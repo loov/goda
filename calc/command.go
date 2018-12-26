@@ -21,26 +21,26 @@ type Command struct {
 func (*Command) Name() string     { return "calc" }
 func (*Command) Synopsis() string { return "Calculate with pacakge sets." }
 func (*Command) Usage() string {
-	return `calc <pkg> [(+|-|++) <pkg>]*:
+	return `calc <pkg> [(|+|-|@) <pkg>]*:
 	Calculates with package dependency sets.
 	
-	a b    : returns packages that are used in either a or b
-	a - b  : returns packages that are needed used in a and not used in b
-	a + b  : returns packages that are used in both a and b
-	a ^    : dependencies (e.g. golang.org/x/tools/... ^)
+	a b    : returns packages that are used by either a or b
+	a + b  : returns packages that are used by both a and b
+	a - b  : returns packages that are used by a and not used by b
+	a @    : dependencies (e.g. golang.org/x/tools/... @)
 
 	Examples:
 
-	calc github.com/loov/goda ^
+	calc github.com/loov/goda @
 		show all dependencies for "github.com/loov/goda" package 
 
-	calc github.com/loov/goda/... ^
+	calc github.com/loov/goda/... @
 		show all dependencies for "github.com/loov/goda" sub-package 
 	
 	calc github.com/loov/goda/pkg + github.com/loov/goda/calc
 		show packages shared by "github.com/loov/goda/pkg" and "github.com/loov/goda/calc"
 
-	calc ./... ^ - golang.org/x/tools/...
+	calc ./... @ - golang.org/x/tools/...
 		show all my dependencies excluding golang.org/x/tools
   `
 }
@@ -51,7 +51,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 }
 
 func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "^"
+	return arg == "+" || arg == "-" || arg == "@"
 }
 
 func findOp(stack []string) int {
@@ -97,7 +97,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 
 		right := pkg.NewSet(roots...)
-		if nextOperation < len(stack) && stack[nextOperation] == "^" {
+		if nextOperation < len(stack) && stack[nextOperation] == "@" {
 			for _, root := range roots {
 				delete(right, root.ID)
 			}
