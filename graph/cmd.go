@@ -31,7 +31,7 @@ func (*Command) Usage() string {
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 	f.StringVar(&cmd.outputType, "type", "dot", "output type")
-	f.StringVar(&cmd.label, "label", "{{.ID}}", "label formatting")
+	f.StringVar(&cmd.label, "label", "{{.ID}}\\l{{LineCount .}} / {{Size .}}\\l", "label formatting")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -63,8 +63,11 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	pkgs := result.Sorted()
 
 	fmt.Fprintf(os.Stdout, "digraph G {\n")
-	fmt.Fprintf(os.Stdout, "    node [shape=rectangle];")
-	fmt.Fprintf(os.Stdout, "    rankdir=LR;")
+	fmt.Fprintf(os.Stdout, "    node [fontsize=10 shape=rectangle];\n")
+	fmt.Fprintf(os.Stdout, "    rankdir=LR;\n")
+	fmt.Fprintf(os.Stdout, "    newrank=true;\n")
+	fmt.Fprintf(os.Stdout, "    ranksep=\"1.5\";\n")
+	fmt.Fprintf(os.Stdout, "    quantum=\"0.5\";\n")
 	defer fmt.Fprintf(os.Stdout, "}\n")
 
 	for _, p := range pkgs {
@@ -74,13 +77,13 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
 
-		fmt.Fprintf(os.Stdout, "    %v [label=%q];\n", escapeID(p.ID), s.String())
+		fmt.Fprintf(os.Stdout, "    %v [label=\"%v\"];\n", escapeID(p.ID), s.String())
 	}
 
 	for _, src := range pkgs {
 		for _, dst := range src.Imports {
 			if _, ok := result[dst.ID]; ok {
-				fmt.Fprintf(os.Stdout, "    %v -> %v;\n", escapeID(src.ID), escapeID(dst.ID))
+				fmt.Fprintf(os.Stdout, "    %v:e -> %v:w;\n", escapeID(src.ID), escapeID(dst.ID))
 			}
 		}
 	}
