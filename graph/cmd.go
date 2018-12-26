@@ -15,7 +15,8 @@ import (
 
 type Command struct {
 	printStandard bool
-	format        string
+	outputType    string
+	label         string
 }
 
 func (*Command) Name() string     { return "graph" }
@@ -29,7 +30,8 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
-	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
+	f.StringVar(&cmd.outputType, "type", "dot", "output type")
+	f.StringVar(&cmd.label, "label", "{{.ID}}", "label formatting")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -38,9 +40,14 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitUsageError
 	}
 
-	t, err := templates.Parse(cmd.format)
+	if cmd.outputType != "dot" {
+		fmt.Fprintf(os.Stderr, "unknown output type %v\n", cmd.outputType)
+		return subcommands.ExitUsageError
+	}
+
+	t, err := templates.Parse(cmd.label)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "invalid format string\n")
+		fmt.Fprintf(os.Stderr, "invalid label string\n")
 		return subcommands.ExitFailure
 	}
 
