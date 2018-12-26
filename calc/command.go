@@ -22,9 +22,10 @@ func (*Command) Usage() string {
 	return `calc <pkg> [(+|-|++) <pkg>]*:
 	Calculates with package dependency sets.
 	
-	a - b: returns packages that are needed used in a and not used in b
-	a + b: returns packages that are used in either a or b
-	a ++ b: returns packages that are used in both a and b
+	a b    : returns packages that are used in either a or b
+	a - b  : returns packages that are needed used in a and not used in b
+	a + b  : returns packages that are used in both a and b
+	a ^    : dependencies (e.g. golang.org/x/tools/... ^)
   `
 }
 
@@ -33,7 +34,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 }
 
 func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "++"
+	return arg == "+" || arg == "-" || arg == "^"
 }
 
 func findOp(stack []string) int {
@@ -55,7 +56,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	stack := f.Args()
 
 	left := pkg.NewSet()
-	operation := "+"
+	operation := ""
 
 	for len(stack) > 0 {
 		nextOperation := findOp(stack)
@@ -73,12 +74,19 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 
 		right := pkg.NewSet(roots...)
+		if nextOperation < len(stack) && stack[nextOperation] == "^" {
+			for _, root := range roots {
+				delete(right, root.ID)
+			}
+			nextOperation++
+		}
+
 		switch operation {
-		case "+":
+		case "":
 			left = pkg.Union(left, right)
 		case "-":
 			left = pkg.Subtract(left, right)
-		case "++":
+		case "+":
 			left = pkg.Intersect(left, right)
 		}
 
