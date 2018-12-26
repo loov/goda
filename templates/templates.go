@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"text/template"
 
+	"github.com/loov/goda/memory"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -72,7 +72,7 @@ func Size(vs ...interface{}) string {
 		}
 	}
 
-	return bytes(size)
+	return memory.ToString(size)
 }
 
 func AllFiles(vs ...interface{}) []string {
@@ -122,27 +122,6 @@ func allFiles(p *packages.Package) []string {
 	sort.Strings(files)
 
 	return files
-}
-
-func bytes(s int64) string {
-	size := float64(s)
-
-	switch {
-	case size >= (1<<60)*2/3:
-		return fmt.Sprintf("%.1fEB", size/(1<<60))
-	case size >= (1<<50)*2/3:
-		return fmt.Sprintf("%.1fPB", size/(1<<50))
-	case size >= (1<<40)*2/3:
-		return fmt.Sprintf("%.1fTB", size/(1<<40))
-	case size >= (1<<30)*2/3:
-		return fmt.Sprintf("%.1fGB", size/(1<<30))
-	case size >= (1<<20)*2/3:
-		return fmt.Sprintf("%.1fMB", size/(1<<20))
-	case size >= (1<<10)*2/3:
-		return fmt.Sprintf("%.1fKB", size/(1<<10))
-	}
-
-	return strconv.Itoa(int(s)) + " B"
 }
 
 func countLines(r io.Reader) int64 {
