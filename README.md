@@ -4,6 +4,11 @@ Goda is a Go dependency analysing toolset.
 
 Subcommands:
 
+* `goda calc`: calculate with dependency sets
+* `goda tree`: print dependency tree
+* `goda exec`: execute commands with more information
+
+
 ## `goda calc`
 
 Implements calculating with dependency sets.
