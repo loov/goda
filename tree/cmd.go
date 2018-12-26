@@ -21,7 +21,7 @@ type Command struct {
 }
 
 func (*Command) Name() string     { return "tree" }
-func (*Command) Synopsis() string { return "Print dependency tree" }
+func (*Command) Synopsis() string { return "Print dependency tree." }
 func (*Command) Usage() string {
 	return `tree <pkg>+:
 	Print dependency tree of packages.

@@ -1,4 +1,4 @@
-package dissect
+package nm
 
 import (
 	"bufio"
@@ -23,11 +23,11 @@ type Command struct {
 	minimum    int
 }
 
-func (*Command) Name() string     { return "dissect" }
-func (*Command) Synopsis() string { return "Dissect a compiled binary" }
+func (*Command) Name() string     { return "nm" }
+func (*Command) Synopsis() string { return "Analyse binary symbols." }
 func (*Command) Usage() string {
-	return `dissect <binary>:
-	Dissect compiled binary symbol sizes.
+	return `nm <binary>:
+	Analyse binary symbols.
   `
 }
 

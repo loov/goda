@@ -9,8 +9,8 @@ import (
 	"github.com/google/subcommands"
 
 	"github.com/loov/goda/calc"
-	"github.com/loov/goda/dissect"
 	"github.com/loov/goda/exec"
+	"github.com/loov/goda/nm"
 	"github.com/loov/goda/tree"
 )
 
@@ -21,7 +21,7 @@ func main() {
 	cmds.Register(&calc.Command{}, "")
 	cmds.Register(&tree.Command{}, "")
 	cmds.Register(&exec.Command{}, "")
-	cmds.Register(&dissect.Command{}, "")
+	cmds.Register(&nm.Command{}, "")
 
 	flag.Parse()
 	ctx := context.Background()

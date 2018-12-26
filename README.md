@@ -6,6 +6,7 @@ Subcommands:
 
 * `goda calc`: calculate with dependency sets
 * `goda tree`: print dependency tree
+* `goda nm`: print binary executable symbol information
 * `goda exec`: execute commands with more information
 
 
