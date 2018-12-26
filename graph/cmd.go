@@ -77,7 +77,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
 
-		fmt.Fprintf(os.Stdout, "    %v [label=\"%v\"];\n", escapeID(p.ID), s.String())
+		fmt.Fprintf(os.Stdout, "    %v [label=\"%v\" href=%q];\n", escapeID(p.ID), s.String(), "http://godoc.org/"+p.ID)
 	}
 
 	for _, src := range pkgs {
