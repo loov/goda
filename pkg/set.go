@@ -1,6 +1,10 @@
 package pkg
 
-import "golang.org/x/tools/go/packages"
+import (
+	"sort"
+
+	"golang.org/x/tools/go/packages"
+)
 
 // Set is a p.ID -> *packages.Package
 type Set map[string]*packages.Package
@@ -12,6 +16,18 @@ func NewSet(roots ...*packages.Package) Set {
 		set.IncludeRecursive(p)
 	}
 	return set
+}
+
+// Sorted returns packages in sorted order
+func (set Set) Sorted() []*packages.Package {
+	var list []*packages.Package
+	for _, pkg := range set {
+		list = append(list, pkg)
+	}
+	sort.Slice(list, func(i, k int) bool {
+		return list[i].ID < list[k].ID
+	})
+	return list
 }
 
 // IncludeRecursive adds p recursively
@@ -37,6 +53,10 @@ func (set Set) Clone() Set {
 
 // Union includes packages from both sets
 func Union(a, b Set) Set {
+	if len(a) == 0 {
+		return b.Clone()
+	}
+
 	r := a.Clone()
 	for pid, p := range b {
 		if _, exists := r[pid]; !exists {
@@ -49,16 +69,16 @@ func Union(a, b Set) Set {
 // Subtract returns packages that exist in a, but not in b
 func Subtract(a, b Set) Set {
 	r := a.Clone()
-	for pid, _ := range b {
+	for pid := range b {
 		delete(r, pid)
 	}
 	return r
 }
 
-// Interesct returns packages that exist in both
+// Intersect returns packages that exist in both
 func Intersect(a, b Set) Set {
 	r := make(Set, len(a))
-	for pid, _ := range b {
+	for pid := range b {
 		if p, ok := a[pid]; ok {
 			r[pid] = p
 		}

@@ -1,48 +1,25 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"flag"
 	"os"
+	"path"
 
-	"github.com/loov/ago/pkg"
-	"golang.org/x/tools/go/packages"
+	"github.com/google/subcommands"
+
+	"github.com/loov/ago/calc"
 )
 
-var commands = map[string]func(*State, ...string){
-	// tree prints dependency tree
-	"tree": nil,
-	// analyze size impact for each imported package
-	"size": nil,
-	// calculate with package sets
-	"calc": nil,
-	// time commands (cross-platform time)
-	"time": nil,
-}
-
-type State struct{}
-
 func main() {
-	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.LoadImports,
-		Env:  append(os.Environ(), "GOOS=windows"),
-	}, os.Args[1])
-	if err != nil {
-		panic(err)
-	}
+	cmds := subcommands.NewCommander(flag.CommandLine, path.Base(os.Args[0]))
+	cmds.Register(cmds.HelpCommand(), "")
+	cmds.Register(cmds.FlagsCommand(), "")
+	cmds.Register(cmds.CommandsCommand(), "")
 
-	pkg.NewSet()
+	cmds.Register(&calc.Command{}, "")
 
-	/*
-		func(fset *token.FileSet, filename string) (*ast.File, error) {
-			const mode = parser.AllErrors | parser.ParseComments
-			return parser.ParseFile(fset, filename, nil, mode)
-		}
-	*/
-
-	for _, p := range pkgs {
-		fmt.Println(p.ID)
-		for _, file := range p.GoFiles {
-			fmt.Println(file)
-		}
-	}
+	flag.Parse()
+	ctx := context.Background()
+	os.Exit(int(cmds.Execute(ctx)))
 }
