@@ -16,8 +16,6 @@ import (
 func main() {
 	cmds := subcommands.NewCommander(flag.CommandLine, path.Base(os.Args[0]))
 	cmds.Register(cmds.HelpCommand(), "")
-	cmds.Register(cmds.FlagsCommand(), "")
-	cmds.Register(cmds.CommandsCommand(), "")
 
 	cmds.Register(&calc.Command{}, "")
 	cmds.Register(&tree.Command{}, "")
