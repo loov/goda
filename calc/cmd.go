@@ -5,17 +5,17 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"text/template"
 
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
 
 	"github.com/loov/goda/pkg"
+	"github.com/loov/goda/templates"
 )
 
 type Command struct {
-	format        string
 	printStandard bool
+	format        string
 }
 
 func (*Command) Name() string     { return "calc" }
@@ -46,8 +46,8 @@ func (*Command) Usage() string {
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
+	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
 }
 
 func isOp(arg string) bool {
@@ -70,7 +70,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitUsageError
 	}
 
-	t, err := template.New("").Parse(cmd.format)
+	t, err := templates.Parse(cmd.format)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "invalid format string\n")
 		return subcommands.ExitFailure
