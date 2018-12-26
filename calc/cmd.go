@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/google/subcommands"
-	"golang.org/x/tools/go/packages"
 
 	"github.com/loov/goda/pkg"
 	"github.com/loov/goda/templates"
@@ -50,20 +49,6 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
 }
 
-func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "@"
-}
-
-func findOp(stack []string) int {
-	for i := 0; i < len(stack); i++ {
-		if isOp(stack[i]) {
-			return i
-		}
-	}
-
-	return len(stack)
-}
-
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if f.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "missing package names\n")
@@ -76,51 +61,13 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitFailure
 	}
 
-	stack := f.Args()
-
-	left := pkg.NewSet()
-	operation := ""
-
-	for len(stack) > 0 {
-		nextOperation := findOp(stack)
-		load := stack[:nextOperation]
-
-		roots, err := packages.Load(&packages.Config{
-			Context: ctx,
-			Mode:    packages.LoadImports,
-			Env:     os.Environ(),
-		}, load...)
-
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to load %v: %v\n", load, err)
-			return subcommands.ExitFailure
-		}
-
-		right := pkg.NewSet(roots...)
-		if nextOperation < len(stack) && stack[nextOperation] == "@" {
-			for _, root := range roots {
-				delete(right, root.ID)
-			}
-			nextOperation++
-		}
-
-		switch operation {
-		case "":
-			left = pkg.Union(left, right)
-		case "-":
-			left = pkg.Subtract(left, right)
-		case "+":
-			left = pkg.Intersect(left, right)
-		}
-
-		if nextOperation >= len(stack) {
-			break
-		}
-
-		operation, stack = stack[nextOperation], stack[nextOperation+1:]
+	result, err := pkg.Calc(ctx, f.Args())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return subcommands.ExitFailure
 	}
 
-	pkgs := left.Sorted()
+	pkgs := result.Sorted()
 	for _, p := range pkgs {
 		if !cmd.printStandard && pkg.IsStd(p) {
 			continue

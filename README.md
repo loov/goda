@@ -1,4 +1,4 @@
-# Goda
+# goda
 
 Goda is a Go dependency analysing toolset.
 
