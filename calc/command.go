@@ -31,14 +31,14 @@ func (*Command) Usage() string {
 
 	Examples:
 
-	calc github.com/loov/ago ^
-		show all dependencies for "github.com/loov/ago" package 
+	calc github.com/loov/goda ^
+		show all dependencies for "github.com/loov/goda" package 
 
-	calc github.com/loov/ago/... ^
-		show all dependencies for "github.com/loov/ago" sub-package 
+	calc github.com/loov/goda/... ^
+		show all dependencies for "github.com/loov/goda" sub-package 
 	
-	calc github.com/loov/ago/pkg + github.com/loov/ago/calc
-		show packages shared by "github.com/loov/ago/pkg" and "github.com/loov/ago/calc"
+	calc github.com/loov/goda/pkg + github.com/loov/goda/calc
+		show packages shared by "github.com/loov/goda/pkg" and "github.com/loov/goda/calc"
 
 	calc ./... ^ - golang.org/x/tools/...
 		show all my dependencies excluding golang.org/x/tools
