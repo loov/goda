@@ -38,3 +38,10 @@ func IsStdName(id string) bool {
 	_, ok := stdpkgs[id]
 	return ok
 }
+
+// Std returns the standard package set
+func Std() Set {
+	loadstd()
+
+	return stdpkgs.Clone()
+}

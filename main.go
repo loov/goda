@@ -10,6 +10,7 @@ import (
 
 	"github.com/loov/goda/calc"
 	"github.com/loov/goda/exec"
+	"github.com/loov/goda/graph"
 	"github.com/loov/goda/nm"
 	"github.com/loov/goda/tree"
 )
@@ -22,6 +23,7 @@ func main() {
 	cmds.Register(&tree.Command{}, "")
 	cmds.Register(&exec.Command{}, "")
 	cmds.Register(&nm.Command{}, "")
+	cmds.Register(&graph.Command{}, "")
 
 	flag.Parse()
 	ctx := context.Background()

@@ -1,10 +1,11 @@
-package calc
+package graph
 
 import (
 	"context"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/google/subcommands"
 
@@ -17,30 +18,12 @@ type Command struct {
 	format        string
 }
 
-func (*Command) Name() string     { return "calc" }
-func (*Command) Synopsis() string { return "Calculate with pacakge sets." }
+func (*Command) Name() string     { return "graph" }
+func (*Command) Synopsis() string { return "Print dependency graph." }
 func (*Command) Usage() string {
-	return `calc <pkg> [(|+|-|@) <pkg>]*:
-	Calculates with package dependency sets.
-	
-	a b    : returns packages that are used by either a or b
-	a + b  : returns packages that are used by both a and b
-	a - b  : returns packages that are used by a and not used by b
-	a @    : dependencies (e.g. golang.org/x/tools/... @)
+	return `graph <pkg>:
+	Print dependency dot graph.
 
-	Examples:
-
-	calc github.com/loov/goda @
-		show all dependencies for "github.com/loov/goda" package 
-
-	calc github.com/loov/goda/... @
-		show all dependencies for "github.com/loov/goda" sub-package 
-	
-	calc github.com/loov/goda/pkg + github.com/loov/goda/calc
-		show packages shared by "github.com/loov/goda/pkg" and "github.com/loov/goda/calc"
-
-	calc ./... @ - golang.org/x/tools/...
-		show all my dependencies excluding golang.org/x/tools
   `
 }
 
@@ -70,13 +53,46 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		result = pkg.Subtract(result, pkg.Std())
 	}
 
-	for _, p := range result.Sorted() {
-		err := t.Execute(os.Stdout, p)
-		fmt.Fprintln(os.Stdout)
+	pkgs := result.Sorted()
+
+	fmt.Fprintf(os.Stdout, "digraph G {\n")
+	fmt.Fprintf(os.Stdout, "    node [shape=rectangle];")
+	fmt.Fprintf(os.Stdout, "    rankdir=LR;")
+	defer fmt.Fprintf(os.Stdout, "}\n")
+
+	for _, p := range pkgs {
+		var s strings.Builder
+		err := t.Execute(&s, p)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
+		}
+
+		fmt.Fprintf(os.Stdout, "    %v [label=%q];\n", escapeID(p.ID), s.String())
+	}
+
+	for _, src := range pkgs {
+		for _, dst := range src.Imports {
+			if _, ok := result[dst.ID]; ok {
+				fmt.Fprintf(os.Stdout, "    %v -> %v;\n", escapeID(src.ID), escapeID(dst.ID))
+			}
 		}
 	}
 
 	return subcommands.ExitSuccess
+}
+
+func escapeID(s string) string {
+	var d []byte
+	for _, r := range s {
+		if 'a' <= r && r <= 'z' {
+			d = append(d, byte(r))
+		} else if 'A' <= r && r <= 'Z' {
+			d = append(d, byte(r))
+		} else if '0' <= r && r <= '9' {
+			d = append(d, byte(r))
+		} else {
+			d = append(d, '_')
+		}
+	}
+	return string(d)
 }
