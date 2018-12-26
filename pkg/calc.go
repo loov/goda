@@ -32,6 +32,13 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 				delete(right, root.ID)
 			}
 			nextOperation++
+		} else if nextOperation < len(expr) && expr[nextOperation] == "$" {
+			newRight := NewSet()
+			for _, root := range roots {
+				newRight[root.ID] = right[root.ID]
+			}
+			right = newRight
+			nextOperation++
 		}
 
 		switch operation {
@@ -54,7 +61,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 }
 
 func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "@"
+	return arg == "+" || arg == "-" || arg == "@" || arg == "$"
 }
 
 func findOp(stack []string) int {

@@ -44,6 +44,7 @@ func (*ExprHelp) Usage() string {
 	a + b  : returns packages that are used by both a and b
 	a - b  : returns packages that are used by a and not used by b
 	a @    : only dependencies of a
+	a $    : only roots of a
 
 	Examples:
 

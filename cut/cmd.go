@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
@@ -18,6 +19,7 @@ import (
 type Command struct {
 	printStandard bool
 	format        string
+	exclude       string
 }
 
 func (*Command) Name() string     { return "cut" }
@@ -33,6 +35,7 @@ func (*Command) Usage() string {
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 	f.StringVar(&cmd.format, "format", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.Packages}}\tsize:{{.Cut.Size}}\tloc:{{.Cut.Lines}}", "info formatting")
+	f.StringVar(&cmd.exclude, "exclude", "", "package expr to exclude from output")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -52,6 +55,16 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		fmt.Fprintln(os.Stderr, err.Error())
 		return subcommands.ExitFailure
 	}
+
+	excluded := pkg.NewSet()
+	if cmd.exclude != "" {
+		excluded, err = pkg.Calc(ctx, strings.Fields(cmd.exclude))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			return subcommands.ExitFailure
+		}
+	}
+
 	if !cmd.printStandard {
 		result = pkg.Subtract(result, pkg.Std())
 	}
@@ -107,6 +120,10 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	})
 
 	for _, stat := range statlist {
+		if _, exclude := excluded[stat.ID]; exclude {
+			continue
+		}
+
 		err := t.Execute(os.Stdout, stat)
 		fmt.Fprintln(os.Stdout)
 		if err != nil {
