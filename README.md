@@ -6,9 +6,11 @@ Goda is a Go dependency analysing toolset.
 Usage: goda <flags> <subcommand> <subcommand args>
 
 Subcommands:
-	calc             Calculate with pacakge sets.
+	cut              Print dependencies cutting information.
 	exec             Run command with extended statistics.
+	expr             Help about package expressions
 	graph            Print dependency graph.
+	list             List packages
 	nm               Analyse binary symbols.
 	tree             Print dependency tree.
 ```
