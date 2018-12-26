@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"text/template"
 
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
@@ -13,6 +14,7 @@ import (
 )
 
 type Command struct {
+	format        string
 	printStandard bool
 }
 
@@ -26,10 +28,25 @@ func (*Command) Usage() string {
 	a - b  : returns packages that are needed used in a and not used in b
 	a + b  : returns packages that are used in both a and b
 	a ^    : dependencies (e.g. golang.org/x/tools/... ^)
+
+	Examples:
+
+	calc github.com/loov/ago ^
+		show all dependencies for "github.com/loov/ago" package 
+
+	calc github.com/loov/ago/... ^
+		show all dependencies for "github.com/loov/ago" sub-package 
+	
+	calc github.com/loov/ago/pkg + github.com/loov/ago/calc
+		show packages shared by "github.com/loov/ago/pkg" and "github.com/loov/ago/calc"
+
+	calc ./... ^ - golang.org/x/tools/...
+		show all my dependencies excluding golang.org/x/tools
   `
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
+	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 }
 
@@ -51,6 +68,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	if f.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "missing package names\n")
 		return subcommands.ExitUsageError
+	}
+
+	t, err := template.New("").Parse(cmd.format)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid format string\n")
+		return subcommands.ExitFailure
 	}
 
 	stack := f.Args()
@@ -102,7 +125,11 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		if !cmd.printStandard && pkg.IsStd(p) {
 			continue
 		}
-		fmt.Fprintf(os.Stdout, "%v\n", p.ID)
+		err := t.Execute(os.Stdout, p)
+		fmt.Fprintln(os.Stdout)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
+		}
 	}
 
 	return subcommands.ExitSuccess
