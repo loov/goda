@@ -32,7 +32,7 @@ func (*Command) Usage() string {
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&cmd.format, "format", "{{.Command}} pkg:{{.PackageName}} user:{{.UserTime}} system:{{.SystemTime}} in:{{.InputsSize}} out:{{.OutputSize}}", "formatting")
+	f.StringVar(&cmd.format, "format", "{{.Command}} {{.PackageName}} user:{{.UserTime}} system:{{.SystemTime}} in:{{.InputsSize}} out:{{.OutputSize}}", "formatting")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
