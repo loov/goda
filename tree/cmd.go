@@ -25,7 +25,7 @@ func (*Command) Synopsis() string { return "Print dependency tree." }
 func (*Command) Usage() string {
 	return `tree <pkg>+:
 	Print dependency tree of packages.
-  `
+`
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {

@@ -24,7 +24,7 @@ func (*Command) Usage() string {
 	List packages using an expression.
 
 	See "help expr" for further information about expressions. 
-  `
+`
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {

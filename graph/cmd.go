@@ -26,7 +26,7 @@ func (*Command) Usage() string {
 	Print dependency dot graph.
 
 	See "help expr" for further information about expressions.
-  `
+`
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {

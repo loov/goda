@@ -28,7 +28,7 @@ func (*Command) Synopsis() string { return "Analyse binary symbols." }
 func (*Command) Usage() string {
 	return `nm <binary>:
 	Analyse binary symbols.
-  `
+`
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {

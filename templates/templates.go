@@ -50,7 +50,7 @@ func LineCount(vs ...interface{}) int64 {
 	return count
 }
 
-func Size(vs ...interface{}) string {
+func Size(vs ...interface{}) memory.Bytes {
 	var size int64
 
 	for _, v := range vs {
@@ -72,7 +72,7 @@ func Size(vs ...interface{}) string {
 		}
 	}
 
-	return memory.ToString(size)
+	return memory.Bytes(size)
 }
 
 func AllFiles(vs ...interface{}) []string {

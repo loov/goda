@@ -28,7 +28,7 @@ func (*Command) Usage() string {
 	Example:
 
 	go build -toolexec "goda exec" .
-  `
+`
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {

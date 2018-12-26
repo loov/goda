@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/subcommands"
 
+	"github.com/loov/goda/cut"
 	"github.com/loov/goda/exec"
 	"github.com/loov/goda/graph"
 	"github.com/loov/goda/list"
@@ -24,6 +25,7 @@ func main() {
 	cmds.Register(&exec.Command{}, "")
 	cmds.Register(&nm.Command{}, "")
 	cmds.Register(&graph.Command{}, "")
+	cmds.Register(&cut.Command{}, "")
 	cmds.Register(&ExprHelp{}, "")
 
 	flag.Parse()
