@@ -10,7 +10,7 @@ import (
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
 
-	"github.com/loov/ago/pkg"
+	"github.com/loov/goda/pkg"
 )
 
 type Command struct {

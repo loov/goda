@@ -1,4 +1,4 @@
-module github.com/loov/ago
+module github.com/loov/goda
 
 require (
 	github.com/google/subcommands v0.0.0-20181012225330-46f0354f6315 // indirect

@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/subcommands"
 
-	"github.com/loov/ago/calc"
+	"github.com/loov/goda/calc"
 )
 
 func main() {
