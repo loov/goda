@@ -29,5 +29,5 @@ func ToString(s int64) string {
 		return fmt.Sprintf("%.1fKB", size/(1<<10))
 	}
 
-	return strconv.Itoa(int(s)) + " B"
+	return strconv.Itoa(int(s)) + "B"
 }
