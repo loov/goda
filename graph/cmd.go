@@ -22,9 +22,10 @@ type Command struct {
 func (*Command) Name() string     { return "graph" }
 func (*Command) Synopsis() string { return "Print dependency graph." }
 func (*Command) Usage() string {
-	return `graph <pkg>:
+	return `graph <expr>:
 	Print dependency dot graph.
 
+	See "help expr" for further information about expressions.
   `
 }
 

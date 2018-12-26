@@ -2,13 +2,16 @@
 
 Goda is a Go dependency analysing toolset.
 
+```
+Usage: goda <flags> <subcommand> <subcommand args>
+
 Subcommands:
-
-* `goda calc`: calculate with dependency sets
-* `goda tree`: print dependency tree
-* `goda nm`: print binary executable symbol information
-* `goda exec`: execute commands with more information
-
+	calc             Calculate with pacakge sets.
+	exec             Run command with extended statistics.
+	graph            Print dependency graph.
+	nm               Analyse binary symbols.
+	tree             Print dependency tree.
+```
 
 ## `goda calc`
 

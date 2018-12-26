@@ -1,4 +1,4 @@
-package calc
+package list
 
 import (
 	"context"
@@ -17,30 +17,13 @@ type Command struct {
 	format        string
 }
 
-func (*Command) Name() string     { return "calc" }
-func (*Command) Synopsis() string { return "Calculate with pacakge sets." }
+func (*Command) Name() string     { return "list" }
+func (*Command) Synopsis() string { return "List packages" }
 func (*Command) Usage() string {
-	return `calc <pkg> [(|+|-|@) <pkg>]*:
-	Calculates with package dependency sets.
-	
-	a b    : returns packages that are used by either a or b
-	a + b  : returns packages that are used by both a and b
-	a - b  : returns packages that are used by a and not used by b
-	a @    : dependencies (e.g. golang.org/x/tools/... @)
+	return `list <expr>:
+	List packages using an expression.
 
-	Examples:
-
-	calc github.com/loov/goda @
-		show all dependencies for "github.com/loov/goda" package 
-
-	calc github.com/loov/goda/... @
-		show all dependencies for "github.com/loov/goda" sub-package 
-	
-	calc github.com/loov/goda/pkg + github.com/loov/goda/calc
-		show packages shared by "github.com/loov/goda/pkg" and "github.com/loov/goda/calc"
-
-	calc ./... @ - golang.org/x/tools/...
-		show all my dependencies excluding golang.org/x/tools
+	See "help expr" for further information about expressions. 
   `
 }
 
