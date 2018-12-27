@@ -33,20 +33,6 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
 }
 
-func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "@"
-}
-
-func findOp(stack []string) int {
-	for i := 0; i < len(stack); i++ {
-		if isOp(stack[i]) {
-			return i
-		}
-	}
-
-	return len(stack)
-}
-
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if f.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "missing package names\n")
