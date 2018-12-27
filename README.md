@@ -63,3 +63,9 @@ All of these can of course be combined:
 # excluding golang.org/x/tools/..., but not their dependencies
 goda list github.com/loov/goda/... @ - golang.org/x/tools/... $
 ```
+
+## Why not use `go list` instead of `goda list`
+
+For basic usage `go list` is quite nice, however when you want to do more complicated queries then things become difficult quite fast. You end up needing scripts that do the heavy lifting and making them cross-platform is another issue.
+
+However, `go list` is more tightly integrated with `go` itself, so it can answer more in-depth queries.
