@@ -29,7 +29,7 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
-	f.StringVar(&cmd.format, "format", "{{.ID}}", "formatting")
+	f.StringVar(&cmd.format, "f", "{{.ID}}", "formatting")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {

@@ -34,7 +34,7 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
-	f.StringVar(&cmd.format, "format", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.Packages}}\tsize:{{.Cut.SourceSize}}\tloc:{{.Cut.Lines}}", "info formatting")
+	f.StringVar(&cmd.format, "f", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.Packages}}\tsize:{{.Cut.SourceSize}}\tloc:{{.Cut.Lines}}", "info formatting")
 	f.StringVar(&cmd.exclude, "exclude", "", "package expr to exclude from output")
 }
 
