@@ -9,6 +9,12 @@ import (
 )
 
 func Calc(ctx context.Context, expr []string) (Set, error) {
+	config := &packages.Config{
+		Context: ctx,
+		Mode:    packages.LoadImports,
+		Env:     os.Environ(),
+	}
+
 	left := New()
 	operation := ""
 
@@ -16,11 +22,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 		nextOperation := findOp(expr)
 		load := expr[:nextOperation]
 
-		roots, err := packages.Load(&packages.Config{
-			Context: ctx,
-			Mode:    packages.LoadImports,
-			Env:     os.Environ(),
-		}, load...)
+		roots, err := packages.Load(config, load...)
 
 		if err != nil {
 			return left, fmt.Errorf("failed to load %v: %v", load, err)
