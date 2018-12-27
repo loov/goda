@@ -50,6 +50,8 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 			left = Subtract(left, right)
 		case "+":
 			left = Intersect(left, right)
+		case "/":
+			left = SymmetricDifference(left, right)
 		}
 
 		if nextOperation >= len(expr) {
@@ -63,7 +65,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 }
 
 func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "@" || arg == "$"
+	return arg == "+" || arg == "-" || arg == "/" || arg == "@" || arg == "$"
 }
 
 func findOp(stack []string) int {

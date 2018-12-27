@@ -85,3 +85,20 @@ func Intersect(a, b Set) Set {
 	}
 	return r
 }
+
+// SymmetricDifference returns packages that are different
+func SymmetricDifference(a, b Set) Set {
+	r := make(Set, len(a))
+	for pid, p := range a {
+		if _, ok := b[pid]; !ok {
+			r[pid] = p
+		}
+	}
+
+	for pid, p := range b {
+		if _, ok := a[pid]; !ok {
+			r[pid] = p
+		}
+	}
+	return r
+}
