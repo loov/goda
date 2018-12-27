@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/subcommands"
 
-	"github.com/loov/goda/pkg"
+	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/templates"
 )
 
@@ -44,13 +44,13 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitFailure
 	}
 
-	result, err := pkg.Calc(ctx, f.Args())
+	result, err := pkgset.Calc(ctx, f.Args())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		return subcommands.ExitFailure
 	}
 	if !cmd.printStandard {
-		result = pkg.Subtract(result, pkg.Std())
+		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
 	for _, p := range result.Sorted() {

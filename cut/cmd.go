@@ -12,7 +12,7 @@ import (
 	"golang.org/x/tools/go/packages"
 
 	"github.com/loov/goda/memory"
-	"github.com/loov/goda/pkg"
+	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/templates"
 )
 
@@ -50,15 +50,15 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitFailure
 	}
 
-	result, err := pkg.Calc(ctx, f.Args())
+	result, err := pkgset.Calc(ctx, f.Args())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		return subcommands.ExitFailure
 	}
 
-	excluded := pkg.NewSet()
+	excluded := pkgset.New()
 	if cmd.exclude != "" {
-		excluded, err = pkg.Calc(ctx, strings.Fields(cmd.exclude))
+		excluded, err = pkgset.Calc(ctx, strings.Fields(cmd.exclude))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 			return subcommands.ExitFailure
@@ -66,7 +66,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	if !cmd.printStandard {
-		result = pkg.Subtract(result, pkg.Std())
+		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
 	stats := map[string]*Stat{}
@@ -98,7 +98,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	for _, p := range stats {
-		if !cmd.printStandard && pkg.IsStd(p.Package) {
+		if !cmd.printStandard && pkgset.IsStd(p.Package) {
 			continue
 		}
 

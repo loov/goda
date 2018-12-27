@@ -11,7 +11,7 @@ import (
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
 
-	"github.com/loov/goda/pkg"
+	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/templates"
 )
 
@@ -85,7 +85,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
 
-		if printed[p.ID] || pkg.IsStd(p) {
+		if printed[p.ID] || pkgset.IsStd(p) {
 			fmt.Fprintln(os.Stdout, " ~")
 			return
 		}
@@ -94,7 +94,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		printed[p.ID] = true
 		keys := []string{}
 		for id, dep := range p.Imports {
-			if !cmd.printStandard && pkg.IsStd(dep) {
+			if !cmd.printStandard && pkgset.IsStd(dep) {
 				continue
 			}
 			keys = append(keys, id)

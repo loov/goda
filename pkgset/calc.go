@@ -1,4 +1,4 @@
-package pkg
+package pkgset
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 func Calc(ctx context.Context, expr []string) (Set, error) {
-	left := NewSet()
+	left := New()
 	operation := ""
 
 	for len(expr) > 0 {
@@ -26,14 +26,14 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 			return left, fmt.Errorf("failed to load %v: %v", load, err)
 		}
 
-		right := NewSet(roots...)
+		right := New(roots...)
 		if nextOperation < len(expr) && expr[nextOperation] == "@" {
 			for _, root := range roots {
 				delete(right, root.ID)
 			}
 			nextOperation++
 		} else if nextOperation < len(expr) && expr[nextOperation] == "$" {
-			newRight := NewSet()
+			newRight := New()
 			for _, root := range roots {
 				newRight[root.ID] = right[root.ID]
 			}

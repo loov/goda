@@ -1,4 +1,4 @@
-package pkg
+package pkgset
 
 import (
 	"sort"
@@ -9,8 +9,8 @@ import (
 // Set is a p.ID -> *packages.Package
 type Set map[string]*packages.Package
 
-// NewSet makes a set from roots recursively
-func NewSet(roots ...*packages.Package) Set {
+// New makes a set from roots recursively
+func New(roots ...*packages.Package) Set {
 	set := make(Set, len(roots))
 	for _, p := range roots {
 		set.IncludeRecursive(p)

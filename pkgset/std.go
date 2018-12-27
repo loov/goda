@@ -1,4 +1,4 @@
-package pkg
+package pkgset
 
 import (
 	"sync"
@@ -20,7 +20,7 @@ func loadstd() {
 			panic(err)
 		}
 
-		stdpkgs = NewSet(standard...)
+		stdpkgs = New(standard...)
 	})
 }
 
