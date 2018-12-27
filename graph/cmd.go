@@ -32,7 +32,7 @@ func (*Command) Usage() string {
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 	f.StringVar(&cmd.outputType, "type", "dot", "output type")
-	f.StringVar(&cmd.label, "label", "{{.ID}}\\l{{LineCount .}} / {{Size .}}\\l", "label formatting")
+	f.StringVar(&cmd.label, "label", "{{.ID}}\\l{{LineCount .}} / {{CodeSize .}}\\l", "label formatting")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {

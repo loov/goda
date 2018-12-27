@@ -34,7 +34,7 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
-	f.StringVar(&cmd.format, "format", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.Packages}}\tsize:{{.Cut.Size}}\tloc:{{.Cut.Lines}}", "info formatting")
+	f.StringVar(&cmd.format, "format", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.Packages}}\tsize:{{.Cut.CodeSize}}\tloc:{{.Cut.Lines}}", "info formatting")
 	f.StringVar(&cmd.exclude, "exclude", "", "package expr to exclude from output")
 }
 
@@ -104,7 +104,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 		p.Info.Packages = 1
 		p.Info.Lines = templates.LineCount(p.Package)
-		p.Info.Size = templates.Size(p.Package)
+		p.Info.CodeSize = templates.CodeSize(p.Package)
 	}
 
 	for _, stat := range statlist {
@@ -154,14 +154,14 @@ func Erase(stat *Stat) Info {
 type Info struct {
 	Packages int
 	Lines    int64
-	Size     memory.Bytes
+	CodeSize memory.Bytes
 }
 
 func (a Info) Add(b Info) Info {
 	return Info{
 		Packages: a.Packages + b.Packages,
 		Lines:    a.Lines + b.Lines,
-		Size:     a.Size + b.Size,
+		CodeSize: a.CodeSize + b.CodeSize,
 	}
 }
 

@@ -15,7 +15,7 @@ import (
 func Parse(t string) (*template.Template, error) {
 	return template.New("").Funcs(template.FuncMap{
 		"LineCount": LineCount,
-		"Size":      Size,
+		"CodeSize":  CodeSize,
 		"AllFiles":  AllFiles,
 	}).Parse(t)
 }
@@ -50,7 +50,7 @@ func LineCount(vs ...interface{}) int64 {
 	return count
 }
 
-func Size(vs ...interface{}) memory.Bytes {
+func CodeSize(vs ...interface{}) memory.Bytes {
 	var size int64
 
 	for _, v := range vs {
