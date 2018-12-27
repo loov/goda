@@ -1,4 +1,4 @@
-# goda
+# Goda
 
 Goda is a Go dependency analysis toolkit. It contains a bunch of different things to figure out what your program is using.
 
@@ -37,7 +37,7 @@ The basic syntax is that you can specify multiple packages:
 goda list github.com/loov/goda/... github.com/loov/qloc
 ```
 
-By default it will select all the pacakges and dependencies of those packages. You can select only the packages with `$` and only the dependencies with `@`. For example:
+By default it will select all the packages and dependencies of those packages. You can select only the packages with `$` and only the dependencies with `@`. For example:
 
 ```
 goda list github.com/loov/goda/... @
@@ -64,8 +64,10 @@ All of these can of course be combined:
 goda list github.com/loov/goda/... @ - golang.org/x/tools/... $
 ```
 
-## Why not use `go list` instead of `goda list`
+## How it differs from `go list` or `go mod`
 
-For basic usage `go list` is quite nice, however when you want to do more complicated queries then things become difficult quite fast. You end up needing scripts that do the heavy lifting and making them cross-platform is another issue.
+`go list` and `go mod` are tightly integrated with Go and can answer simple queries with compatibility. It also serves as good building blocks for other tools.
 
-However, `go list` is more tightly integrated with `go` itself, so it can answer more in-depth queries.
+`goda` is intended for more complicated queries and analysis. Some of the features can be reproduced by format flags and scripts, however this is an extra step when you want to quickly figure out different parts.
+
+Of course, it should go without saying, they can be used together.
