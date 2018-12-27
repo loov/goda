@@ -1,19 +1,8 @@
 # goda
 
-Goda is a Go dependency analysing toolset.
+Goda is a Go dependency analysis toolkit. It contains a bunch of different things to figure out what your program is using.
 
-```
-Usage: goda <flags> <subcommand> <subcommand args>
-
-Subcommands:
-	cut              Print dependencies cutting information.
-	exec             Run command with extended statistics.
-	expr             Help about package expressions
-	graph            Print dependency graph.
-	list             List packages
-	nm               Analyse binary symbols.
-	tree             Print dependency tree.
-```
+_Note: the exact syntax of the command line arguments has not yet been finalized. So expect some changes to it._
 
 Cool things it can do:
 
@@ -38,4 +27,39 @@ goda tree ./...
 
 # print stats while building a go program
 go build -a --toolexec "goda exec" .
+```
+
+Maybe you noticed that it's using some weird symbols on the command-line while specifying packages. They allow to specify more complex scenarios.
+
+The basic syntax is that you can specify multiple packages:
+
+```
+goda list github.com/loov/goda/... github.com/loov/qloc
+```
+
+By default it will select all the pacakges and dependencies of those packages. You can select only the packages with `$` and only the dependencies with `@`. For example:
+
+```
+goda list github.com/loov/goda/... @
+goda list github.com/loov/goda/... $
+```
+
+You can also do basic arithmetic with these sets. For example, if you wish to ignore all `golang.org/x/tools` things in your output you can write:
+
+```
+goda list github.com/loov/goda/... - golang.org/x/tools/...
+```
+
+There's also `+` which allows to list the shared dependencies:
+
+```
+goda list github.com/loov/goda/exec + github.com/loov/goda/graph
+```
+
+All of these can of course be combined:
+
+```
+# list packages used by github.com/loov/goda
+# excluding golang.org/x/tools/..., but not their dependencies
+goda list github.com/loov/goda/... @ - golang.org/x/tools/... $
 ```
