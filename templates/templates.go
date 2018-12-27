@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
 	"text/template"
 
@@ -14,9 +13,9 @@ import (
 
 func Parse(t string) (*template.Template, error) {
 	return template.New("").Funcs(template.FuncMap{
-		"LineCount": LineCount,
-		"CodeSize":  CodeSize,
-		"AllFiles":  AllFiles,
+		"LineCount":  LineCount,
+		"SourceSize": SourceSize,
+		"AllFiles":   AllFiles,
 	}).Parse(t)
 }
 
@@ -50,7 +49,7 @@ func LineCount(vs ...interface{}) int64 {
 	return count
 }
 
-func CodeSize(vs ...interface{}) memory.Bytes {
+func SourceSize(vs ...interface{}) memory.Bytes {
 	var size int64
 
 	for _, v := range vs {
@@ -89,39 +88,21 @@ func AllFiles(vs ...interface{}) []string {
 }
 
 func allFiles(p *packages.Package) []string {
-	dirs := map[string]bool{}
+	files := map[string]bool{}
 	for _, filename := range p.GoFiles {
-		dirs[filepath.Dir(filename)] = true
+		files[filename] = true
 	}
 	for _, filename := range p.OtherFiles {
-		dirs[filepath.Dir(filename)] = true
+		files[filename] = true
 	}
 
-	var files []string
-	for dir := range dirs {
-		file, err := os.Open(dir)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v open failed: %v", dir, err)
-			continue
-		}
-
-		stats, err := file.Readdir(-1)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v readdirnames failed: %v", dir, err)
-			continue
-		}
-
-		for _, stat := range stats {
-			if stat.IsDir() {
-				continue
-			}
-
-			files = append(files, filepath.Join(dir, stat.Name()))
-		}
+	var list []string
+	for file := range files {
+		list = append(list, file)
 	}
-	sort.Strings(files)
+	sort.Strings(list)
 
-	return files
+	return list
 }
 
 func countLines(r io.Reader) int64 {
