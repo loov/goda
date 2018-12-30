@@ -114,10 +114,6 @@ func (ctx *Dot) Label(p *packages.Package) string {
 	return labelText.String()
 }
 
-func (ctx *Dot) Ref(p *packages.Package) string {
-	return "http://godoc.org/" + p.ID
-}
-
 func (ctx *Dot) ClusterLabel(tree *pkgset.Tree, parentPrinted bool) string {
 	var suffix = ""
 	if parentPrinted && tree.Parent != nil && tree.Parent.Path != "" {
@@ -156,15 +152,19 @@ func (ctx *Dot) TreeLabel(tree *pkgset.Tree, parentPrinted bool) string {
 	return labelText.String()
 }
 
+func (ctx *Dot) Ref(p *packages.Package) string {
+	return fmt.Sprintf(`href=%q `, "http://godoc.org/"+p.ID)
+}
+
 func (ctx *Dot) TreeRef(tree *pkgset.Tree) string {
-	return "http://godoc.org/" + tree.Path
+	return fmt.Sprintf(`href=%q `, "http://godoc.org/"+tree.Path)
 }
 
 func (ctx *Dot) writeGraphProperties() {
 	if ctx.nocolor {
-		fmt.Fprintf(ctx.out, "    node [fontsize=10 shape=rectangle];\n")
+		fmt.Fprintf(ctx.out, "    node [fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
 	} else {
-		fmt.Fprintf(ctx.out, "    node [penwidth=2 fontsize=10 shape=rectangle];\n")
+		fmt.Fprintf(ctx.out, "    node [penwidth=2 fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
 		fmt.Fprintf(ctx.out, "    edge [penwidth=2];\n")
 	}
 	fmt.Fprintf(ctx.out, "    compound=true;\n")
@@ -181,7 +181,7 @@ func (ctx *Dot) WriteRegular(result pkgset.Set, pkgs []*packages.Package) {
 	defer fmt.Fprintf(ctx.out, "}\n")
 
 	for _, p := range pkgs {
-		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" href=%q %v];\n", pkgID(p), ctx.Label(p), ctx.Ref(p), ctx.colorOf(p))
+		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" %v %v];\n", pkgID(p), ctx.Label(p), ctx.Ref(p), ctx.colorOf(p))
 	}
 
 	for _, src := range pkgs {
@@ -208,7 +208,7 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 		if len(tree.Children) == 0 {
 			label := ctx.TreeLabel(tree, parentPrinted)
 			href := ctx.TreeRef(tree)
-			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" tooltip=\"%v\" href=%q %v];\n", pkgID(p), label, tree.Path, href, ctx.colorOf(p))
+			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" tooltip=\"%v\" %v %v];\n", pkgID(p), label, tree.Path, href, ctx.colorOf(p))
 			return
 		}
 
@@ -239,7 +239,7 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 			}
 			fmt.Fprintf(ctx.out, "    label=\"%v\"\n", ctx.ClusterLabel(tree, parentPrinted))
 			fmt.Fprintf(ctx.out, "    tooltip=\"%v\"\n", tree.Path)
-			fmt.Fprintf(ctx.out, "    href=%q\n", ctx.TreeRef(tree))
+			fmt.Fprintf(ctx.out, "    %v\n", ctx.TreeRef(tree))
 			defer fmt.Fprintf(ctx.out, "}\n")
 		}
 
