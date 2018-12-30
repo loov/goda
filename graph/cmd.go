@@ -120,7 +120,7 @@ func (ctx *Dot) Ref(p *packages.Package) string {
 
 func (ctx *Dot) ClusterLabel(tree *pkgset.Tree, parentPrinted bool) string {
 	var suffix = ""
-	if parentPrinted && tree.Parent != nil {
+	if parentPrinted && tree.Parent != nil && tree.Parent.Path != "" {
 		suffix = "./" + strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
 	}
 
