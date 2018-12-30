@@ -163,9 +163,10 @@ func (ctx *Dot) TreeRef(tree *pkgset.Tree) string {
 func (ctx *Dot) writeGraphProperties() {
 	if ctx.nocolor {
 		fmt.Fprintf(ctx.out, "    node [fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
+		fmt.Fprintf(ctx.out, "    edge [tailport=e];\n")
 	} else {
 		fmt.Fprintf(ctx.out, "    node [penwidth=2 fontsize=10 shape=rectangle target=\"_graphviz\"];\n")
-		fmt.Fprintf(ctx.out, "    edge [penwidth=2];\n")
+		fmt.Fprintf(ctx.out, "    edge [tailport=e penwidth=2];\n")
 	}
 	fmt.Fprintf(ctx.out, "    compound=true;\n")
 
@@ -187,7 +188,7 @@ func (ctx *Dot) WriteRegular(result pkgset.Set, pkgs []*packages.Package) {
 	for _, src := range pkgs {
 		for _, dst := range src.Imports {
 			if _, ok := result[dst.ID]; ok {
-				fmt.Fprintf(ctx.out, "    %v:e -> %v:w [%v];\n", pkgID(src), pkgID(dst), ctx.colorOf(dst))
+				fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", pkgID(src), pkgID(dst), ctx.colorOf(dst))
 			}
 		}
 	}
@@ -258,9 +259,9 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 				tooltip := src.ID + " -> " + dst.ID
 
 				if isCluster[dst] && !srctree.HasParent(dsttree) {
-					fmt.Fprintf(ctx.out, "    %v:e -> %v [tooltip=\"%v\" lhead=cluster_%v %v];\n", pkgID(src), dstid, tooltip, dstid, ctx.colorOf(dst))
+					fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=cluster_%v %v];\n", pkgID(src), dstid, tooltip, dstid, ctx.colorOf(dst))
 				} else {
-					fmt.Fprintf(ctx.out, "    %v:e -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
+					fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
 				}
 			}
 		}
