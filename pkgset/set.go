@@ -36,6 +36,7 @@ func (set Set) Tree() *Tree {
 	for _, pkg := range set {
 		tree.Add(pkg)
 	}
+	tree.Sort()
 	return tree
 }
 

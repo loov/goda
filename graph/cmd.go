@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"io"
@@ -18,8 +19,11 @@ import (
 
 type Command struct {
 	printStandard bool
-	outputType    string
-	labelFormat   string
+
+	outputType  string
+	labelFormat string
+
+	nocolor bool
 
 	clusters bool
 	shortID  bool
@@ -37,6 +41,9 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
+
+	f.BoolVar(&cmd.nocolor, "nocolor", false, "disable coloring")
+
 	f.StringVar(&cmd.outputType, "type", "dot", "output type")
 	f.StringVar(&cmd.labelFormat, "f", "{{.ID}}\\l{{LineCount .}} / {{SourceSize .}}\\l", "label formatting")
 
@@ -73,6 +80,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	dot := &Dot{
 		out:     os.Stdout,
 		err:     os.Stderr,
+		nocolor: cmd.nocolor,
 		shortID: cmd.shortID,
 		label:   label,
 	}
@@ -91,6 +99,7 @@ type Dot struct {
 	out io.Writer
 	err io.Writer
 
+	nocolor bool
 	shortID bool
 
 	label *template.Template
@@ -107,6 +116,18 @@ func (ctx *Dot) Label(p *packages.Package) string {
 
 func (ctx *Dot) Ref(p *packages.Package) string {
 	return "http://godoc.org/" + p.ID
+}
+
+func (ctx *Dot) ClusterLabel(tree *pkgset.Tree, parentPrinted bool) string {
+	var suffix = ""
+	if parentPrinted && tree.Parent != nil {
+		suffix = strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
+	}
+
+	if parentPrinted && suffix != "" && ctx.shortID {
+		return suffix
+	}
+	return tree.Path
 }
 
 func (ctx *Dot) TreeLabel(tree *pkgset.Tree, parentPrinted bool) string {
@@ -139,23 +160,34 @@ func (ctx *Dot) TreeRef(tree *pkgset.Tree) string {
 	return "http://godoc.org/" + tree.Path
 }
 
-func (ctx *Dot) WriteRegular(result pkgset.Set, pkgs []*packages.Package) {
-	fmt.Fprintf(ctx.out, "digraph G {\n")
-	fmt.Fprintf(ctx.out, "    node [fontsize=10 shape=rectangle];\n")
+func (ctx *Dot) writeGraphProperties() {
+	if ctx.nocolor {
+		fmt.Fprintf(ctx.out, "    node [fontsize=10 shape=rectangle];\n")
+	} else {
+		fmt.Fprintf(ctx.out, "    node [penwidth=2 fontsize=10 shape=rectangle];\n")
+		fmt.Fprintf(ctx.out, "    edge [penwidth=2];\n")
+	}
+	fmt.Fprintf(ctx.out, "    compound=true;\n")
+
 	fmt.Fprintf(ctx.out, "    rankdir=LR;\n")
 	fmt.Fprintf(ctx.out, "    newrank=true;\n")
 	fmt.Fprintf(ctx.out, "    ranksep=\"1.5\";\n")
 	fmt.Fprintf(ctx.out, "    quantum=\"0.5\";\n")
+}
+
+func (ctx *Dot) WriteRegular(result pkgset.Set, pkgs []*packages.Package) {
+	fmt.Fprintf(ctx.out, "digraph G {\n")
+	ctx.writeGraphProperties()
 	defer fmt.Fprintf(ctx.out, "}\n")
 
 	for _, p := range pkgs {
-		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" href=%q];\n", pkgID(p), ctx.Label(p), ctx.Ref(p))
+		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" href=%q %v];\n", pkgID(p), ctx.Label(p), ctx.Ref(p), ctx.colorOf(p))
 	}
 
 	for _, src := range pkgs {
 		for _, dst := range src.Imports {
 			if _, ok := result[dst.ID]; ok {
-				fmt.Fprintf(ctx.out, "    %v:e -> %v:w;\n", pkgID(src), pkgID(dst))
+				fmt.Fprintf(ctx.out, "    %v:e -> %v:w [%v];\n", pkgID(src), pkgID(dst), ctx.colorOf(dst))
 			}
 		}
 	}
@@ -163,20 +195,20 @@ func (ctx *Dot) WriteRegular(result pkgset.Set, pkgs []*packages.Package) {
 
 func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 	fmt.Fprintf(ctx.out, "digraph G {\n")
-	fmt.Fprintf(ctx.out, "    node [fontsize=10 shape=rectangle];\n")
-	fmt.Fprintf(ctx.out, "    rankdir=LR;\n")
-	fmt.Fprintf(ctx.out, "    newrank=true;\n")
-	fmt.Fprintf(ctx.out, "    ranksep=\"1.5\";\n")
-	fmt.Fprintf(ctx.out, "    quantum=\"0.5\";\n")
+	ctx.writeGraphProperties()
 	defer fmt.Fprintf(ctx.out, "}\n")
 
 	var walk func(bool, *pkgset.Tree)
+	root := result.Tree()
+	lookup := root.LookupTable()
+	isCluster := map[*packages.Package]bool{}
+
 	walk = func(parentPrinted bool, tree *pkgset.Tree) {
 		p := tree.Package
 		if len(tree.Children) == 0 {
 			label := ctx.TreeLabel(tree, parentPrinted)
 			href := ctx.TreeRef(tree)
-			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" href=%q];\n", pkgID(p), label, href)
+			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" href=%q %v];\n", pkgID(p), label, href, ctx.colorOf(p))
 			return
 		}
 
@@ -200,9 +232,10 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 		if print {
 			fmt.Fprintf(ctx.out, "subgraph cluster_%v {\n", escapeID(tree.Path))
 			if tree.Package != nil {
-				fmt.Fprintf(ctx.out, "    %v [label=\"\" shape=circle];\n", pkgID(p))
+				isCluster[tree.Package] = true
+				fmt.Fprintf(ctx.out, "    %v [label=\"\" shape=circle %v rank=0];\n", pkgID(p), ctx.colorOf(p))
 			}
-			fmt.Fprintf(ctx.out, "    label=\"%v\"\n", tree.Path)
+			fmt.Fprintf(ctx.out, "    label=\"%v\"\n", ctx.ClusterLabel(tree, parentPrinted))
 			fmt.Fprintf(ctx.out, "    href=%q\n", ctx.TreeRef(tree))
 			defer fmt.Fprintf(ctx.out, "}\n")
 		}
@@ -211,15 +244,32 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 			walk(print, child)
 		}
 	}
-	walk(false, result.Tree())
+	walk(false, root)
 
 	for _, src := range pkgs {
+		srctree := lookup[src]
 		for _, dst := range src.Imports {
 			if _, ok := result[dst.ID]; ok {
-				fmt.Fprintf(ctx.out, "    %v:e -> %v:w;\n", pkgID(src), pkgID(dst))
+				dstid := pkgID(dst)
+				dsttree := lookup[dst]
+				if isCluster[dst] && !srctree.HasParent(dsttree) {
+					fmt.Fprintf(ctx.out, "    %v:e -> %v [lhead=cluster_%v %v];\n", pkgID(src), dstid, dstid, ctx.colorOf(dst))
+				} else {
+					fmt.Fprintf(ctx.out, "    %v:e -> %v [%v];\n", pkgID(src), dstid, ctx.colorOf(dst))
+				}
 			}
 		}
 	}
+}
+
+func (ctx *Dot) colorOf(p *packages.Package) string {
+	if ctx.nocolor {
+		return ""
+	}
+
+	hash := sha256.Sum256([]byte(p.PkgPath))
+	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+	return "color=" + hslahex(hue, 0.9, 0.3, 0.7)
 }
 
 func pkgID(p *packages.Package) string {

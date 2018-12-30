@@ -2,6 +2,7 @@ package pkgset
 
 import (
 	"path"
+	"sort"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -51,4 +52,27 @@ func (tree *Tree) Walk(fn func(tree *Tree)) {
 	for _, child := range tree.Children {
 		child.Walk(fn)
 	}
+}
+
+func (tree *Tree) HasParent(parent *Tree) bool {
+	return strings.HasPrefix(tree.Path, parent.Path+"/")
+}
+
+func (tree *Tree) LookupTable() map[*packages.Package]*Tree {
+	table := map[*packages.Package]*Tree{}
+	tree.Walk(func(x *Tree) {
+		if x.Package != nil {
+			table[x.Package] = x
+		}
+	})
+	return table
+}
+
+func (tree *Tree) Sort() {
+	tree.Walk(func(x *Tree) {
+		sort.Slice(x.Children, func(i, k int) bool {
+			left, right := x.Children[i], x.Children[k]
+			return left.Path < right.Path
+		})
+	})
 }
