@@ -30,6 +30,15 @@ func (set Set) Sorted() []*packages.Package {
 	return list
 }
 
+// Tree returns package tree
+func (set Set) Tree() *Tree {
+	tree := NewTree(nil, "")
+	for _, pkg := range set {
+		tree.Add(pkg)
+	}
+	return tree
+}
+
 // IncludeRecursive adds p recursively
 func (set Set) IncludeRecursive(p *packages.Package) {
 	if _, added := set[p.ID]; added {
