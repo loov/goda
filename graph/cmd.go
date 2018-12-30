@@ -121,7 +121,7 @@ func (ctx *Dot) Ref(p *packages.Package) string {
 func (ctx *Dot) ClusterLabel(tree *pkgset.Tree, parentPrinted bool) string {
 	var suffix = ""
 	if parentPrinted && tree.Parent != nil {
-		suffix = strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
+		suffix = "./" + strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
 	}
 
 	if parentPrinted && suffix != "" && ctx.shortID {
@@ -132,7 +132,7 @@ func (ctx *Dot) ClusterLabel(tree *pkgset.Tree, parentPrinted bool) string {
 
 func (ctx *Dot) TreeLabel(tree *pkgset.Tree, parentPrinted bool) string {
 	var suffix = ""
-	if parentPrinted && tree.Parent != nil {
+	if parentPrinted && tree.Parent != nil && tree.Parent.Path != "" {
 		suffix = strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
 	}
 
@@ -208,34 +208,37 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 		if len(tree.Children) == 0 {
 			label := ctx.TreeLabel(tree, parentPrinted)
 			href := ctx.TreeRef(tree)
-			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" href=%q %v];\n", pkgID(p), label, href, ctx.colorOf(p))
+			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" tooltip=\"%v\" href=%q %v];\n", pkgID(p), label, tree.Path, href, ctx.colorOf(p))
 			return
 		}
 
-		print := parentPrinted
+		print := p != nil
 		if p != nil {
 			print = true
 		}
 
-		if !print {
-			childCount := 0
-			for _, child := range tree.Children {
-				if child.Package != nil {
-					childCount++
-				}
+		childPackageCount := 0
+		for _, child := range tree.Children {
+			if child.Package != nil {
+				childPackageCount++
 			}
-			if childCount > 1 {
-				print = true
-			}
+		}
+		if childPackageCount > 1 {
+			print = true
+		}
+
+		if tree.Path == "" {
+			print = false
 		}
 
 		if print {
 			fmt.Fprintf(ctx.out, "subgraph cluster_%v {\n", escapeID(tree.Path))
 			if tree.Package != nil {
 				isCluster[tree.Package] = true
-				fmt.Fprintf(ctx.out, "    %v [label=\"\" shape=circle %v rank=0];\n", pkgID(p), ctx.colorOf(p))
+				fmt.Fprintf(ctx.out, "    %v [label=\"\" tooltip=\"%v\" shape=circle %v rank=0];\n", pkgID(p), tree.Path, ctx.colorOf(p))
 			}
 			fmt.Fprintf(ctx.out, "    label=\"%v\"\n", ctx.ClusterLabel(tree, parentPrinted))
+			fmt.Fprintf(ctx.out, "    tooltip=\"%v\"\n", tree.Path)
 			fmt.Fprintf(ctx.out, "    href=%q\n", ctx.TreeRef(tree))
 			defer fmt.Fprintf(ctx.out, "}\n")
 		}
@@ -252,10 +255,12 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 			if _, ok := result[dst.ID]; ok {
 				dstid := pkgID(dst)
 				dsttree := lookup[dst]
+				tooltip := src.ID + " -> " + dst.ID
+
 				if isCluster[dst] && !srctree.HasParent(dsttree) {
-					fmt.Fprintf(ctx.out, "    %v:e -> %v [lhead=cluster_%v %v];\n", pkgID(src), dstid, dstid, ctx.colorOf(dst))
+					fmt.Fprintf(ctx.out, "    %v:e -> %v [tooltip=\"%v\" lhead=cluster_%v %v];\n", pkgID(src), dstid, tooltip, dstid, ctx.colorOf(dst))
 				} else {
-					fmt.Fprintf(ctx.out, "    %v:e -> %v [%v];\n", pkgID(src), dstid, ctx.colorOf(dst))
+					fmt.Fprintf(ctx.out, "    %v:e -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
 				}
 			}
 		}
@@ -289,5 +294,5 @@ func escapeID(s string) string {
 			d = append(d, '_')
 		}
 	}
-	return string(d)
+	return "n_" + string(d)
 }
