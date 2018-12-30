@@ -2,78 +2,184 @@ package pkgset
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"golang.org/x/tools/go/packages"
+
+	"github.com/loov/goda/pkgset/ast"
 )
 
 func Calc(ctx context.Context, expr []string) (Set, error) {
-	config := &packages.Config{
+	tokens, err := ast.Tokenize(strings.Join(expr, " "))
+	if err != nil {
+		return New(), fmt.Errorf("failed to tokenize: %v", err)
+	}
+
+	rootExpr, err := ast.Parse(tokens)
+	if err != nil {
+		return New(), fmt.Errorf("failed to parse: %v", err)
+	}
+
+	var eval func(*packages.Config, ast.Expr) (Set, error)
+
+	evalArgs := func(cfg *packages.Config, exprs []ast.Expr) ([]Set, error) {
+		args := make([]Set, len(exprs))
+		var errs []error
+		for i, expr := range exprs {
+			var err error
+			args[i], err = eval(cfg, expr)
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
+
+		if len(errs) == 1 {
+			return args, errs[0]
+		}
+		if len(errs) > 1 {
+			return args, fmt.Errorf("%v", errs)
+		}
+
+		return args, nil
+	}
+
+	eval = func(cfg *packages.Config, e ast.Expr) (Set, error) {
+		if e == nil {
+			return nil, errors.New("empty expression")
+		}
+		switch e := e.(type) {
+		case ast.Package:
+			roots, err := packages.Load(cfg, string(e))
+			return New(roots...), err
+
+		case ast.Func:
+			switch strings.ToLower(e.Name) {
+			case "":
+				args := extractLoadGroup(e)
+				if len(args) > 0 {
+					roots, err := packages.Load(cfg, args...)
+					return New(roots...), err
+				}
+				// fallback to union implementation
+				fallthrough
+
+			// binary operators
+			case
+				"+", "add", "or",
+				"-", "subtract", "exclude",
+				"shared", "intersect",
+				"xor":
+				args, err := evalArgs(cfg, e.Args)
+				if len(args) == 0 {
+					return New(), err
+				}
+
+				var op func(a, b Set) Set
+				switch strings.ToLower(e.Name) {
+				case " ", "+", "add", "or":
+					op = Union
+				case "-", "subtract", "exclude":
+					op = Subtract
+				case "shared", "intersect":
+					op = Intersect
+				case "xor":
+					op = SymmetricDifference
+				}
+
+				base := args[0]
+				for _, arg := range args[1:] {
+					base = op(base, arg)
+				}
+				return base, nil
+
+			case "reach":
+				if len(e.Args) != 2 {
+					return nil, fmt.Errorf("reach requires two arguments: %v", e)
+				}
+				args, err := evalArgs(cfg, e.Args)
+				return Reach(args[0], args[1]), err
+
+			default:
+				return nil, fmt.Errorf("unknown func %v: %v", e.Name, e)
+			}
+
+		case ast.Select:
+			switch strings.ToLower(e.Selector) {
+			case "root":
+				p, ok := e.Expr.(ast.Package)
+				if !ok {
+					return nil, fmt.Errorf(":root cannot be used with composite expressions: %v", e)
+				}
+
+				roots, err := packages.Load(cfg, string(p))
+				if err != nil {
+					return nil, err
+				}
+
+				return NewRoot(roots...), nil
+
+			case "!root":
+				p, ok := e.Expr.(ast.Package)
+				if !ok {
+					return nil, fmt.Errorf(":!root cannot be used with composite expressions: %v", e)
+				}
+
+				roots, err := packages.Load(cfg, string(p))
+				if err != nil {
+					return nil, err
+				}
+
+				return Subtract(New(roots...), NewRoot(roots...)), nil
+
+			case "source":
+				set, err := eval(cfg, e.Expr)
+				if err != nil {
+					return nil, err
+				}
+
+				return Sources(set), nil
+
+			case "!source":
+				set, err := eval(cfg, e.Expr)
+				if err != nil {
+					return nil, err
+				}
+
+				return Subtract(set, Sources(set)), nil
+
+			case "deps":
+				set, err := eval(cfg, e.Expr)
+				if err != nil {
+					return nil, err
+				}
+				return Dependencies(set), nil
+
+			default:
+				return nil, fmt.Errorf("unknown selector %v: %v", e.Selector, e)
+			}
+		}
+
+		return nil, nil
+	}
+
+	return eval(&packages.Config{
 		Context: ctx,
 		Mode:    packages.LoadImports,
 		Env:     os.Environ(),
-	}
-
-	left := New()
-	operation := ""
-
-	for len(expr) > 0 {
-		nextOperation := findOp(expr)
-		load := expr[:nextOperation]
-
-		roots, err := packages.Load(config, load...)
-
-		if err != nil {
-			return left, fmt.Errorf("failed to load %v: %v", load, err)
-		}
-
-		right := New(roots...)
-		if nextOperation < len(expr) && expr[nextOperation] == "@" {
-			for _, root := range roots {
-				delete(right, root.ID)
-			}
-			nextOperation++
-		} else if nextOperation < len(expr) && expr[nextOperation] == "$" {
-			newRight := New()
-			for _, root := range roots {
-				newRight[root.ID] = right[root.ID]
-			}
-			right = newRight
-			nextOperation++
-		}
-
-		switch operation {
-		case "":
-			left = Union(left, right)
-		case "-":
-			left = Subtract(left, right)
-		case "+":
-			left = Intersect(left, right)
-		case "/":
-			left = SymmetricDifference(left, right)
-		}
-
-		if nextOperation >= len(expr) {
-			break
-		}
-
-		operation, expr = expr[nextOperation], expr[nextOperation+1:]
-	}
-
-	return left, nil
+	}, rootExpr)
 }
 
-func isOp(arg string) bool {
-	return arg == "+" || arg == "-" || arg == "/" || arg == "@" || arg == "$"
-}
-
-func findOp(stack []string) int {
-	for i := 0; i < len(stack); i++ {
-		if isOp(stack[i]) {
-			return i
+func extractLoadGroup(fn ast.Func) []string {
+	var pkgs []string
+	for _, arg := range fn.Args {
+		pkg, ok := arg.(ast.Package)
+		if !ok {
+			return nil
 		}
+		pkgs = append(pkgs, string(pkg))
 	}
-
-	return len(stack)
+	return pkgs
 }

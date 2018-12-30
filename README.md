@@ -8,14 +8,16 @@ Cool things it can do:
 
 ```
 # draw graph of packages in github.com/loov/goda
-goda graph github.com/loov/goda/... $ | dot -Tsvg -o graph.svg
-goda graph -cluster -short github.com/loov/goda/... $ | dot -Tsvg -o graph.svg
+goda graph github.com/loov/goda/...:root | dot -Tsvg -o graph.svg
+
+# draw dependcy graph of github.com/loov/goda
+goda graph -cluster -short github.com/loov/goda | dot -Tsvg -o graph.svg
 
 # list dependencies of github.com/loov/goda
-goda list github.com/loov/goda/... @
+goda list github.com/loov/goda/...:!root
 
-# list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/calc
-goda list github.com/loov/goda/pkgset + github.com/loov/goda/calc
+# list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
+goda list shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)
 
 # list how much memory each symbol in the final binary is taking
 goda nm -h $GOPATH/bin/goda
@@ -38,23 +40,23 @@ The basic syntax is that you can specify multiple packages:
 goda list github.com/loov/goda/... github.com/loov/qloc
 ```
 
-By default it will select all the packages and dependencies of those packages. You can select only the packages with `$` and only the dependencies with `@`. For example:
+By default it will select all the packages and dependencies of those packages. You can select only the packages with `:root` and without the roots `:!root`. For example:
 
 ```
-goda list github.com/loov/goda/... @
-goda list github.com/loov/goda/... $
+goda list github.com/loov/goda/...:root
+goda list github.com/loov/goda/...:!root
 ```
 
-You can also do basic arithmetic with these sets. For example, if you wish to ignore all `golang.org/x/tools` things in your output you can write:
+You can also do basic arithmetic with these sets. For example, if you wish to ignore all `golang.org/x/tools` and dependencies:
 
 ```
 goda list github.com/loov/goda/... - golang.org/x/tools/...
 ```
 
-There's also `+` which allows to list the shared dependencies:
+There's also `shared` which allows to list the shared dependencies:
 
 ```
-goda list github.com/loov/goda/exec + github.com/loov/goda/graph
+goda list shared(github.com/loov/goda/exec, github.com/loov/goda/graph)
 ```
 
 All of these can of course be combined:
@@ -62,7 +64,7 @@ All of these can of course be combined:
 ```
 # list packages used by github.com/loov/goda
 # excluding golang.org/x/tools/..., but not their dependencies
-goda list github.com/loov/goda/... @ - golang.org/x/tools/... $
+goda list github.com/loov/goda/...:!root - golang.org/x/tools/...:root
 ```
 
 ## How it differs from `go list` or `go mod`
