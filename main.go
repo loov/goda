@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"path"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/loov/goda/graph"
 	"github.com/loov/goda/list"
 	"github.com/loov/goda/nm"
+	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/tree"
 )
 
@@ -98,5 +100,16 @@ func (*ExprHelp) Usage() string {
 func (*ExprHelp) SetFlags(f *flag.FlagSet) {}
 
 func (cmd *ExprHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	return subcommands.ExitUsageError
+	if f.NArg() == 0 {
+		return subcommands.ExitUsageError
+	}
+
+	result, err := pkgset.Parse(ctx, f.Args())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return subcommands.ExitFailure
+	}
+	fmt.Fprintln(os.Stdout, result.Tree(0))
+
+	return subcommands.ExitSuccess
 }

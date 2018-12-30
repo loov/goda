@@ -253,16 +253,18 @@ func (ctx *Dot) WriteClusters(result pkgset.Set, pkgs []*packages.Package) {
 	for _, src := range pkgs {
 		srctree := lookup[src]
 		for _, dst := range src.Imports {
-			if _, ok := result[dst.ID]; ok {
-				dstid := pkgID(dst)
-				dsttree := lookup[dst]
-				tooltip := src.ID + " -> " + dst.ID
+			if _, ok := result[dst.ID]; !ok {
+				continue
+			}
 
-				if isCluster[dst] && !srctree.HasParent(dsttree) {
-					fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=cluster_%v %v];\n", pkgID(src), dstid, tooltip, dstid, ctx.colorOf(dst))
-				} else {
-					fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
-				}
+			dstid := pkgID(dst)
+			dsttree := lookup[dst]
+			tooltip := src.ID + " -> " + dst.ID
+
+			if isCluster[dst] && !srctree.HasParent(dsttree) {
+				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=cluster_%v %v];\n", pkgID(src), dstid, tooltip, dstid, ctx.colorOf(dst))
+			} else {
+				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
 			}
 		}
 	}

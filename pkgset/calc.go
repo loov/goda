@@ -12,15 +12,24 @@ import (
 	"github.com/loov/goda/pkgset/ast"
 )
 
-func Calc(ctx context.Context, expr []string) (Set, error) {
+func Parse(ctx context.Context, expr []string) (ast.Expr, error) {
 	tokens, err := ast.Tokenize(strings.Join(expr, " "))
 	if err != nil {
-		return New(), fmt.Errorf("failed to tokenize: %v", err)
+		return nil, fmt.Errorf("failed to tokenize: %v", err)
 	}
 
-	rootExpr, err := ast.Parse(tokens)
+	root, err := ast.Parse(tokens)
 	if err != nil {
-		return New(), fmt.Errorf("failed to parse: %v", err)
+		return nil, fmt.Errorf("failed to parse: %v", err)
+	}
+
+	return root, nil
+}
+
+func Calc(ctx context.Context, expr []string) (Set, error) {
+	rootExpr, err := Parse(ctx, expr)
+	if err != nil {
+		return New(), err
 	}
 
 	var eval func(*packages.Config, ast.Expr) (Set, error)

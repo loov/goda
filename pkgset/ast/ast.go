@@ -7,6 +7,7 @@ import (
 
 type Expr interface {
 	String() string
+	Tree(ident int) string
 }
 
 type Package string
@@ -33,12 +34,26 @@ func (f Func) String() string {
 	return f.Name + "(" + strings.Join(args, ", ") + ")"
 }
 
+func (p Package) Tree(ident int) string { return strings.Repeat("  ", ident) + string(p) + "\n" }
+
+func (s Select) Tree(ident int) string {
+	return strings.Repeat("  ", ident) + "select " + s.Selector + "\n" + s.Expr.Tree(ident+1)
+}
+
+func (f Func) Tree(ident int) string {
+	result := strings.Repeat("  ", ident) + f.Name + "{\n"
+	for _, arg := range f.Args {
+		result += arg.Tree(ident + 1)
+	}
+	return result
+}
+
 func Parse(tokens []Token) (Expr, error) {
 	if len(tokens) == 0 {
 		return nil, nil
 	}
 
-	p, expr, err := parseCombine(0, tokens)
+	p, expr, err := parseCombine(0, tokens, false)
 	if err != nil {
 		return expr, err
 	}
@@ -48,7 +63,7 @@ func Parse(tokens []Token) (Expr, error) {
 	return expr, nil
 }
 
-func parseCombine(p int, tokens []Token) (int, Expr, error) {
+func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, error) {
 	var err error
 	if len(tokens) == 0 {
 		return p, nil, nil
@@ -82,9 +97,12 @@ func parseCombine(p int, tokens []Token) (int, Expr, error) {
 
 			for {
 				var arg Expr
-				p, arg, err = parseCombine(p, tokens)
+				p, arg, err = parseCombine(p, tokens, false)
 				if err != nil {
 					return p, combine(exprs), err
+				}
+				if arg == nil {
+					return p, combine(exprs), errors.New("empty expression")
 				}
 				funcexpr.Args = append(funcexpr.Args, arg)
 				if tokens[p-1].Kind != TComma {
@@ -94,18 +112,33 @@ func parseCombine(p int, tokens []Token) (int, Expr, error) {
 			expr = funcexpr
 
 		case TOp:
-			var right Expr
-			p, right, err = parseCombine(p+1, tokens)
-			if err != nil {
+			p++
+			if lookingForOperator {
 				return p, combine(exprs), err
 			}
-			if right == nil {
-				return p, combine(exprs), errors.New("expected expression for operator")
+
+			op := tok.Text
+			left := combine(exprs)
+			for {
+				var right Expr
+				p, right, err = parseCombine(p, tokens, true)
+				if err != nil {
+					return p, combine(exprs), err
+				}
+				if right == nil {
+					return p, combine(exprs), errors.New("empty expression")
+				}
+				left = Func{op, []Expr{left, right}}
+				if p == len(tokens) && tokens[p-1].Kind != TOp {
+					break
+				}
+				if tokens[p-1].Kind != TOp {
+					return p, left, errors.New("unexpected token")
+				}
+				op = tokens[p-1].Text
 			}
-			return p, Func{tok.Text, []Expr{
-				combine(exprs),
-				right,
-			}}, err
+
+			return p, left, err
 
 		case TSelector:
 			p++
