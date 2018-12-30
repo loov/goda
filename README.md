@@ -9,6 +9,7 @@ Cool things it can do:
 ```
 # draw graph of packages in github.com/loov/goda
 goda graph github.com/loov/goda/... $ | dot -Tsvg -o graph.svg
+goda graph -cluster -short github.com/loov/goda/... $ | dot -Tsvg -o graph.svg
 
 # list dependencies of github.com/loov/goda
 goda list github.com/loov/goda/... @
