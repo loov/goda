@@ -73,4 +73,4 @@ goda list github.com/loov/goda/...:!root - golang.org/x/tools/...:root
 
 `goda` is intended for more complicated queries and analysis. Some of the features can be reproduced by format flags and scripts, however this is an extra step when you want to quickly figure out different parts.
 
-Of course, it should go without saying, they can be used together.
+Of course, it should go without saying that they can be used together.
