@@ -11,13 +11,13 @@ type Kind byte
 
 const (
 	TUnknown    Kind = '?'
-	TOp              = 'o'
-	TComma           = ','
-	TSelector        = 's'
-	TFunc            = 'f'
-	TLeftParen       = '('
-	TRightParen      = ')'
-	TPackage         = 'p'
+	TOp         Kind = 'o'
+	TComma      Kind = ','
+	TSelector   Kind = 's'
+	TFunc       Kind = 'f'
+	TLeftParen  Kind = '('
+	TRightParen Kind = ')'
+	TPackage    Kind = 'p'
 )
 
 func Tokenize(s string) ([]Token, error) {

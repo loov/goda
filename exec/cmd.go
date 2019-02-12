@@ -151,6 +151,4 @@ func ParseArgs(info *Info, args []string) {
 			info.InputsSize += memory.Bytes(stat.Size())
 		}
 	}
-
-	return
 }
