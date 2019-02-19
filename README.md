@@ -14,7 +14,7 @@ goda graph github.com/loov/goda/...:root | dot -Tsvg -o graph.svg
 goda graph -cluster -short github.com/loov/goda | dot -Tsvg -o graph.svg
 
 # list dependencies of github.com/loov/goda
-goda list github.com/loov/goda/...:!root
+goda list github.com/loov/goda/...:noroot
 
 # list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
 goda list shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)
@@ -40,11 +40,11 @@ The basic syntax is that you can specify multiple packages:
 goda list github.com/loov/goda/... github.com/loov/qloc
 ```
 
-By default it will select all the packages and dependencies of those packages. You can select only the packages with `:root` and without the roots `:!root`. For example:
+By default it will select all the packages and dependencies of those packages. You can select only the packages with `:root` and without the roots `:noroot`. For example:
 
 ```
 goda list github.com/loov/goda/...:root
-goda list github.com/loov/goda/...:!root
+goda list github.com/loov/goda/...:noroot
 ```
 
 You can also do basic arithmetic with these sets. For example, if you wish to ignore all `golang.org/x/tools` and dependencies:
@@ -64,7 +64,7 @@ All of these can of course be combined:
 ```
 # list packages used by github.com/loov/goda
 # excluding golang.org/x/tools/..., but not their dependencies
-goda list github.com/loov/goda/...:!root - golang.org/x/tools/...:root
+goda list github.com/loov/goda/...:noroot - golang.org/x/tools/...:root
 ```
 
 ## How it differs from `go list` or `go mod`

@@ -81,12 +81,12 @@ func Tokenize(s string) ([]Token, error) {
 }
 
 func isIdentFirst(p byte) bool {
-	return (p == '.') || (p == '!') ||
+	return (p == '.') ||
 		('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || ('0' <= p && p <= '9')
 }
 
 func isIdent(p byte) bool {
-	return (p == '.') || (p == '!') || (p == '@') || (p == '_') || (p == '-') || (p == '/') ||
+	return (p == '.') || (p == '@') || (p == '_') || (p == '-') || (p == '/') ||
 		('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || ('0' <= p && p <= '9')
 }
 

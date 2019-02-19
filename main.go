@@ -63,12 +63,12 @@ func (*ExprHelp) Usage() string {
 
 	a:root
 		keeps packages that are explictly included by a (excluding dependencies)
-	a:!root
+	a:noroot
 		selects excluding roots, shorthand for (a - a:root)
 
 	a:source
 		keeps packages that have no dependents
-	a:!source
+	a:nosource
 		selects excluding sources, shorthand for (a - a:source)
 
 	a:deps
@@ -84,13 +84,13 @@ func (*ExprHelp) Usage() string {
 	github.com/loov/goda:deps
 		all dependencies for "github.com/loov/goda" package 
 
-	github.com/loov/goda/...:!root
+	github.com/loov/goda/...:noroot
 		all dependencies for "github.com/loov/goda" sub-package 
 
 	shared(github.com/loov/goda/pkgset, github.com/loov/goda/templates)
 		packages shared by "github.com/loov/goda/pkgset" and "github.com/loov/goda/templates"
 
-	github.com/loov/goda/...:!root - golang.org/x/tools/...
+	github.com/loov/goda/...:noroot - golang.org/x/tools/...
 		all dependencies excluding golang.org/x/tools
 	
 	reach(github.com/loov/goda/...:root, golang.org/x/tools/go/packages:root)

@@ -130,10 +130,10 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 
 				return NewRoot(roots...), nil
 
-			case "!root":
+			case "noroot":
 				p, ok := e.Expr.(ast.Package)
 				if !ok {
-					return nil, fmt.Errorf(":!root cannot be used with composite expressions: %v", e)
+					return nil, fmt.Errorf(":noroot cannot be used with composite expressions: %v", e)
 				}
 
 				roots, err := packages.Load(cfg, string(p))
@@ -151,7 +151,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 
 				return Sources(set), nil
 
-			case "!source":
+			case "nosource":
 				set, err := eval(cfg, e.Expr)
 				if err != nil {
 					return nil, err
