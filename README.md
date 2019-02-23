@@ -1,16 +1,16 @@
 # Goda
 
-Goda is a Go dependency analysis toolkit. It contains a bunch of different things to figure out what your program is using.
+Goda is a Go dependency analysis toolkit. It contains tools to figure out what your program is using.
 
 _Note: the exact syntax of the command line arguments has not yet been finalized. So expect some changes to it._
 
 Cool things it can do:
 
 ```
-# draw graph of packages in github.com/loov/goda
+# draw a graph of packages in github.com/loov/goda
 goda graph github.com/loov/goda/...:root | dot -Tsvg -o graph.svg
 
-# draw dependcy graph of github.com/loov/goda
+# draw a dependcy graph of github.com/loov/goda
 goda graph -cluster -short github.com/loov/goda | dot -Tsvg -o graph.svg
 
 # list dependencies of github.com/loov/goda
@@ -22,7 +22,7 @@ goda list shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)
 # list how much memory each symbol in the final binary is taking
 goda nm -h $GOPATH/bin/goda
 
-# list how much dependencies would be removed by cutting a package
+# show the impact of cutting a package
 goda cut ./...
 
 # print dependency tree of all sub-packages
@@ -32,7 +32,7 @@ goda tree ./...
 go build -a --toolexec "goda exec" .
 ```
 
-Maybe you noticed that it's using some weird symbols on the command-line while specifying packages. They allow to specify more complex scenarios.
+Maybe you noticed that it's using some weird symbols on the command-line while specifying packages. They allow for more complex scenarios.
 
 The basic syntax is that you can specify multiple packages:
 
@@ -47,19 +47,19 @@ goda list github.com/loov/goda/...:root
 goda list github.com/loov/goda/...:noroot
 ```
 
-You can also do basic arithmetic with these sets. For example, if you wish to ignore all `golang.org/x/tools` and dependencies:
+You can also do basic arithmetic with these sets. For example, if you wish to ignore all `golang.org/x/tools` dependencies:
 
 ```
 goda list github.com/loov/goda/... - golang.org/x/tools/...
 ```
 
-There's also `shared` which allows to list the shared dependencies:
+`shared` subcommand lists shared dependencies:
 
 ```
 goda list shared(github.com/loov/goda/exec, github.com/loov/goda/graph)
 ```
 
-All of these can of course be combined:
+The functionality can also be combined:
 
 ```
 # list packages used by github.com/loov/goda
@@ -69,8 +69,8 @@ goda list github.com/loov/goda/...:noroot - golang.org/x/tools/...:root
 
 ## How it differs from `go list` or `go mod`
 
-`go list` and `go mod` are tightly integrated with Go and can answer simple queries with compatibility. It also serves as good building blocks for other tools.
+`go list` and `go mod` are tightly integrated with Go and can answer simple queries with compatibility. They also serves as good building blocks for other tools.
 
-`goda` is intended for more complicated queries and analysis. Some of the features can be reproduced by format flags and scripts, however this is an extra step when you want to quickly figure out different parts.
+`goda` is intended for more complicated queries and analysis. Some of the features can be reproduced by format flags and scripts. However, this library aims to make even complicated analysis fast.
 
-Of course, it should go without saying that they can be used together.
+Also, `goda` can be used together with `go list` and `go mod`.
