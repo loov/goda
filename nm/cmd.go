@@ -137,7 +137,12 @@ func sortByTotalSize(trees []*Tree) {
 }
 
 func sortBySize(trees []*Tree) {
-	sort.Slice(trees, func(i, k int) bool { return trees[i].Size > trees[k].Size })
+	sort.Slice(trees, func(i, k int) bool {
+		if trees[i].Size == trees[k].Size {
+			return trees[i].TotalSize > trees[k].TotalSize
+		}
+		return trees[i].Size > trees[k].Size
+	})
 }
 
 type Tree struct {
@@ -187,7 +192,9 @@ func (tree *Tree) Sort(sortfn func([]*Tree)) {
 		child.Sort(sortfn)
 	}
 
-	sort.Slice(tree.Syms, func(i, k int) bool { return tree.Syms[i].Size > tree.Syms[k].Size })
+	sort.Slice(tree.Syms, func(i, k int) bool {
+		return tree.Syms[i].Size > tree.Syms[k].Size
+	})
 }
 
 type Sym struct {
