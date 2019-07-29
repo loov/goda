@@ -2,7 +2,11 @@ package templates
 
 import (
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io"
+	"io/ioutil"
 	"os"
 	"sort"
 	"text/template"
@@ -16,6 +20,7 @@ func Parse(t string) (*template.Template, error) {
 		"LineCount":  LineCount,
 		"SourceSize": SourceSize,
 		"AllFiles":   AllFiles,
+		"DeclCount":  CountDecls,
 	}).Parse(t)
 }
 
@@ -34,13 +39,13 @@ func LineCount(vs ...interface{}) int64 {
 		for _, filename := range files {
 			r, err := os.Open(filename)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v open failed: %v", filename, err)
+				fmt.Fprintf(os.Stderr, "%v open failed: %v\n", filename, err)
 				continue
 			}
 			count += countLines(r)
 
 			if err := r.Close(); err != nil {
-				fmt.Fprintf(os.Stderr, "%v close failed: %v", filename, err)
+				fmt.Fprintf(os.Stderr, "%v close failed: %v\n", filename, err)
 				continue
 			}
 		}
@@ -85,6 +90,71 @@ func AllFiles(vs ...interface{}) []string {
 		}
 	}
 	return files
+}
+
+type DeclCount struct {
+	Func  int64
+	Type  int64
+	Const int64
+	Var   int64
+	Other int64
+}
+
+func (decl DeclCount) Total() int64 {
+	return decl.Func + decl.Type + decl.Const + decl.Var + decl.Other
+}
+
+func CountDecls(vs ...interface{}) DeclCount {
+	var count DeclCount
+
+	for _, v := range vs {
+		var files []string
+		switch v := v.(type) {
+		case []string: // assume we want the size of a list of files
+			files = v
+		case *packages.Package: // assume we want the size of all files in package directories
+			files = v.GoFiles
+		}
+
+		fset := token.NewFileSet() // positions are relative to fset
+
+		for _, filename := range files {
+			src, err := ioutil.ReadFile(filename)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%q reading failed: %v\n", filename, err)
+				continue
+			}
+
+			// Parse src but stop after processing the imports.
+			f, err := parser.ParseFile(fset, filename, src, 0)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%q parsing failed: %v\n", filename, err)
+				continue
+			}
+
+			for _, decl := range f.Decls {
+				switch decl := decl.(type) {
+				case *ast.GenDecl:
+					switch decl.Tok {
+					case token.TYPE:
+						count.Type++
+					case token.VAR:
+						count.Var++
+					case token.CONST:
+						count.Const++
+					default:
+						count.Other++
+					}
+				case *ast.FuncDecl:
+					count.Func++
+				default:
+					count.Other++
+				}
+			}
+		}
+	}
+
+	return count
 }
 
 func allFiles(p *packages.Package) []string {
