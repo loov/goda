@@ -79,8 +79,7 @@ func SourceSize(vs ...interface{}) memory.Bytes {
 	return memory.Bytes(size)
 }
 
-func AllFiles(vs ...interface{}) []string {
-	var files []string
+func AllFiles(vs ...interface{}) (files []string) {
 	for _, v := range vs {
 		switch v := v.(type) {
 		case []string: // assume we want the size of a list of files
