@@ -51,7 +51,8 @@ func hsla(h, s, l, a float64) (r, g, b, ra float64) {
 	return
 }
 
-// sat8 converts 0..1 float to 0..255 uint8
+// sat8 converts 0..1 float to 0..255 uint8.
+// sat8 is short for saturate 8, referring to 8 byte saturation arithmetic
 func sat8(v float64) uint8 {
 	v *= 255.0
 	if v >= 255 {
