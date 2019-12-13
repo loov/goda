@@ -13,9 +13,9 @@ import (
 	"github.com/loov/goda/exec"
 	"github.com/loov/goda/graph"
 	"github.com/loov/goda/list"
-	"github.com/loov/goda/nm"
 	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/tree"
+	"github.com/loov/goda/weight"
 )
 
 func main() {
@@ -25,7 +25,8 @@ func main() {
 	cmds.Register(&list.Command{}, "")
 	cmds.Register(&tree.Command{}, "")
 	cmds.Register(&exec.Command{}, "")
-	cmds.Register(&nm.Command{}, "")
+	cmds.Register(&weight.Command{}, "")
+	cmds.Register(subcommands.Alias("nm", &weight.Command{}), "")
 	cmds.Register(&graph.Command{}, "")
 	cmds.Register(&cut.Command{}, "")
 	cmds.Register(&ExprHelp{}, "")

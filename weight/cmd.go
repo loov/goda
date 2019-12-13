@@ -1,4 +1,4 @@
-package nm
+package weight
 
 import (
 	"bufio"
@@ -23,10 +23,10 @@ type Command struct {
 	minimum    int
 }
 
-func (*Command) Name() string     { return "nm" }
+func (*Command) Name() string     { return "weight" }
 func (*Command) Synopsis() string { return "Analyse binary symbols." }
 func (*Command) Usage() string {
-	return `nm <binary>:
+	return `weight <binary>:
 	Analyse binary symbols.
 `
 }

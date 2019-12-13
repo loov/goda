@@ -20,7 +20,7 @@ goda list github.com/loov/goda/...:noroot
 goda list shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)
 
 # list how much memory each symbol in the final binary is taking
-goda nm -h $GOPATH/bin/goda
+goda weight -h $GOPATH/bin/goda
 
 # show the impact of cutting a package
 goda cut ./...
