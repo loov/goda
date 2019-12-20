@@ -96,6 +96,8 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 					op = Intersect
 				case "xor":
 					op = SymmetricDifference
+				default:
+					return nil, fmt.Errorf("unknown op %q", e.Name)
 				}
 
 				base := args[0]
@@ -169,9 +171,9 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 			default:
 				return nil, fmt.Errorf("unknown selector %v: %v", e.Selector, e)
 			}
+		default:
+			return nil, fmt.Errorf("unknown token %T", e)
 		}
-
-		return nil, nil
 	}
 
 	return eval(&packages.Config{
