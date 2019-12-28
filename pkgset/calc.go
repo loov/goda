@@ -26,20 +26,20 @@ func Parse(ctx context.Context, expr []string) (ast.Expr, error) {
 	return root, nil
 }
 
-func Calc(ctx context.Context, expr []string) (Set, error) {
-	rootExpr, err := Parse(ctx, expr)
+func Calc(parentContext context.Context, expr []string) (Set, error) {
+	rootExpr, err := Parse(parentContext, expr)
 	if err != nil {
 		return New(), err
 	}
 
-	var eval func(*packages.Config, ast.Expr) (Set, error)
+	var eval func(*Context, ast.Expr) (Set, error)
 
-	evalArgs := func(cfg *packages.Config, exprs []ast.Expr) ([]Set, error) {
+	evalArgs := func(ctx *Context, exprs []ast.Expr) ([]Set, error) {
 		args := make([]Set, len(exprs))
 		var errs []error
 		for i, expr := range exprs {
 			var err error
-			args[i], err = eval(cfg, expr)
+			args[i], err = eval(ctx, expr)
 			if err != nil {
 				errs = append(errs, err)
 			}
@@ -55,13 +55,13 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 		return args, nil
 	}
 
-	eval = func(cfg *packages.Config, e ast.Expr) (Set, error) {
+	eval = func(ctx *Context, e ast.Expr) (Set, error) {
 		if e == nil {
 			return nil, errors.New("empty expression")
 		}
 		switch e := e.(type) {
 		case ast.Package:
-			roots, err := packages.Load(cfg, string(e))
+			roots, err := ctx.Load(string(e))
 			return New(roots...), err
 
 		case ast.Func:
@@ -69,7 +69,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 			case "":
 				args := extractLoadGroup(e)
 				if len(args) > 0 {
-					roots, err := packages.Load(cfg, args...)
+					roots, err := ctx.Load(args...)
 					return New(roots...), err
 				}
 				// fallback to union implementation
@@ -81,7 +81,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 				"-", "subtract", "exclude",
 				"shared", "intersect",
 				"xor":
-				args, err := evalArgs(cfg, e.Args)
+				args, err := evalArgs(ctx, e.Args)
 				if len(args) == 0 {
 					return New(), err
 				}
@@ -110,7 +110,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 				if len(e.Args) != 2 {
 					return nil, fmt.Errorf("reach requires two arguments: %v", e)
 				}
-				args, err := evalArgs(cfg, e.Args)
+				args, err := evalArgs(ctx, e.Args)
 				return Reach(args[0], args[1]), err
 
 			default:
@@ -125,7 +125,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 					return nil, fmt.Errorf(":root cannot be used with composite expressions: %v", e)
 				}
 
-				roots, err := packages.Load(cfg, string(p))
+				roots, err := ctx.Load(string(p))
 				if err != nil {
 					return nil, err
 				}
@@ -138,7 +138,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 					return nil, fmt.Errorf(":noroot cannot be used with composite expressions: %v", e)
 				}
 
-				roots, err := packages.Load(cfg, string(p))
+				roots, err := ctx.Load(string(p))
 				if err != nil {
 					return nil, err
 				}
@@ -146,7 +146,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 				return Subtract(New(roots...), NewRoot(roots...)), nil
 
 			case "source":
-				set, err := eval(cfg, e.Expr)
+				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
@@ -154,7 +154,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 				return Sources(set), nil
 
 			case "nosource":
-				set, err := eval(cfg, e.Expr)
+				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
@@ -162,7 +162,7 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 				return Subtract(set, Sources(set)), nil
 
 			case "deps":
-				set, err := eval(cfg, e.Expr)
+				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
@@ -176,11 +176,22 @@ func Calc(ctx context.Context, expr []string) (Set, error) {
 		}
 	}
 
-	return eval(&packages.Config{
-		Context: ctx,
-		Mode:    packages.LoadImports,
+	return eval(&Context{
+		Context: parentContext,
 		Env:     Strings(os.Environ()),
 	}, rootExpr)
+}
+
+func extractLoadGroup(fn ast.Func) []string {
+	var pkgs []string
+	for _, arg := range fn.Args {
+		pkg, ok := arg.(ast.Package)
+		if !ok {
+			return nil
+		}
+		pkgs = append(pkgs, string(pkg))
+	}
+	return pkgs
 }
 
 type Context struct {
@@ -197,7 +208,7 @@ func (ctx Context) Clone() Context {
 	}
 }
 
-func (ctx Context) LoadPackage(patterns ...string) ([]*packages.Package, error) {
+func (ctx Context) Load(patterns ...string) ([]*packages.Package, error) {
 	return packages.Load(ctx.Config(), patterns...)
 }
 
@@ -241,18 +252,6 @@ func (ctx Context) Config() *packages.Config {
 	}
 
 	return config
-}
-
-func extractLoadGroup(fn ast.Func) []string {
-	var pkgs []string
-	for _, arg := range fn.Args {
-		pkg, ok := arg.(ast.Package)
-		if !ok {
-			return nil
-		}
-		pkgs = append(pkgs, string(pkg))
-	}
-	return pkgs
 }
 
 type Strings []string
