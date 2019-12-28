@@ -19,6 +19,12 @@ goda list github.com/loov/goda/...:noroot
 # list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
 goda list shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)
 
+# list packages that are only imported for tests
+goda list test=1(github.com/loov/goda/...) - test=0(github.com/loov/goda/...)
+
+# list packages that are imported for windows and not linux
+goda list goos=windows(github.com/loov/goda/...) - goos=linux(github.com/loov/goda/...)
+
 # list how much memory each symbol in the final binary is taking
 goda weight -h $GOPATH/bin/goda
 
