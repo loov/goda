@@ -233,7 +233,7 @@ var envvars = map[string]struct{}{
 
 func (ctx *Context) Set(key, value string) {
 	if _, ok := envvars[strings.ToUpper(key)]; ok {
-		ctx.Env.Set(key, value)
+		ctx.Env.Set(strings.ToUpper(key), value)
 		return
 	}
 	ctx.Tags.Set(key, value)
