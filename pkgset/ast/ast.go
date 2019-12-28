@@ -2,6 +2,7 @@ package ast
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -46,6 +47,18 @@ func (f Func) Tree(ident int) string {
 		result += arg.Tree(ident + 1)
 	}
 	return result
+}
+
+func (f Func) IsTag() bool {
+	return strings.IndexByte(f.Name, '=') >= 0
+}
+
+func (f Func) ParseAsTag() (tag string, state bool, ok bool) {
+	p := strings.LastIndexByte(f.Name, '=')
+	if p < 0 || p == len(f.Name)-1 {
+		return "", false, false
+	}
+	return f.Name[:p], f.Name[p+1:] == "1", true
 }
 
 func Parse(tokens []Token) (Expr, error) {
@@ -114,7 +127,7 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 		case TOp:
 			p++
 			if lookingForOperator {
-				return p, combine(exprs), err
+				return p, combine(exprs), nil
 			}
 
 			op := tok.Text
@@ -133,20 +146,22 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 					break
 				}
 				if tokens[p-1].Kind != TOp {
-					return p, left, errors.New("unexpected token")
+					return p, left, fmt.Errorf("unexpected token %q %#v", tokens[p-1].Kind, tokens[p-1])
 				}
 				op = tokens[p-1].Text
 			}
 
-			return p, left, err
+			return p, left, nil
 
 		case TSelector:
-			p++
-			return p, nil, errors.New("unexpected selector")
+			return p, nil, fmt.Errorf("unexpected selector %q %#v", tokens[p].Kind, tokens[p])
 
 		case TRightParen, TComma:
 			p++
 			return p, combine(exprs), nil
+
+		default:
+			return p, nil, fmt.Errorf("unhandled token %#v", tokens[p])
 		}
 
 		for p < len(tokens) && tokens[p].Kind == TSelector {

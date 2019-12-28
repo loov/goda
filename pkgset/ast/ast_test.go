@@ -70,6 +70,29 @@ func TestParsing(t *testing.T) {
 			{TSelector, "deps"},
 			{TSelector, "root"},
 		},
+	}, {
+		"test=1(github.com/loov/goda)",
+		"test=1(github.com/loov/goda)",
+		[]Token{
+			{TFunc, "test=1"},
+			{TLeftParen, "("},
+			{TPackage, "github.com/loov/goda"},
+			{TRightParen, ")"},
+		},
+	}, {
+		"test=1(github.com/loov/goda) - test=0(github.com/loov/goda)",
+		"-(test=1(github.com/loov/goda), test=0(github.com/loov/goda))",
+		[]Token{
+			{TFunc, "test=1"},
+			{TLeftParen, "("},
+			{TPackage, "github.com/loov/goda"},
+			{TRightParen, ")"},
+			{TOp, "-"},
+			{TFunc, "test=0"},
+			{TLeftParen, "("},
+			{TPackage, "github.com/loov/goda"},
+			{TRightParen, ")"},
+		},
 	}}
 
 	for _, test := range tests {
@@ -88,11 +111,11 @@ func TestParsing(t *testing.T) {
 		}
 
 		expr, err := Parse(tokens)
-		if expr == nil {
-			continue
-		}
 		if err != nil {
 			t.Errorf("\nparse %q\n\t%v", test.input, err)
+			continue
+		}
+		if expr == nil {
 			continue
 		}
 

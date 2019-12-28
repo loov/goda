@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Token struct {
 	Kind Kind
@@ -20,6 +23,8 @@ const (
 	TPackage    Kind = 'p'
 )
 
+func (k Kind) String() string { return string(k) }
+
 func Tokenize(s string) ([]Token, error) {
 	var tokens []Token
 	emit := func(kind Kind, text string) {
@@ -28,9 +33,11 @@ func Tokenize(s string) ([]Token, error) {
 
 	p := 0
 	for p < len(s) {
+		// skip whitespace
 		for p < len(s) && s[p] == ' ' {
 			p++
 		}
+		// finish when everything is parsed
 		if p >= len(s) {
 			break
 		}
@@ -41,6 +48,9 @@ func Tokenize(s string) ([]Token, error) {
 			if p < len(s) && s[p] == '(' {
 				emit(TFunc, ident)
 				continue
+			}
+			if strings.Contains(ident, "=") {
+				return tokens, fmt.Errorf("package name %q shouldn't contain '='", ident)
 			}
 			emit(TPackage, ident)
 			continue
@@ -87,7 +97,8 @@ func isIdentFirst(p byte) bool {
 
 func isIdent(p byte) bool {
 	return (p == '.') || (p == '@') || (p == '_') || (p == '-') || (p == '/') ||
-		('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || ('0' <= p && p <= '9')
+		('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || ('0' <= p && p <= '9') ||
+		(p == '=') // for build tags
 }
 
 func parseIdent(start int, s string) (int, string) {
