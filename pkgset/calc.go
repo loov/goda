@@ -65,6 +65,16 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 			return New(roots...), err
 
 		case ast.Func:
+			if e.IsContext() {
+				subctx := ctx.Clone()
+				key, value := KeyValue(e.Name)
+				subctx.Set(key, value)
+				if len(e.Args) != 1 {
+					return nil, fmt.Errorf("expected 1 argument found %d", len(e.Args))
+				}
+				return eval(subctx, e.Args[0])
+			}
+
 			switch strings.ToLower(e.Name) {
 			case "":
 				args := extractLoadGroup(e)
@@ -200,8 +210,8 @@ type Context struct {
 	Env     Strings
 }
 
-func (ctx Context) Clone() Context {
-	return Context{
+func (ctx Context) Clone() *Context {
+	return &Context{
 		Context: ctx.Context,
 		Tags:    ctx.Tags.Clone(),
 		Env:     ctx.Env.Clone(),
