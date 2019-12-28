@@ -49,16 +49,8 @@ func (f Func) Tree(ident int) string {
 	return result
 }
 
-func (f Func) IsTag() bool {
+func (f Func) IsContext() bool {
 	return strings.IndexByte(f.Name, '=') >= 0
-}
-
-func (f Func) ParseAsTag() (tag string, state bool, ok bool) {
-	p := strings.LastIndexByte(f.Name, '=')
-	if p < 0 || p == len(f.Name)-1 {
-		return "", false, false
-	}
-	return f.Name[:p], f.Name[p+1:] == "1", true
 }
 
 func Parse(tokens []Token) (Expr, error) {
