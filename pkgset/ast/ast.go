@@ -134,11 +134,13 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 					return p, combine(exprs), errors.New("empty expression")
 				}
 				left = Func{op, []Expr{left, right}}
+				// finished parsing
 				if p == len(tokens) && tokens[p-1].Kind != TOp {
 					break
 				}
+				// finished parsing an expression
 				if tokens[p-1].Kind != TOp {
-					return p, left, fmt.Errorf("unexpected token %q %#v", tokens[p-1].Kind, tokens[p-1])
+					return p, left, nil
 				}
 				op = tokens[p-1].Text
 			}
