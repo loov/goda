@@ -67,6 +67,9 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			fmt.Fprintf(os.Stderr, "failed to parse: %v\n", err)
 			return subcommands.ExitFailure
 		}
+		if sym.QualifiedName == "" {
+			continue
+		}
 
 		if len(sym.Path) > 0 && strings.HasPrefix(sym.Path[0], "go.itab.") {
 			continue
@@ -214,7 +217,7 @@ func ParseSym(s string) (*Sym, error) {
 	sym := &Sym{}
 
 	tokens := strings.Fields(s[8:])
-	if len(tokens) < 3 {
+	if len(tokens) < 2 {
 		return nil, fmt.Errorf("invalid sym text: %q", s)
 	}
 
@@ -236,8 +239,15 @@ func ParseSym(s string) (*Sym, error) {
 		sym.Code, _ = utf8.DecodeRuneInString(code)
 	}
 
-	sym.QualifiedName = tokens[2]
-	sym.Info = strings.Join(tokens[3:], " ")
+	if len(tokens) >= 3 {
+		sym.QualifiedName = tokens[2]
+	}
+	if len(tokens) >= 4 {
+		sym.Info = strings.Join(tokens[3:], " ")
+	}
+	if sym.QualifiedName == "" {
+		return sym, nil
+	}
 
 	braceOff := strings.IndexByte(sym.QualifiedName, '(')
 	if braceOff < 0 {
