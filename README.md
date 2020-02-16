@@ -73,6 +73,16 @@ The functionality can also be combined:
 goda list github.com/loov/goda/...:noroot - golang.org/x/tools/...:root
 ```
 
+## Graph example
+
+Here's an example output for:
+
+```
+goda graph github.com/loov/goda/... | dot -Tsvg -o graph.svg
+```
+
+![github.com/loov/goda dependency graph](./graph.svg)
+
 ## How it differs from `go list` or `go mod`
 
 `go list` and `go mod` are tightly integrated with Go and can answer simple queries with compatibility. They also serves as good building blocks for other tools.
