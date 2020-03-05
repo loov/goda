@@ -34,6 +34,19 @@ func TestParsing(t *testing.T) {
 			{TPackage, "golang.org/x/tools/..."},
 		},
 	}, {
+		"std - (std - unsafe:root)",
+		"-(std, -(std, unsafe:root))",
+		[]Token{
+			{TPackage, "std"},
+			{TOp, "-"},
+			{TLeftParen, "("},
+			{TPackage, "std"},
+			{TOp, "-"},
+			{TPackage, "unsafe"},
+			{TSelector, "root"},
+			{TRightParen, ")"},
+		},
+	}, {
 		"  github.com/loov/goda:root - golang.org/x/tools/...  ",
 		"-(github.com/loov/goda:root, golang.org/x/tools/...)",
 		[]Token{
@@ -98,7 +111,7 @@ func TestParsing(t *testing.T) {
 	for _, test := range tests {
 		tokens, err := Tokenize(test.input)
 		if err != nil {
-			t.Errorf("\nlex %q\n\t%v\n\t%v", test.input, tokens, err)
+			t.Errorf("\nlex %q\n\tgot:%v\n\terr:%v", test.input, tokens, err)
 			continue
 		}
 		if len(tokens) == 0 {
@@ -106,13 +119,13 @@ func TestParsing(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(tokens, test.tokens) {
-			t.Errorf("\nlex %q\n\t%v\n\t%v", test.input, test.tokens, tokens)
+			t.Errorf("\nlex %q\n\texp:%v\n\tgot:%v", test.input, test.tokens, tokens)
 			continue
 		}
 
 		expr, err := Parse(tokens)
 		if err != nil {
-			t.Errorf("\nparse %q\n\t%v", test.input, err)
+			t.Errorf("\nparse %q\n\terr:%v", test.input, err)
 			continue
 		}
 		if expr == nil {
@@ -121,7 +134,8 @@ func TestParsing(t *testing.T) {
 
 		clean := expr.String()
 		if clean != test.clean {
-			t.Errorf("\nparse %q\n\t%v\n\t%v", test.input, test.clean, clean)
+			t.Errorf("\nparse %q\n\texp:%v\n\tgot:%v", test.input, test.clean, clean)
+			t.Log("\nTREE\n", expr.Tree(0))
 			continue
 		}
 	}

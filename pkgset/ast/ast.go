@@ -114,7 +114,15 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 					break
 				}
 			}
-			expr = funcexpr
+
+			if tok.Kind == TLeftParen {
+				if len(funcexpr.Args) != 1 {
+					return p, combine(exprs), errors.New("comma delimited values between parens")
+				}
+				expr = funcexpr.Args[0]
+			} else {
+				expr = funcexpr
+			}
 
 		case TOp:
 			p++
