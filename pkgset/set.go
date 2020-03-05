@@ -147,47 +147,7 @@ func SymmetricDifference(a, b Set) Set {
 	return r
 }
 
-// Reach returns packages in a that terminate in b
-func Reach(a, b Set) Set {
-	result := New()
-	reaches := b.Clone()
-	cannotReach := New()
-
-	var checkReachability func(p *packages.Package) bool
-	checkReachability = func(p *packages.Package) bool {
-		if _, ok := reaches[p.ID]; ok {
-			return true
-		}
-		if _, ok := cannotReach[p.ID]; ok {
-			return false
-		}
-
-		for _, dep := range p.Imports {
-			if checkReachability(dep) {
-				if _, ina := a[p.ID]; ina {
-					result[p.ID] = p
-				}
-				reaches[p.ID] = p
-				return true
-			}
-		}
-
-		cannotReach[p.ID] = p
-		return false
-	}
-
-	for _, p := range a {
-		if _, reaches := b[p.ID]; reaches {
-			result[p.ID] = p
-			continue
-		}
-		checkReachability(p)
-	}
-
-	return result
-}
-
-// Sources returns packages that don't have incoming edges
+// Sources returns packages that don't have incoming edges.
 func Sources(a Set) Set {
 	incoming := map[string]int{}
 

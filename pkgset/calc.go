@@ -121,6 +121,19 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				args, err := evalArgs(ctx, e.Args)
 				return Reach(args[0], args[1]), err
 
+			case "reachwithout":
+				if len(e.Args) != 3 {
+					return nil, fmt.Errorf("reach requires two arguments: %v", e)
+				}
+				args, err := evalArgs(ctx, e.Args)
+				return ReachWithout(args[0], args[1], args[2]), err
+			case "reachusing":
+				if len(e.Args) != 3 {
+					return nil, fmt.Errorf("reach requires two arguments: %v", e)
+				}
+				args, err := evalArgs(ctx, e.Args)
+				return ReachUsing(args[0], args[1], args[2]), err
+
 			default:
 				return nil, fmt.Errorf("unknown func %v: %v", e.Name, e)
 			}
