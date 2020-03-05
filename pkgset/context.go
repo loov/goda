@@ -7,6 +7,29 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+var envvars = map[string]struct{}{
+	"GOOS":        {},
+	"GOARCH":      {},
+	"GOENV":       {},
+	"GOFLAGS":     {},
+	"GOROOT":      {},
+	"CGO_ENABLED": {},
+}
+
+var packageAliases = map[string]string{
+	"C": "runtime/cgo",
+}
+
+func replaceAliases(patterns ...string) []string {
+	xs := append([]string{}, patterns...)
+	for i, x := range xs {
+		if alias, ok := packageAliases[x]; ok {
+			xs[i] = alias
+		}
+	}
+	return xs
+}
+
 type Context struct {
 	Context context.Context
 	Tags    Strings
@@ -22,16 +45,7 @@ func (ctx Context) Clone() *Context {
 }
 
 func (ctx Context) Load(patterns ...string) ([]*packages.Package, error) {
-	return packages.Load(ctx.Config(), patterns...)
-}
-
-var envvars = map[string]struct{}{
-	"GOOS":        {},
-	"GOARCH":      {},
-	"GOENV":       {},
-	"GOFLAGS":     {},
-	"GOROOT":      {},
-	"CGO_ENABLED": {},
+	return packages.Load(ctx.Config(), replaceAliases(patterns...)...)
 }
 
 func (ctx *Context) Set(key, value string) {
