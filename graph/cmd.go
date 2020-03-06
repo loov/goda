@@ -153,11 +153,11 @@ func (ctx *Dot) TreeLabel(tree *pkgset.Tree, parentPrinted bool) string {
 }
 
 func (ctx *Dot) Ref(p *packages.Package) string {
-	return fmt.Sprintf(`href=%q `, "http://godoc.org/"+p.ID)
+	return fmt.Sprintf(`href=%q `, "http://pkg.go.dev/"+p.ID)
 }
 
 func (ctx *Dot) TreeRef(tree *pkgset.Tree) string {
-	return fmt.Sprintf(`href=%q `, "http://godoc.org/"+tree.Path)
+	return fmt.Sprintf(`href=%q `, "http://pkg.go.dev/"+tree.Path)
 }
 
 func (ctx *Dot) writeGraphProperties() {
