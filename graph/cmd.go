@@ -20,6 +20,8 @@ import (
 type Command struct {
 	printStandard bool
 
+	docs string
+
 	outputType  string
 	labelFormat string
 
@@ -43,6 +45,8 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 
 	f.BoolVar(&cmd.nocolor, "nocolor", false, "disable coloring")
+
+	f.StringVar(&cmd.docs, "docs", "http://pkg.go.dev/", "override the docs url to use")
 
 	f.StringVar(&cmd.outputType, "type", "dot", "output type")
 	f.StringVar(&cmd.labelFormat, "f", "{{.ID}}\\l{{LineCount .}} / {{SourceSize .}}\\l", "label formatting")
@@ -80,6 +84,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	dot := &Dot{
 		out:     os.Stdout,
 		err:     os.Stderr,
+		docs:    cmd.docs,
 		nocolor: cmd.nocolor,
 		shortID: cmd.shortID,
 		label:   label,
@@ -99,6 +104,7 @@ type Dot struct {
 	out io.Writer
 	err io.Writer
 
+	docs    string
 	nocolor bool
 	shortID bool
 
@@ -153,11 +159,11 @@ func (ctx *Dot) TreeLabel(tree *pkgset.Tree, parentPrinted bool) string {
 }
 
 func (ctx *Dot) Ref(p *packages.Package) string {
-	return fmt.Sprintf(`href=%q `, "http://pkg.go.dev/"+p.ID)
+	return fmt.Sprintf(`href=%q `, ctx.docs+p.ID)
 }
 
 func (ctx *Dot) TreeRef(tree *pkgset.Tree) string {
-	return fmt.Sprintf(`href=%q `, "http://pkg.go.dev/"+tree.Path)
+	return fmt.Sprintf(`href=%q%q `, ctx.docs, tree.Path)
 }
 
 func (ctx *Dot) writeGraphProperties() {
