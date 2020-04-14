@@ -46,7 +46,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 
 	f.BoolVar(&cmd.nocolor, "nocolor", false, "disable coloring")
 
-	f.StringVar(&cmd.docs, "docs", "http://pkg.go.dev/", "override the docs url to use")
+	f.StringVar(&cmd.docs, "docs", "https://pkg.go.dev/", "override the docs url to use")
 
 	f.StringVar(&cmd.outputType, "type", "dot", "output type")
 	f.StringVar(&cmd.labelFormat, "f", "{{.ID}}\\l{{LineCount .}} / {{SourceSize .}}\\l", "label formatting")
