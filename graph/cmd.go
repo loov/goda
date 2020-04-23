@@ -163,7 +163,7 @@ func (ctx *Dot) Ref(p *packages.Package) string {
 }
 
 func (ctx *Dot) TreeRef(tree *pkgset.Tree) string {
-	return fmt.Sprintf(`href=%q%q `, ctx.docs, tree.Path)
+	return fmt.Sprintf(`href=%q `, ctx.docs+tree.Path)
 }
 
 func (ctx *Dot) writeGraphProperties() {
