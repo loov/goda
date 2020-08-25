@@ -10,7 +10,7 @@ Cool things it can do:
 # draw a graph of packages in github.com/loov/goda
 goda graph github.com/loov/goda/...:root | dot -Tsvg -o graph.svg
 
-# draw a dependcy graph of github.com/loov/goda
+# draw a dependency graph of github.com/loov/goda
 goda graph -cluster -short github.com/loov/goda | dot -Tsvg -o graph.svg
 
 # list dependencies of github.com/loov/goda
