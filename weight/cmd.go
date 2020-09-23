@@ -18,10 +18,37 @@ import (
 
 type Command struct {
 	limit      int
+	sort       Order
 	cumulative bool
 	humanized  bool
 	minimum    int
 }
+
+type Order string
+
+const (
+	Default     Order = ""
+	BySize            = "size"
+	ByTotalSize       = "totalsize"
+	ByName            = "name"
+)
+
+func (mode *Order) Set(v string) error {
+	switch Order(strings.ToLower(v)) {
+	case Default:
+		*mode = Default
+	case BySize:
+		*mode = BySize
+	case ByTotalSize:
+		*mode = ByTotalSize
+	case ByName:
+		*mode = ByName
+	default:
+		return fmt.Errorf("unsupported order %q", v)
+	}
+	return nil
+}
+func (mode *Order) String() string { return string(*mode) }
 
 func (*Command) Name() string     { return "weight" }
 func (*Command) Synopsis() string { return "Analyse binary symbols." }
@@ -33,7 +60,8 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.IntVar(&cmd.limit, "limit", -1, "limit number of entries to print")
-	f.BoolVar(&cmd.cumulative, "cum", false, "print cumulative size")
+	f.Var(&cmd.sort, "sort", "sorting mode (size, totalsize, name)")
+	f.BoolVar(&cmd.cumulative, "cum", false, "print cumulative size (deprecated, use -sort)")
 	f.BoolVar(&cmd.humanized, "h", false, "humanized size output")
 
 	f.IntVar(&cmd.minimum, "minimum", 1024, "minimum size to print")
@@ -97,11 +125,14 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 	recurse(root)
 
-	var sorter func([]*Tree)
-	if cmd.cumulative {
-		sorter = sortByTotalSize
-	} else {
-		sorter = sortBySize
+	if cmd.sort == "" && cmd.cumulative {
+		cmd.sort = ByTotalSize
+	}
+
+	sorter, ok := sortFunc[cmd.sort]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "invalid sorting mode %q\n", cmd.sort)
+		return subcommands.ExitFailure
 	}
 
 	root.Sort(sorter)
@@ -135,8 +166,15 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	return subcommands.ExitSuccess
 }
 
-func sortByTotalSize(trees []*Tree) {
-	sort.Slice(trees, func(i, k int) bool { return trees[i].TotalSize > trees[k].TotalSize })
+var sortFunc = map[Order]func([]*Tree){
+	Default: sortBySize,
+	BySize:  sortBySize,
+	ByTotalSize: func(trees []*Tree) {
+		sort.Slice(trees, func(i, k int) bool { return trees[i].TotalSize > trees[k].TotalSize })
+	},
+	ByName: func(trees []*Tree) {
+		sort.Slice(trees, func(i, k int) bool { return trees[i].Path < trees[i].Path })
+	},
 }
 
 func sortBySize(trees []*Tree) {
