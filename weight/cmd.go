@@ -154,12 +154,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			continue
 		}
 
-		fmt.Fprintf(os.Stderr, "%10s %10s %v [syms %d]\n", sizeToString(tree.TotalSize), sizeToString(tree.Size), tree.Path, len(tree.Syms))
+		fmt.Fprintf(os.Stdout, "%10s %10s %v [syms %d]\n", sizeToString(tree.TotalSize), sizeToString(tree.Size), tree.Path, len(tree.Syms))
 		for _, sym := range tree.Syms {
 			if sym.Size < int64(cmd.minimum) {
 				continue
 			}
-			fmt.Fprintf(os.Stderr, "%10s %10s %v %v\n", "", sizeToString(sym.Size), string(sym.Code), sym.Name)
+			fmt.Fprintf(os.Stdout, "%10s %10s %v %v\n", "", sizeToString(sym.Size), string(sym.Code), sym.Name)
 		}
 	}
 
