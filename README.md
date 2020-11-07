@@ -8,22 +8,25 @@ Cool things it can do:
 
 ```
 # draw a graph of packages in github.com/loov/goda
-goda graph github.com/loov/goda/...:root | dot -Tsvg -o graph.svg
+goda graph "github.com/loov/goda/...:root" | dot -Tsvg -o graph.svg
 
 # draw a dependency graph of github.com/loov/goda
-goda graph -cluster -short github.com/loov/goda | dot -Tsvg -o graph.svg
+goda graph -cluster -short "github.com/loov/goda" | dot -Tsvg -o graph.svg
 
 # list dependencies of github.com/loov/goda
-goda list github.com/loov/goda/...:noroot
+goda list "github.com/loov/goda/...:noroot"
 
 # list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
-goda list shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)
+goda list "shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)""
 
 # list packages that are only imported for tests
-goda list test=1(github.com/loov/goda/...) - test=0(github.com/loov/goda/...)
+goda list "test=1(github.com/loov/goda/...) - test=0(github.com/loov/goda/...)"
+
+# list packages that are imported with `purego` tag
+goda list -std "purego=1(github.com/loov/goda/...)"
 
 # list packages that are imported for windows and not linux
-goda list goos=windows(github.com/loov/goda/...) - goos=linux(github.com/loov/goda/...)
+goda list "goos=windows(github.com/loov/goda/...) - goos=linux(github.com/loov/goda/...)"
 
 # list how much memory each symbol in the final binary is taking
 goda weight -h $GOPATH/bin/goda

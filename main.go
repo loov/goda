@@ -80,6 +80,17 @@ func (*ExprHelp) Usage() string {
 	reach(a, b);
 		lists packages from a that can reach a package in b
 
+# Tags and OS:
+
+	test=1(a);
+		list a packages with test packages
+
+	goos=linux(a):
+		list packages that are included for "linux"
+
+	purego=1(a):
+		list packages that are included for tag "purego"
+
 # Example expressions
 
 	github.com/loov/goda:deps
