@@ -46,7 +46,7 @@ func (*ExprHelp) Usage() string {
 # Basic operations
 	There are a few basic oprations specified for manipulating sets of packages.
 
-	a b c;  
+	a b c;
 	a + b + c;  add(a, b, c);  or(a, b, c)
 		returns packages that are used by a or b
 
@@ -80,6 +80,9 @@ func (*ExprHelp) Usage() string {
 	reach(a, b);
 		lists packages from a that can reach a package in b
 
+	transitive(a);
+		a transitive reduction in package dependencies
+
 # Tags and OS:
 
 	test=1(a);
@@ -94,17 +97,17 @@ func (*ExprHelp) Usage() string {
 # Example expressions
 
 	github.com/loov/goda:deps
-		all dependencies for "github.com/loov/goda" package 
+		all dependencies for "github.com/loov/goda" package
 
 	github.com/loov/goda/...:noroot
-		all dependencies for "github.com/loov/goda" sub-package 
+		all dependencies for "github.com/loov/goda" sub-package
 
 	shared(github.com/loov/goda/pkgset, github.com/loov/goda/templates)
 		packages shared by "github.com/loov/goda/pkgset" and "github.com/loov/goda/templates"
 
 	github.com/loov/goda/...:noroot - golang.org/x/tools/...
 		all dependencies excluding golang.org/x/tools
-	
+
 	reach(github.com/loov/goda/...:root, golang.org/x/tools/go/packages:root)
 		packages in github.com/loov/goda/ that use golang.org/x/tools/go/packages
 `

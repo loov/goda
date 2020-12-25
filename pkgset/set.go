@@ -90,7 +90,7 @@ func (set Set) IncludeRecursive(p *packages.Package) {
 func (set Set) Clone() Set {
 	r := make(Set, len(set))
 	for pid, p := range set {
-		r[pid] = p
+		r[pid] = p // TODO: make a deep clone
 	}
 	return r
 }
@@ -182,6 +182,34 @@ func Reach(a, b Set) Set {
 			continue
 		}
 		checkReachability(p)
+	}
+
+	return result
+}
+
+// Transitive returns transitive reduction.
+func Transitive(a Set) Set {
+	result := a.Clone()
+
+	var includeDeps func(p *packages.Package, r map[string]struct{})
+	includeDeps = func(p *packages.Package, r map[string]struct{}) {
+		for _, c := range p.Imports {
+			if _, visited := r[c.ID]; visited {
+				continue
+			}
+			r[c.ID] = struct{}{}
+			includeDeps(c, r)
+		}
+	}
+
+	for _, p := range result {
+		indirectDeps := make(map[string]struct{})
+		for _, c := range p.Imports {
+			includeDeps(c, indirectDeps)
+		}
+		for dep := range indirectDeps {
+			delete(p.Imports, dep)
+		}
 	}
 
 	return result

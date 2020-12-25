@@ -121,6 +121,13 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				args, err := evalArgs(ctx, e.Args)
 				return Reach(args[0], args[1]), err
 
+			case "transitive":
+				if len(e.Args) != 1 {
+					return nil, fmt.Errorf("reach requires one argument: %v", e)
+				}
+				args, err := evalArgs(ctx, e.Args)
+				return Transitive(args[0]), err
+
 			default:
 				return nil, fmt.Errorf("unknown func %v: %v", e.Name, e)
 			}
