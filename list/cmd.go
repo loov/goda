@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/subcommands"
 
+	"github.com/loov/goda/pkggraph"
 	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/templates"
 )
@@ -53,7 +54,9 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
-	for _, p := range result.Sorted() {
+	graph := pkggraph.FromSet(result)
+
+	for _, p := range graph.Sorted {
 		err := t.Execute(os.Stdout, p)
 		fmt.Fprintln(os.Stdout)
 		if err != nil {
