@@ -178,8 +178,9 @@ type Stat struct {
 	indegree int
 }
 
-func (parent *Stat) InDegree() int  { return len(parent.ImportedBy) }
-func (parent *Stat) OutDegree() int { return len(parent.Imports) }
+func (parent *Stat) Pkg() *packages.Package { return parent.Package }
+func (parent *Stat) InDegree() int          { return len(parent.ImportedBy) }
+func (parent *Stat) OutDegree() int         { return len(parent.Imports) }
 
 func (parent *Stat) Import(child *Stat) {
 	if parent == nil {

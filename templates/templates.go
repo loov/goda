@@ -70,6 +70,8 @@ func AllFiles(vs ...interface{}) (files []string) {
 			files = append(files, v...)
 		case *packages.Package:
 			files = append(files, allFiles(v)...)
+		case interface{ Pkg() *packages.Package }:
+			files = append(files, allFiles(v.Pkg())...)
 		}
 	}
 	return files
@@ -100,7 +102,6 @@ func CountDecls(vs ...interface{}) DeclCount {
 				continue
 			}
 
-			// Parse src but stop after processing the imports.
 			f, err := parser.ParseFile(fset, filename, src, 0)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%q parsing failed: %v\n", filename, err)
@@ -140,6 +141,8 @@ func filesFromInterface(v interface{}) []string {
 	// assume we want the size of all files in package directories
 	case *packages.Package:
 		return v.GoFiles
+	case interface{ Pkg() *packages.Package }:
+		return v.Pkg().GoFiles
 	}
 	return nil
 }
