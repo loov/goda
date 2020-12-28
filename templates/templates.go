@@ -27,19 +27,17 @@ func Parse(t string) (*template.Template, error) {
 func LineCount(vs ...interface{}) int64 {
 	var count int64
 
-	for _, v := range vs {
-		for _, filename := range filesFromInterface(v) {
-			r, err := os.Open(filename)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v open failed: %v\n", filename, err)
-				continue
-			}
-			count += countLines(r)
+	for _, filename := range filesFromInterface(vs...) {
+		r, err := os.Open(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v open failed: %v\n", filename, err)
+			continue
+		}
+		count += countLines(r)
 
-			if err := r.Close(); err != nil {
-				fmt.Fprintf(os.Stderr, "%v close failed: %v\n", filename, err)
-				continue
-			}
+		if err := r.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "%v close failed: %v\n", filename, err)
+			continue
 		}
 	}
 
@@ -49,15 +47,13 @@ func LineCount(vs ...interface{}) int64 {
 func SourceSize(vs ...interface{}) memory.Bytes {
 	var size int64
 
-	for _, v := range vs {
-		for _, filename := range filesFromInterface(v) {
-			stat, err := os.Stat(filename)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v stat failed: %v", filename, err)
-				continue
-			}
-			size += stat.Size()
+	for _, filename := range filesFromInterface(vs...) {
+		stat, err := os.Stat(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v stat failed: %v", filename, err)
+			continue
 		}
+		size += stat.Size()
 	}
 
 	return memory.Bytes(size)
@@ -133,18 +129,22 @@ func CountDecls(vs ...interface{}) DeclCount {
 	return count
 }
 
-func filesFromInterface(v interface{}) []string {
-	switch v := v.(type) {
-	// assume we want the size of a list of files
-	case []string:
-		return v
-	// assume we want the size of all files in package directories
-	case *packages.Package:
-		return v.GoFiles
-	case interface{ Pkg() *packages.Package }:
-		return v.Pkg().GoFiles
+func filesFromInterface(vs ...interface{}) []string {
+	var files []string
+	for _, v := range vs {
+		switch v := v.(type) {
+		// assume we want the list of files
+		case []string:
+			files = append(files, v...)
+		// assume we want the all files in package directories
+		case *packages.Package:
+			files = append(files, v.GoFiles...)
+		// assume we want the all files in package directories
+		case interface{ Pkg() *packages.Package }:
+			files = append(files, v.Pkg().GoFiles...)
+		}
 	}
-	return nil
+	return files
 }
 
 func allFiles(p *packages.Package) []string {
