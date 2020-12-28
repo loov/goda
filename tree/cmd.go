@@ -47,7 +47,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	roots, err := packages.Load(&packages.Config{
 		Context: ctx,
-		Mode:    packages.LoadImports,
+		Mode:    packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports,
 		Env:     os.Environ(),
 	}, f.Args()...)
 

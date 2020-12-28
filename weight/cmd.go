@@ -28,9 +28,9 @@ type Order string
 
 const (
 	Default     Order = ""
-	BySize            = "size"
-	ByTotalSize       = "totalsize"
-	ByName            = "name"
+	BySize      Order = "size"
+	ByTotalSize Order = "totalsize"
+	ByName      Order = "name"
 )
 
 func (mode *Order) Set(v string) error {
@@ -173,7 +173,7 @@ var sortFunc = map[Order]func([]*Tree){
 		sort.Slice(trees, func(i, k int) bool { return trees[i].TotalSize > trees[k].TotalSize })
 	},
 	ByName: func(trees []*Tree) {
-		sort.Slice(trees, func(i, k int) bool { return trees[i].Path < trees[i].Path })
+		sort.Slice(trees, func(i, k int) bool { return trees[i].Path < trees[k].Path })
 	},
 }
 
