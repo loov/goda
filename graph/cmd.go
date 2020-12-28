@@ -68,7 +68,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	label, err := templates.Parse(cmd.labelFormat)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "invalid label format\n")
+		fmt.Fprintf(os.Stderr, "invalid label format: %v\n", err)
 		return subcommands.ExitFailure
 	}
 

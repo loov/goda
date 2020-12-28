@@ -45,7 +45,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	t, err := templates.Parse(cmd.format)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "invalid format string\n")
+		fmt.Fprintf(os.Stderr, "invalid format string: %v\n", err)
 		return subcommands.ExitFailure
 	}
 
