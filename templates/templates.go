@@ -28,15 +28,7 @@ func LineCount(vs ...interface{}) int64 {
 	var count int64
 
 	for _, v := range vs {
-		var files []string
-		switch v := v.(type) {
-		case []string: // assume we want the count of a list of files
-			files = v
-		case *packages.Package: // assume we want the count of all files in package directories
-			files = allFiles(v)
-		}
-
-		for _, filename := range files {
+		for _, filename := range filesFromInterface(v) {
 			r, err := os.Open(filename)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v open failed: %v\n", filename, err)
@@ -58,15 +50,7 @@ func SourceSize(vs ...interface{}) memory.Bytes {
 	var size int64
 
 	for _, v := range vs {
-		var files []string
-		switch v := v.(type) {
-		case []string: // assume we want the size of a list of files
-			files = v
-		case *packages.Package: // assume we want the size of all files in package directories
-			files = allFiles(v)
-		}
-
-		for _, filename := range files {
+		for _, filename := range filesFromInterface(v) {
 			stat, err := os.Stat(filename)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v stat failed: %v", filename, err)
@@ -107,17 +91,9 @@ func CountDecls(vs ...interface{}) DeclCount {
 	var count DeclCount
 
 	for _, v := range vs {
-		var files []string
-		switch v := v.(type) {
-		case []string: // assume we want the size of a list of files
-			files = v
-		case *packages.Package: // assume we want the size of all files in package directories
-			files = v.GoFiles
-		}
-
 		fset := token.NewFileSet() // positions are relative to fset
 
-		for _, filename := range files {
+		for _, filename := range filesFromInterface(v) {
 			src, err := ioutil.ReadFile(filename)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%q reading failed: %v\n", filename, err)
@@ -154,6 +130,18 @@ func CountDecls(vs ...interface{}) DeclCount {
 	}
 
 	return count
+}
+
+func filesFromInterface(v interface{}) []string {
+	switch v := v.(type) {
+	// assume we want the size of a list of files
+	case []string:
+		return v
+	// assume we want the size of all files in package directories
+	case *packages.Package:
+		return v.GoFiles
+	}
+	return nil
 }
 
 func allFiles(p *packages.Package) []string {
