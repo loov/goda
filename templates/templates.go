@@ -11,8 +11,9 @@ import (
 	"sort"
 	"text/template"
 
-	"github.com/loov/goda/memory"
 	"golang.org/x/tools/go/packages"
+
+	"github.com/loov/goda/memory"
 )
 
 func Parse(t string) (*template.Template, error) {

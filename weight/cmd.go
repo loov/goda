@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/subcommands"
+
 	"github.com/loov/goda/memory"
 )
 
