@@ -25,7 +25,7 @@ func (*Command) Synopsis() string { return "Run command with extended statistics
 func (*Command) Usage() string {
 	return `calc <command>:
 	Run command with extended statistics.
-	
+
 	Example:
 
 	go build -toolexec "goda exec" .

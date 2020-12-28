@@ -18,6 +18,8 @@ type Graph struct {
 func (g *Graph) AddNode(n *Node) { g.Packages[n.ID] = n }
 
 type Node struct {
+	DirectNodes []*Node
+
 	ImportsNodes    []*Node
 	ImportedByNodes []*Node
 
@@ -72,6 +74,21 @@ func From(pkgs map[string]*packages.Package) *Graph {
 	}
 
 	for _, n := range g.Packages {
+		for id := range n.Package.Imports {
+			direct, ok := g.Packages[id]
+			if !ok {
+				// TODO:
+				//  should we include dependencies where Y is hidden?
+				//  X -> [Y] -> Z
+				continue
+			}
+
+			n.DirectNodes = append(n.DirectNodes, direct)
+		}
+	}
+
+	for _, n := range g.Packages {
+		SortNodes(n.DirectNodes)
 		SortNodes(n.ImportsNodes)
 		SortNodes(n.ImportedByNodes)
 	}

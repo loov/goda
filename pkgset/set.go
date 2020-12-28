@@ -39,16 +39,6 @@ func (set Set) Sorted() []*packages.Package {
 	return list
 }
 
-// Tree returns package tree
-func (set Set) Tree() *Tree {
-	tree := NewTree(nil, "")
-	for _, pkg := range set {
-		tree.Add(pkg)
-	}
-	tree.Sort()
-	return tree
-}
-
 func (set Set) Walk(fn func(*packages.Package)) {
 	for _, p := range set {
 		fn(p)
