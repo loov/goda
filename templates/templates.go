@@ -21,6 +21,7 @@ func Parse(t string) (*template.Template, error) {
 		"SourceSize": SourceSize,
 		"AllFiles":   AllFiles,
 		"DeclCount":  CountDecls,
+		"TokenCount": CountTokens,
 	}).Parse(t)
 }
 
@@ -123,6 +124,52 @@ func CountDecls(vs ...interface{}) DeclCount {
 					count.Other++
 				}
 			}
+		}
+	}
+
+	return count
+}
+
+type TokenCount struct {
+	Code    int64
+	Comment int64
+	Basic   int64
+}
+
+func CountTokens(vs ...interface{}) TokenCount {
+	var count TokenCount
+	for _, v := range vs {
+		fset := token.NewFileSet() // positions are relative to fset
+		for _, filename := range filesFromInterface(v) {
+			src, err := ioutil.ReadFile(filename)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%q reading failed: %v\n", filename, err)
+				continue
+			}
+
+			f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%q parsing failed: %v\n", filename, err)
+				continue
+			}
+
+			ast.Inspect(f, func(n ast.Node) bool {
+				if n == nil {
+					return true
+				}
+
+				switch n.(type) {
+				default:
+					count.Code++
+				case *ast.BasicLit:
+					count.Basic++
+				case *ast.CommentGroup, *ast.Comment:
+					count.Comment++
+					return false
+				}
+
+				return true
+			})
 		}
 	}
 
