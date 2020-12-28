@@ -23,10 +23,11 @@ type Command struct {
 }
 
 func (*Command) Name() string     { return "cut" }
-func (*Command) Synopsis() string { return "Print dependencies cutting information." }
+func (*Command) Synopsis() string { return "Analyse indirect-dependencies." }
 func (*Command) Usage() string {
 	return `cut <expr>:
-	Print dependency cutting information.
+	Print information about indirect-dependencies.
+	It shows packages whose removal would remove the most indirect dependencies.
 
 	See "help expr" for further information about expressions.
 `
