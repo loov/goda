@@ -21,14 +21,14 @@ func (g *Graph) AddNode(n *Node) {
 }
 
 type Node struct {
-	DirectNodes []*Node
+	ImportsNodes []*Node
 
-	ImportsNodes    []*Node
-	ImportedByNodes []*Node
-
+	// Stats about the current node.
 	stat.Stat
-	Imports    stat.Stat
-	ImportedBy stat.Stat
+	// Stats about upstream nodes.
+	Up   stat.Stat
+	// Stats about downstream nodes.
+	Down stat.Stat
 
 	Errors []error
 	Graph  *Graph
@@ -60,7 +60,6 @@ func From(pkgs map[string]*packages.Package) *Graph {
 
 	for _, n := range g.Packages {
 		importsIDs := cache[n.ID]
-		n.ImportsNodes = make([]*Node, 0, len(importsIDs))
 		for _, id := range importsIDs {
 			imported, ok := g.Packages[id]
 			if !ok {
@@ -68,11 +67,8 @@ func From(pkgs map[string]*packages.Package) *Graph {
 				continue
 			}
 
-			n.ImportsNodes = append(n.ImportsNodes, imported)
-			imported.ImportedByNodes = append(imported.ImportedByNodes, n)
-
-			n.Imports.Add(imported.Stat)
-			imported.ImportedBy.Add(n.Stat)
+			n.Down.Add(imported.Stat)
+			imported.Up.Add(n.Stat)
 		}
 	}
 
@@ -86,14 +82,12 @@ func From(pkgs map[string]*packages.Package) *Graph {
 				continue
 			}
 
-			n.DirectNodes = append(n.DirectNodes, direct)
+			n.ImportsNodes = append(n.ImportsNodes, direct)
 		}
 	}
 
 	for _, n := range g.Packages {
-		SortNodes(n.DirectNodes)
 		SortNodes(n.ImportsNodes)
-		SortNodes(n.ImportedByNodes)
 	}
 
 	return g

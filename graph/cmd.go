@@ -192,7 +192,7 @@ func (ctx *Dot) WriteRegular(graph *pkggraph.Graph) {
 	}
 
 	for _, src := range graph.Sorted {
-		for _, dst := range src.DirectNodes {
+		for _, dst := range src.ImportsNodes {
 			fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", pkgID(src), pkgID(dst), ctx.colorOf(dst))
 		}
 	}
@@ -256,7 +256,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) {
 
 	for _, src := range graph.Sorted {
 		srctree := lookup[src]
-		for _, dst := range src.DirectNodes {
+		for _, dst := range src.ImportsNodes {
 			dstid := pkgID(dst)
 			dsttree := lookup[dst]
 			tooltip := src.ID + " -> " + dst.ID
