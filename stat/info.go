@@ -11,6 +11,8 @@ import (
 )
 
 type Stat struct {
+	PackageCount int64
+
 	Go    Source
 	Other Source
 
@@ -26,6 +28,7 @@ func (info *Stat) AllFiles() Source {
 }
 
 func (s *Stat) Add(b Stat) {
+	s.PackageCount += b.PackageCount
 	s.Go.Add(b.Go)
 	s.Other.Add(b.Other)
 	s.Decls.Add(b.Decls)
@@ -35,6 +38,8 @@ func (s *Stat) Add(b Stat) {
 func Package(p *packages.Package) (Stat, []error) {
 	var info Stat
 	var errs []error
+
+	info.PackageCount = 1
 
 	fset := token.NewFileSet()
 

@@ -11,8 +11,9 @@ import (
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
 
-	"github.com/loov/goda/memory"
+	"github.com/loov/goda/pkggraph"
 	"github.com/loov/goda/pkgset"
+	"github.com/loov/goda/stat"
 	"github.com/loov/goda/templates"
 )
 
@@ -35,7 +36,7 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
-	f.StringVar(&cmd.format, "f", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.Packages}}\tsize:{{.Cut.SourceSize}}\tloc:{{.Cut.Lines}}", "info formatting")
+	f.StringVar(&cmd.format, "f", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.PackageCount}}\tsize:{{.Cut.AllFiles.Size}}\tloc:{{.Cut.Go.Lines}}", "info formatting")
 	f.StringVar(&cmd.exclude, "exclude", "", "package expr to exclude from output")
 }
 
@@ -70,62 +71,60 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
-	stats := map[string]*Stat{}
-	statlist := []*Stat{}
+	graph := pkggraph.FromSet(result)
 
-	var include func(parent *Stat, p *packages.Package)
-	include = func(parent *Stat, p *packages.Package) {
-		if p, ok := stats[p.ID]; ok {
-			parent.Import(p)
+	nodes := map[string]*Node{}
+	nodelist := []*Node{}
+
+	var include func(parent *Node, n *pkggraph.Node)
+	include = func(parent *Node, n *pkggraph.Node) {
+		if n, ok := nodes[n.ID]; ok {
+			parent.Import(n)
 			return
 		}
 
-		stat := &Stat{
-			Package: p,
+		node := &Node{
+			Node: n,
 		}
-		stats[p.ID] = stat
-		if _, analyse := result[p.ID]; analyse {
-			statlist = append(statlist, stat)
+		nodes[n.ID] = node
+		if _, analyse := graph.Packages[n.ID]; analyse {
+			nodelist = append(nodelist, node)
 		}
 
-		parent.Import(stat)
-		for _, child := range p.Imports {
-			include(stat, child)
+		parent.Import(node)
+		for _, child := range n.ImportsNodes {
+			include(node, child)
 		}
 	}
 
-	for _, p := range result {
-		include(nil, p)
+	for _, n := range graph.Sorted {
+		include(nil, n)
 	}
 
-	for _, p := range stats {
+	for _, p := range nodes {
 		if !cmd.printStandard && pkgset.IsStd(p.Package) {
 			continue
 		}
-
-		p.Info.Packages = 1
-		p.Info.Lines = templates.LineCount(p.Package)
-		p.Info.SourceSize = templates.SourceSize(p.Package)
 	}
 
-	for _, stat := range statlist {
-		Reset(stats)
-		stat.Cut = Erase(stat)
+	for _, node := range nodelist {
+		Reset(nodes)
+		node.Cut = Erase(node)
 	}
 
-	sort.Slice(statlist, func(i, k int) bool {
-		if statlist[i].InDegree() == statlist[k].InDegree() {
-			return statlist[i].Cut.Packages > statlist[k].Cut.Packages
+	sort.Slice(nodelist, func(i, k int) bool {
+		if nodelist[i].InDegree() == nodelist[k].InDegree() {
+			return nodelist[i].Cut.PackageCount > nodelist[k].Cut.PackageCount
 		}
-		return statlist[i].InDegree() < statlist[k].InDegree()
+		return nodelist[i].InDegree() < nodelist[k].InDegree()
 	})
 
-	for _, stat := range statlist {
-		if _, exclude := excluded[stat.ID]; exclude {
+	for _, node := range nodelist {
+		if _, exclude := excluded[node.ID]; exclude {
 			continue
 		}
 
-		err := t.Execute(os.Stdout, stat)
+		err := t.Execute(os.Stdout, node)
 		fmt.Fprintln(os.Stdout)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
@@ -135,54 +134,40 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	return subcommands.ExitSuccess
 }
 
-func Reset(stats map[string]*Stat) {
+func Reset(stats map[string]*Node) {
 	for _, stat := range stats {
 		stat.indegree = len(stat.ImportedBy)
 	}
 }
 
-func Erase(stat *Stat) Info {
-	cut := stat.Info
+func Erase(stat *Node) stat.Stat {
+	cut := stat.Node.Stat
 	for _, imp := range stat.Imports {
 		imp.indegree--
 		if imp.indegree == 0 {
-			cut = cut.Add(Erase(imp))
+			cut.Add(Erase(imp))
 		}
 	}
 	return cut
 }
 
-type Info struct {
-	Packages   int
-	Lines      int64
-	SourceSize memory.Bytes
-}
+type Node struct {
+	*pkggraph.Node
 
-func (a Info) Add(b Info) Info {
-	return Info{
-		Packages:   a.Packages + b.Packages,
-		Lines:      a.Lines + b.Lines,
-		SourceSize: a.SourceSize + b.SourceSize,
-	}
-}
+	Cut stat.Stat
 
-type Stat struct {
-	*packages.Package
-
-	Info Info
-	Cut  Info
-
-	Imports    []*Stat
-	ImportedBy []*Stat
+	Imports    []*Node
+	ImportedBy []*Node
 
 	indegree int
 }
 
-func (parent *Stat) Pkg() *packages.Package { return parent.Package }
-func (parent *Stat) InDegree() int          { return len(parent.ImportedBy) }
-func (parent *Stat) OutDegree() int         { return len(parent.Imports) }
+func (parent *Node) Pkg() *packages.Package { return parent.Package }
 
-func (parent *Stat) Import(child *Stat) {
+func (parent *Node) InDegree() int  { return len(parent.ImportedBy) }
+func (parent *Node) OutDegree() int { return len(parent.Imports) }
+
+func (parent *Node) Import(child *Node) {
 	if parent == nil {
 		return
 	}
@@ -195,7 +180,7 @@ func (parent *Stat) Import(child *Stat) {
 	}
 }
 
-func hasPackage(xs []*Stat, p *Stat) bool {
+func hasPackage(xs []*Node, p *Node) bool {
 	for _, x := range xs {
 		if x == p {
 			return true
