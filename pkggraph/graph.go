@@ -26,7 +26,7 @@ type Node struct {
 	// Stats about the current node.
 	stat.Stat
 	// Stats about upstream nodes.
-	Up   stat.Stat
+	Up stat.Stat
 	// Stats about downstream nodes.
 	Down stat.Stat
 
