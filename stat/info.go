@@ -13,8 +13,8 @@ import (
 type Stat struct {
 	PackageCount int64
 
-	Go    Source
-	Other Source
+	Go         Source
+	OtherFiles Source
 
 	Decls  Decls
 	Tokens Tokens
@@ -23,14 +23,14 @@ type Stat struct {
 func (info *Stat) AllFiles() Source {
 	var c Source
 	c.Add(info.Go)
-	c.Add(info.Other)
+	c.Add(info.OtherFiles)
 	return c
 }
 
 func (s *Stat) Add(b Stat) {
 	s.PackageCount += b.PackageCount
 	s.Go.Add(b.Go)
-	s.Other.Add(b.Other)
+	s.OtherFiles.Add(b.OtherFiles)
 	s.Decls.Add(b.Decls)
 	s.Tokens.Add(b.Tokens)
 }
@@ -65,7 +65,7 @@ func Package(p *packages.Package) (Stat, []error) {
 
 	for _, filename := range p.OtherFiles {
 		count, err := SourceFromPath(filename)
-		info.Other.Add(count)
+		info.OtherFiles.Add(count)
 		if err != nil {
 			if !errors.Is(err, ErrEmptyFile) {
 				errs = append(errs, err)
