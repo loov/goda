@@ -15,7 +15,10 @@ type Graph struct {
 	stat.Stat
 }
 
-func (g *Graph) AddNode(n *Node) { g.Packages[n.ID] = n }
+func (g *Graph) AddNode(n *Node) {
+	g.Packages[n.ID] = n
+	n.Graph = g
+}
 
 type Node struct {
 	DirectNodes []*Node

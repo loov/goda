@@ -23,7 +23,7 @@ func Parse(t string) (*template.Template, error) {
 		"AllFiles":   AllFiles,
 		"DeclCount":  CountDecls,
 		"TokenCount": CountTokens,
-	}).Parse(t)
+	}).Funcs(numeric()).Parse(t)
 }
 
 func LineCount(vs ...interface{}) int64 {
