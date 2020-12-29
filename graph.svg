@@ -137,10 +137,10 @@
 </g>
 <!-- n_github_com_loov_goda_templates -->
 <g id="node11" class="node"><title>n_github_com_loov_goda_templates</title>
-<g id="a_node11"><a xlink:href="https://pkg.go.dev/github.com/loov/goda/templates" xlink:title="github.com/loov/goda/templates\l201 / 4.5KB\l" target="_graphviz">
+<g id="a_node11"><a xlink:href="https://pkg.go.dev/github.com/loov/goda/templates" xlink:title="github.com/loov/goda/templates\l304 / 6.5KB\l" target="_graphviz">
 <polygon fill="none" stroke="#073e91" stroke-width="2" stroke-opacity="0.698039" points="648,-201.378 468,-201.378 468,-165.378 648,-165.378 648,-201.378"/>
 <text text-anchor="start" x="476" y="-186.378" font-family="Times New Roman,serif" font-size="10.00">github.com/loov/goda/templates</text>
-<text text-anchor="start" x="476" y="-175.378" font-family="Times New Roman,serif" font-size="10.00">201 / 4.5KB</text>
+<text text-anchor="start" x="476" y="-175.378" font-family="Times New Roman,serif" font-size="10.00">304 / 6.5KB</text>
 </a>
 </g>
 </g>
@@ -161,10 +161,10 @@
 </g>
 <!-- n_github_com_loov_goda_pkggraph -->
 <g id="node7" class="node"><title>n_github_com_loov_goda_pkggraph</title>
-<g id="a_node7"><a xlink:href="https://pkg.go.dev/github.com/loov/goda/pkggraph" xlink:title="github.com/loov/goda/pkggraph\l201 / 4.5KB\l" target="_graphviz">
+<g id="a_node7"><a xlink:href="https://pkg.go.dev/github.com/loov/goda/pkggraph" xlink:title="github.com/loov/goda/pkggraph\l200 / 4.4KB\l" target="_graphviz">
 <polygon fill="none" stroke="#079175" stroke-width="2" stroke-opacity="0.698039" points="648,-71.3784 468,-71.3784 468,-35.3784 648,-35.3784 648,-71.3784"/>
 <text text-anchor="start" x="476" y="-56.3784" font-family="Times New Roman,serif" font-size="10.00">github.com/loov/goda/pkggraph</text>
-<text text-anchor="start" x="476" y="-45.3784" font-family="Times New Roman,serif" font-size="10.00">201 / 4.5KB</text>
+<text text-anchor="start" x="476" y="-45.3784" font-family="Times New Roman,serif" font-size="10.00">200 / 4.4KB</text>
 </a>
 </g>
 </g>
@@ -205,10 +205,10 @@
 </g>
 <!-- n_github_com_loov_goda_stat -->
 <g id="node10" class="node"><title>n_github_com_loov_goda_stat</title>
-<g id="a_node10"><a xlink:href="https://pkg.go.dev/github.com/loov/goda/stat" xlink:title="github.com/loov/goda/stat\l249 / 4.6KB\l" target="_graphviz">
+<g id="a_node10"><a xlink:href="https://pkg.go.dev/github.com/loov/goda/stat" xlink:title="github.com/loov/goda/stat\l249 / 4.5KB\l" target="_graphviz">
 <polygon fill="none" stroke="#079139" stroke-width="2" stroke-opacity="0.698039" points="900,-67.3784 756,-67.3784 756,-31.3784 900,-31.3784 900,-67.3784"/>
 <text text-anchor="start" x="764" y="-52.3784" font-family="Times New Roman,serif" font-size="10.00">github.com/loov/goda/stat</text>
-<text text-anchor="start" x="764" y="-41.3784" font-family="Times New Roman,serif" font-size="10.00">249 / 4.6KB</text>
+<text text-anchor="start" x="764" y="-41.3784" font-family="Times New Roman,serif" font-size="10.00">249 / 4.5KB</text>
 </a>
 </g>
 </g>

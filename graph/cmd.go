@@ -49,7 +49,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.docs, "docs", "https://pkg.go.dev/", "override the docs url to use")
 
 	f.StringVar(&cmd.outputType, "type", "dot", "output type")
-	f.StringVar(&cmd.labelFormat, "f", "{{.ID}}\\l{{ .Stat.GoFiles.Lines }} / {{ .Stat.GoFiles.Size }}\\l", "label formatting")
+	f.StringVar(&cmd.labelFormat, "f", "{{.ID}}\\l{{ .Stat.Go.Lines }} / {{ .Stat.Go.Size }}\\l", "label formatting")
 
 	f.BoolVar(&cmd.clusters, "cluster", false, "create clusters")
 	f.BoolVar(&cmd.shortID, "short", false, "use short package id-s")

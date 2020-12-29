@@ -81,7 +81,7 @@ goda list github.com/loov/goda/...:noroot - golang.org/x/tools/...:root
 Here's an example output for:
 
 ```
-goda graph github.com/loov/goda/... | dot -Tsvg -o graph.svg
+goda graph github.com/loov/goda/...:root | dot -Tsvg -o graph.svg
 ```
 
 ![github.com/loov/goda dependency graph](./graph.svg)

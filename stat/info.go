@@ -11,25 +11,25 @@ import (
 )
 
 type Stat struct {
-	GoFiles    Source
-	OtherFiles Source
+	Go    Source
+	Other Source
 
-	DeclCount  TopDecl
-	TokenCount Tokens
+	Decls  Decls
+	Tokens Tokens
 }
 
 func (info *Stat) AllFiles() Source {
 	var c Source
-	c.Add(info.GoFiles)
-	c.Add(info.OtherFiles)
+	c.Add(info.Go)
+	c.Add(info.Other)
 	return c
 }
 
 func (s *Stat) Add(b Stat) {
-	s.GoFiles.Add(b.GoFiles)
-	s.OtherFiles.Add(b.OtherFiles)
-	s.DeclCount.Add(b.DeclCount)
-	s.TokenCount.Add(b.TokenCount)
+	s.Go.Add(b.Go)
+	s.Other.Add(b.Other)
+	s.Decls.Add(b.Decls)
+	s.Tokens.Add(b.Tokens)
 }
 
 func Package(p *packages.Package) (Stat, []error) {
@@ -46,7 +46,7 @@ func Package(p *packages.Package) (Stat, []error) {
 		}
 
 		count := SourceFromBytes(src)
-		info.GoFiles.Add(count)
+		info.Go.Add(count)
 
 		f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
 		if err != nil {
@@ -54,13 +54,13 @@ func Package(p *packages.Package) (Stat, []error) {
 			continue
 		}
 
-		info.DeclCount.Add(TopDeclFromAst(f))
-		info.TokenCount.Add(TokensFromAst(f))
+		info.Decls.Add(DeclsFromAst(f))
+		info.Tokens.Add(TokensFromAst(f))
 	}
 
 	for _, filename := range p.OtherFiles {
 		count, err := SourceFromPath(filename)
-		info.OtherFiles.Add(count)
+		info.Other.Add(count)
 		if err != nil {
 			if !errors.Is(err, ErrEmptyFile) {
 				errs = append(errs, err)

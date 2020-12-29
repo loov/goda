@@ -5,8 +5,8 @@ import (
 	"go/token"
 )
 
-// TopDecl stats about top-level declarations.
-type TopDecl struct {
+// Decls stats about top-level declarations.
+type Decls struct {
 	Func  int64
 	Type  int64
 	Const int64
@@ -14,7 +14,7 @@ type TopDecl struct {
 	Other int64
 }
 
-func (s *TopDecl) Add(b TopDecl) {
+func (s *Decls) Add(b Decls) {
 	s.Func += b.Func
 	s.Type += b.Type
 	s.Const += b.Const
@@ -22,12 +22,12 @@ func (s *TopDecl) Add(b TopDecl) {
 	s.Other += b.Other
 }
 
-func (s *TopDecl) Total() int64 {
+func (s *Decls) Total() int64 {
 	return s.Func + s.Type + s.Const + s.Var + s.Other
 }
 
-func TopDeclFromAst(f *ast.File) TopDecl {
-	stat := TopDecl{}
+func DeclsFromAst(f *ast.File) Decls {
+	stat := Decls{}
 	for _, decl := range f.Decls {
 		switch decl := decl.(type) {
 		case *ast.GenDecl:
