@@ -5,7 +5,6 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/loov/goda/pkgset"
 	"github.com/loov/goda/stat"
 )
 
@@ -37,10 +36,6 @@ type Node struct {
 }
 
 func (n *Node) Pkg() *packages.Package { return n.Package }
-
-func FromSet(pkgs pkgset.Set) *Graph {
-	return From(map[string]*packages.Package(pkgs))
-}
 
 // From creates a new graph from a map of packages.
 func From(pkgs map[string]*packages.Package) *Graph {

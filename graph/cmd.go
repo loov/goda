@@ -90,7 +90,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		label:   label,
 	}
 
-	graph := pkggraph.FromSet(result)
+	graph := pkggraph.From(result)
 	if cmd.clusters {
 		dot.WriteClusters(graph)
 	} else {

@@ -54,7 +54,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
-	graph := pkggraph.FromSet(result)
+	graph := pkggraph.From(result)
 
 	for _, p := range graph.Sorted {
 		err := t.Execute(os.Stdout, p)

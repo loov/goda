@@ -71,7 +71,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
-	graph := pkggraph.FromSet(result)
+	graph := pkggraph.From(result)
 
 	nodes := map[string]*Node{}
 	nodelist := []*Node{}
