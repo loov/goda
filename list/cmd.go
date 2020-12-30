@@ -4,7 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"text/tabwriter"
 
 	"github.com/google/subcommands"
 
@@ -15,6 +17,7 @@ import (
 
 type Command struct {
 	printStandard bool
+	noAlign       bool
 	format        string
 }
 
@@ -24,12 +27,13 @@ func (*Command) Usage() string {
 	return `list <expr>:
 	List packages using an expression.
 
-	See "help expr" for further information about expressions. 
+	See "help expr" for further information about expressions.
 `
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
+	f.BoolVar(&cmd.noAlign, "noalign", false, "disable aligning tabs")
 	f.StringVar(&cmd.format, "f", "{{.ID}}", "formatting")
 }
 
@@ -56,12 +60,19 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	graph := pkggraph.From(result)
 
+	var w io.Writer = os.Stdout
+	if !cmd.noAlign {
+		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	}
 	for _, p := range graph.Sorted {
-		err := t.Execute(os.Stdout, p)
-		fmt.Fprintln(os.Stdout)
+		err := t.Execute(w, p)
+		fmt.Fprintln(w)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
+	}
+	if w, ok := w.(interface{ Flush() error }); ok {
+		w.Flush()
 	}
 
 	return subcommands.ExitSuccess

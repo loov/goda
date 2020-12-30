@@ -4,9 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
@@ -19,6 +21,7 @@ import (
 
 type Command struct {
 	printStandard bool
+	noAlign       bool
 	format        string
 	exclude       string
 }
@@ -36,6 +39,7 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
+	f.BoolVar(&cmd.noAlign, "noalign", false, "disable aligning tabs")
 	f.StringVar(&cmd.format, "f", "{{.ID}}\tin:{{.InDegree}}\tpkgs:{{.Cut.PackageCount}}\tsize:{{.Cut.AllFiles.Size}}\tloc:{{.Cut.Go.Lines}}", "info formatting")
 	f.StringVar(&cmd.exclude, "exclude", "", "package expr to exclude from output")
 }
@@ -119,16 +123,23 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return nodelist[i].InDegree() < nodelist[k].InDegree()
 	})
 
+	var w io.Writer = os.Stdout
+	if !cmd.noAlign {
+		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	}
 	for _, node := range nodelist {
 		if _, exclude := excluded[node.ID]; exclude {
 			continue
 		}
 
-		err := t.Execute(os.Stdout, node)
-		fmt.Fprintln(os.Stdout)
+		err := t.Execute(w, node)
+		fmt.Fprintln(w)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
+	}
+	if w, ok := w.(interface{ Flush() error }); ok {
+		w.Flush()
 	}
 
 	return subcommands.ExitSuccess
