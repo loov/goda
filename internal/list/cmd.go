@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"text/tabwriter"
 
 	"github.com/google/subcommands"
@@ -17,8 +18,10 @@ import (
 
 type Command struct {
 	printStandard bool
-	noAlign       bool
-	format        string
+
+	noAlign bool
+	header  string
+	format  string
 }
 
 func (*Command) Name() string     { return "list" }
@@ -34,7 +37,9 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
+
 	f.BoolVar(&cmd.noAlign, "noalign", false, "disable aligning tabs")
+	f.StringVar(&cmd.header, "h", "", "header for the table\nautomatically derives from format, when empty, use \"-\" to skip")
 	f.StringVar(&cmd.format, "f", "{{.ID}}", "formatting")
 }
 
@@ -63,6 +68,13 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	var w io.Writer = os.Stdout
 	if !cmd.noAlign {
 		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	}
+	if cmd.header != "-" {
+		if cmd.header == "" {
+			rx := regexp.MustCompile(`(\{\{\s*\.?|\s*\}\})`)
+			cmd.header = rx.ReplaceAllString(cmd.format, "")
+		}
+		fmt.Fprintln(w, cmd.header)
 	}
 	for _, p := range graph.Sorted {
 		err := t.Execute(w, p)
