@@ -16,6 +16,9 @@ goda graph -cluster -short "github.com/loov/goda" | dot -Tsvg -o graph.svg
 # list dependencies of github.com/loov/goda
 goda list "github.com/loov/goda/...:noroot"
 
+# list dependency graph that reaches flag package, including std
+goda graph -std "reach(github.com/loov/goda/..., flag:root)" | dot -Tsvg -o graph.svg
+
 # list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
 goda list "shared(github.com/loov/goda/pkgset, github.com/loov/goda/cut)""
 
