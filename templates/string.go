@@ -12,16 +12,9 @@ func stringFuncs() template.FuncMap {
 	}
 }
 
-func rel(args ...string) string {
-	if len(args) == 0 {
-		return ""
-	}
-	id, prefixes := args[len(args)-1], args[:len(args)-1]
-
-	for _, prefix := range prefixes {
-		if x, ok := replace(id, prefix, "./"); ok {
-			return x
-		}
+func rel(prefix, id string) string {
+	if x, ok := replace(id, prefix, "./"); ok {
+		return x
 	}
 	return id
 }
