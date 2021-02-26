@@ -25,6 +25,10 @@ func Parse(ctx context.Context, expr []string) (ast.Expr, error) {
 }
 
 func Calc(parentContext context.Context, expr []string) (Set, error) {
+	if len(expr) == 0 {
+		expr = []string{"."}
+	}
+
 	rootExpr, err := Parse(parentContext, expr)
 	if err != nil {
 		return New(), err

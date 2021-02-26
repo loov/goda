@@ -56,11 +56,6 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	if f.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "missing package names\n")
-		return subcommands.ExitUsageError
-	}
-
 	if cmd.outputType != "dot" {
 		fmt.Fprintf(os.Stderr, "unknown output type %v\n", cmd.outputType)
 		return subcommands.ExitUsageError

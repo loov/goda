@@ -38,11 +38,6 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	if f.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "missing package names\n")
-		return subcommands.ExitUsageError
-	}
-
 	t, err := templates.Parse(cmd.format)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "invalid format string: %v\n", err)

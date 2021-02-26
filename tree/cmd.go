@@ -34,22 +34,21 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	if f.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "missing package names\n")
-		return subcommands.ExitUsageError
-	}
-
 	t, err := templates.Parse(cmd.format)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "invalid format string: %v\n", err)
 		return subcommands.ExitFailure
 	}
 
+	args := f.Args()
+	if len(args) == 0 {
+		args = []string{"."}
+	}
 	roots, err := packages.Load(&packages.Config{
 		Context: ctx,
 		Mode:    packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports,
 		Env:     os.Environ(),
-	}, f.Args()...)
+	}, args...)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load %v: %v\n", f.Args(), err)
