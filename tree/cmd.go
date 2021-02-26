@@ -23,7 +23,7 @@ type Command struct {
 func (*Command) Name() string     { return "tree" }
 func (*Command) Synopsis() string { return "Print dependency tree." }
 func (*Command) Usage() string {
-	return `tree <pkg>+:
+	return `tree <expr>:
 	Print dependency tree of packages.
 `
 }
@@ -40,32 +40,34 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitFailure
 	}
 
-	args := f.Args()
-	if len(args) == 0 {
-		args = []string{"."}
-	}
-	roots, err := packages.Load(&packages.Config{
-		Context: ctx,
-		Mode:    packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports,
-		Env:     os.Environ(),
-	}, args...)
-
+	result, err := pkgset.Calc(ctx, f.Args())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load %v: %v\n", f.Args(), err)
+		fmt.Fprintln(os.Stderr, err.Error())
 		return subcommands.ExitFailure
 	}
+	if !cmd.printStandard {
+		result = pkgset.Subtract(result, pkgset.Std())
+	}
+	roots := pkgset.Sources(result)
 
 	printed := map[string]bool{}
 
-	var visit func(int, *packages.Package, bool)
-	visit = func(ident int, p *packages.Package, last bool) {
+	var visit func(int, string, *packages.Package, bool)
+	visit = func(ident int, parentID string, p *packages.Package, last bool) {
 		if last {
 			fmt.Fprint(os.Stdout, strings.Repeat("  ", ident), "  └ ")
 		} else {
 			fmt.Fprint(os.Stdout, strings.Repeat("  ", ident), "  ├ ")
 		}
 
-		err := t.Execute(os.Stdout, p)
+		type packageWithImporter struct {
+			ParentID string
+			*packages.Package
+		}
+		err := t.Execute(os.Stdout, packageWithImporter{
+			ParentID: parentID,
+			Package:  p,
+		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
@@ -78,8 +80,8 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 		printed[p.ID] = true
 		keys := []string{}
-		for id, dep := range p.Imports {
-			if !cmd.printStandard && pkgset.IsStd(dep) {
+		for id := range p.Imports {
+			if _, ok := result[id]; !ok {
 				continue
 			}
 			keys = append(keys, id)
@@ -88,12 +90,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		sort.Strings(keys)
 		for i, id := range keys {
 			dep := p.Imports[id]
-			visit(ident+1, dep, i == len(keys)-1)
+			visit(ident+1, p.ID, dep, i == len(keys)-1)
 		}
 	}
 
 	for _, root := range roots {
-		visit(0, root, false)
+		visit(0, "\x00", root, false)
 	}
 
 	return subcommands.ExitSuccess
