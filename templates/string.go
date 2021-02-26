@@ -53,7 +53,9 @@ func replace(id string, prefix, replacement string) (string, bool) {
 	prefix = withSlash(prefix)
 	if strings.HasPrefix(id, prefix) {
 		id = strings.TrimPrefix(id, prefix)
-		replacement = withSlash(replacement)
+		if replacement != "" {
+			replacement = withSlash(replacement)
+		}
 		return replacement + id, true
 	}
 	return id, false
