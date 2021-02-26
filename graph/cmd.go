@@ -52,7 +52,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.labelFormat, "f", "{{.ID}}\\l{{ .Stat.Go.Lines }} / {{ .Stat.Go.Size }}\\l", "label formatting")
 
 	f.BoolVar(&cmd.clusters, "cluster", false, "create clusters")
-	f.BoolVar(&cmd.shortID, "short", false, "use short package id-s")
+	f.BoolVar(&cmd.shortID, "short", false, "use short package id-s inside clusters")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
