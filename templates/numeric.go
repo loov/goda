@@ -8,7 +8,7 @@ import (
 	"github.com/loov/goda/memory"
 )
 
-func numeric() template.FuncMap {
+func numericFuncs() template.FuncMap {
 	return template.FuncMap{
 		"add": add,
 		"div": div,
