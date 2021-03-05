@@ -125,6 +125,13 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				args, err := evalArgs(ctx, e.Args)
 				return Reach(args[0], args[1]), err
 
+			case "incoming":
+				if len(e.Args) != 2 {
+					return nil, fmt.Errorf("incoming requires two arguments: %v", e)
+				}
+				args, err := evalArgs(ctx, e.Args)
+				return Incoming(args[0], args[1]), err
+
 			case "transitive":
 				if len(e.Args) != 1 {
 					return nil, fmt.Errorf("reach requires one argument: %v", e)

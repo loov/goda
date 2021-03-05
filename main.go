@@ -80,6 +80,9 @@ func (*ExprHelp) Usage() string {
 	reach(a, b);
 		lists packages from a that can reach a package in b
 
+	incoming(a, b);
+		lists packages from a that directly import a package in b, including b
+
 	transitive(a);
 		a transitive reduction in package dependencies
 

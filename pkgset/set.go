@@ -177,6 +177,21 @@ func Reach(a, b Set) Set {
 	return result
 }
 
+// Incoming returns packages from a that directly import packages in b.
+func Incoming(a, b Set) Set {
+	result := b.Clone()
+next:
+	for _, x := range a {
+		for _, imp := range x.Imports {
+			if _, ok := b[imp.ID]; ok {
+				result[x.ID] = x
+				continue next
+			}
+		}
+	}
+	return result
+}
+
 // Transitive returns transitive reduction.
 func Transitive(a Set) Set {
 	result := a.Clone()
