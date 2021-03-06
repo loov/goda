@@ -38,6 +38,8 @@ Supported output types:
 
 	dot - GraphViz dot format
 
+	graphml - GraphML format
+
 	tgf - Trivial Graph Format
 
 	edges - format with each edge separately
@@ -55,7 +57,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 
 	f.StringVar(&cmd.docs, "docs", "https://pkg.go.dev/", "override the docs url to use")
 
-	f.StringVar(&cmd.outputType, "type", "dot", "output type (dot, digraph, edges, tgf)")
+	f.StringVar(&cmd.outputType, "type", "dot", "output type (dot, graphml, digraph, edges, tgf)")
 	f.StringVar(&cmd.labelFormat, "f", "", "label formatting")
 
 	f.BoolVar(&cmd.clusters, "cluster", false, "create clusters")
@@ -104,6 +106,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 	case "edges":
 		format = &Edges{
+			out:   os.Stdout,
+			err:   os.Stderr,
+			label: label,
+		}
+	case "graphml":
+		format = &GraphML{
 			out:   os.Stdout,
 			err:   os.Stderr,
 			label: label,
