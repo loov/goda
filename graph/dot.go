@@ -14,9 +14,10 @@ type Dot struct {
 	out io.Writer
 	err io.Writer
 
-	docs    string
-	nocolor bool
-	shortID bool
+	docs     string
+	clusters bool
+	nocolor  bool
+	shortID  bool
 
 	label *template.Template
 }
@@ -90,6 +91,14 @@ func (ctx *Dot) writeGraphProperties() {
 	fmt.Fprintf(ctx.out, "    newrank=true;\n")
 	fmt.Fprintf(ctx.out, "    ranksep=\"1.5\";\n")
 	fmt.Fprintf(ctx.out, "    quantum=\"0.5\";\n")
+}
+
+func (ctx *Dot) Write(graph *pkggraph.Graph) {
+	if ctx.clusters {
+		ctx.WriteClusters(graph)
+	} else {
+		ctx.WriteRegular(graph)
+	}
 }
 
 func (ctx *Dot) WriteRegular(graph *pkggraph.Graph) {

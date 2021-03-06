@@ -72,23 +72,24 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
-	dot := &Dot{
-		out:     os.Stdout,
-		err:     os.Stderr,
-		docs:    cmd.docs,
-		nocolor: cmd.nocolor,
-		shortID: cmd.shortID,
-		label:   label,
+	var format Format = &Dot{
+		out:      os.Stdout,
+		err:      os.Stderr,
+		docs:     cmd.docs,
+		clusters: cmd.clusters,
+		nocolor:  cmd.nocolor,
+		shortID:  cmd.shortID,
+		label:    label,
 	}
 
 	graph := pkggraph.From(result)
-	if cmd.clusters {
-		dot.WriteClusters(graph)
-	} else {
-		dot.WriteRegular(graph)
-	}
+	format.Write(graph)
 
 	return subcommands.ExitSuccess
+}
+
+type Format interface {
+	Write(*pkggraph.Graph)
 }
 
 func pkgID(p *pkggraph.Node) string {
