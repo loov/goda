@@ -41,61 +41,66 @@ type ExprHelp struct{}
 func (*ExprHelp) Name() string     { return "expr" }
 func (*ExprHelp) Synopsis() string { return "Help about package expressions" }
 func (*ExprHelp) Usage() string {
-	return `Package expressions allow to specify calculations with dependencies:
+	return `Package expressions allow to specify calculations with dependencies.
+
+The examples use X, Y and Z as the package names, however they can be replaced
+by any expression.
+
+Examples using Q can only be used on packages and not expressions.
 
 # Basic operations
 	There are a few basic oprations specified for manipulating sets of packages.
 
-	a b c;
-	a + b + c;  add(a, b, c);  or(a, b, c)
-		returns packages that are used by a or b
+	X Y Z;
+	X + Y + Z;  add(X, Y, Z);  or(X, Y, Z)
+		packages that are used by X, Y or Z
 
-	a - b - c;  subtract(a, b, c);  exclude(a, b, c)
-		returns packages that are used by a and not used by b
+	X - Y - Z;  subtract(X, Y, Z);  exclude(X, Y, Z)
+		packages that are used by X and not used by Y and Z
 
-	shared(a, b, c);  intersect(a, b, c)
-		returns packages that are used by both a and b
+	shared(X, Y, Z);  intersect(X, Y, Z)
+		packages that are used by all X, Y and Z
 
-	xor(a, b);
-		returns packages that are different between a and b
+	xor(X, Y);
+		packages that are different between X and Y
 
 # Selectors
 	Selectors allow selecting parts of the dependency tree.
 
-	a:root
-		keeps packages that are explictly included by a (excluding dependencies)
-	a:noroot
-		selects excluding roots, shorthand for (a - a:root)
+	Q:root
+		packages that are included by package Q without dependencies
+	Q:noroot
+		selects excluding roots, shorthand for (Q - Q:root)
 
-	a:source
-		keeps packages that have no dependents
-	a:nosource
-		selects excluding sources, shorthand for (a - a:source)
+	X:source
+		packages that have no other package importing them
+	X:nosource
+		selects excluding sources, shorthand for (X - X:source)
 
-	a:deps
-		dependencies of a (a not included)
+	X:deps
+		dependencies of X (X not included)
 
 # Functions:
 
-	reach(a, b);
-		lists packages from a that can reach a package in b
+	reach(X, Y);
+		packages from X that can reach a package in Y
 
-	incoming(a, b);
-		lists packages from a that directly import a package in b, including b
+	incoming(X, Y);
+		packages from X that directly import a package in Y, including Y
 
-	transitive(a);
+	transitive(X);
 		a transitive reduction in package dependencies
 
 # Tags and OS:
 
-	test=1(a);
-		list a packages with test packages
+	test=1(X);
+		include tests when resolving X
 
-	goos=linux(a):
-		list packages that are included for "linux"
+	goos=linux(X):
+		set goos to "linux" tests when resolving X
 
-	purego=1(a):
-		list packages that are included for tag "purego"
+	purego=1(X):
+		add tag "purego" for resolving X
 
 # Example expressions
 
