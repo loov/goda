@@ -157,7 +157,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				if err != nil {
 					return nil, err
 				}
-				return Dependencies(set), nil
+				return DirectDependencies(set), nil
 
 			case "source":
 				set, err := eval(ctx, e.Expr)

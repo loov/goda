@@ -13,7 +13,7 @@ goda graph "github.com/loov/goda/..." | dot -Tsvg -o graph.svg
 # draw a dependency graph of github.com/loov/goda and dependencies
 goda graph -cluster -short "github.com/loov/goda:all" | dot -Tsvg -o graph.svg
 
-# list dependencies of github.com/loov/goda
+# list direct dependencies of github.com/loov/goda
 goda list "github.com/loov/goda/...:deps"
 
 # list dependency graph that reaches flag package, including std
@@ -55,7 +55,7 @@ goda list github.com/loov/goda/... github.com/loov/qloc
 By default it will select all the specific packages. You can select the package dependencies with `:deps` and both of them with `:all`:
 
 ```
-goda list github.com/loov/goda/...:deps
+goda list github.com/loov/goda/...:deps:all
 goda list github.com/loov/goda/...:all
 ```
 

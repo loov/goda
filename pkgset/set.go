@@ -258,25 +258,18 @@ func Sources(a Set) Set {
 	return result
 }
 
-// Dependencies returns packages that has removed first layer in the DAG
-func Dependencies(a Set) Set {
-	all := map[string]*packages.Package{}
-	incoming := map[string]int{}
-
-	a.WalkDependencies(func(p *packages.Package) {
-		all[p.ID] = p
+// DirectDependencies returns packages that are direct dependencies of a, `a` not included.
+func DirectDependencies(a Set) Set {
+	rs := map[string]*packages.Package{}
+	for _, p := range a {
 		for _, dep := range p.Imports {
-			incoming[dep.ID]++
-		}
-	})
-
-	result := New()
-	for pid, count := range incoming {
-		if count > 0 {
-			result[pid] = all[pid]
+			if _, ok := a[dep.ID]; ok {
+				continue
+			}
+			rs[dep.ID] = dep
 		}
 	}
-	return result
+	return rs
 }
 
 // Main returns main pacakges.

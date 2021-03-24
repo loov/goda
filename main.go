@@ -67,9 +67,10 @@ package expressions.
 
 	X:all
 		select X and all of its direct and indirect dependencies
-		shorthand for (X + X:deps)
 	X:deps
-		select direct and indirect dependenices of X
+		select direct dependenices of X
+	X:deps:all
+		select direct and indirect dependencies of X; X not included
 
 	X:source
 		packages that have no other package importing them
@@ -106,9 +107,6 @@ package expressions.
 
 	github.com/loov/goda:deps
 		all dependencies for "github.com/loov/goda" package
-
-	github.com/loov/goda/...:deps
-		all dependencies for "github.com/loov/goda" sub-package
 
 	shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/templates:all)
 		packages shared by "github.com/loov/goda/pkgset" and "github.com/loov/goda/templates"
