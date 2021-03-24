@@ -43,42 +43,37 @@ func (*ExprHelp) Synopsis() string { return "Help about package expressions" }
 func (*ExprHelp) Usage() string {
 	return `Package expressions allow to specify calculations with dependencies.
 
-The examples use X, Y and Z as the package names, however they can be replaced
-by any expression.
-
-Examples using Q can only be used on packages and not expressions.
+The examples use X, Y and Z as placeholders for packages, packages paths or
+package expressions.
 
 # Basic operations
 	There are a few basic oprations specified for manipulating sets of packages.
 
 	X Y Z;
 	X + Y + Z;  add(X, Y, Z);  or(X, Y, Z)
-		packages that are used by X, Y or Z
+		all packages that match X, Y and Z
 
 	X - Y - Z;  subtract(X, Y, Z);  exclude(X, Y, Z)
 		packages that are used by X and not used by Y and Z
 
 	shared(X, Y, Z);  intersect(X, Y, Z)
-		packages that are used by all X, Y and Z
+		packages that exist in all of X, Y and Z
 
 	xor(X, Y);
 		packages that are different between X and Y
 
 # Selectors
-	Selectors allow selecting parts of the dependency tree.
+	Selectors allow selecting parts of the dependency tree
 
-	Q:root
-		packages that are included by package Q without dependencies
-	Q:noroot
-		selects excluding roots, shorthand for (Q - Q:root)
+	X:all
+		select X and all of its dependencies, shorthand for (X + X:deps)
+	X:deps
+		select dependenices of X
 
 	X:source
 		packages that have no other package importing them
 	X:nosource
 		selects excluding sources, shorthand for (X - X:source)
-
-	X:deps
-		dependencies of X (X not included)
 
 # Functions:
 
@@ -107,16 +102,16 @@ Examples using Q can only be used on packages and not expressions.
 	github.com/loov/goda:deps
 		all dependencies for "github.com/loov/goda" package
 
-	github.com/loov/goda/...:noroot
+	github.com/loov/goda/...:deps
 		all dependencies for "github.com/loov/goda" sub-package
 
-	shared(github.com/loov/goda/pkgset, github.com/loov/goda/templates)
+	shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/templates:all)
 		packages shared by "github.com/loov/goda/pkgset" and "github.com/loov/goda/templates"
 
-	github.com/loov/goda/...:noroot - golang.org/x/tools/...
+	github.com/loov/goda/... - golang.org/x/tools/...
 		all dependencies excluding golang.org/x/tools
 
-	reach(github.com/loov/goda/...:root, golang.org/x/tools/go/packages:root)
+	reach(github.com/loov/goda/...:all, golang.org/x/tools/go/packages)
 		packages in github.com/loov/goda/ that use golang.org/x/tools/go/packages
 `
 }
