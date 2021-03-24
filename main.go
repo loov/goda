@@ -75,6 +75,9 @@ package expressions.
 	X:nosource
 		selects excluding sources, shorthand for (X - X:source)
 
+	X:main
+		select packages named main
+
 # Functions:
 
 	reach(X, Y);
