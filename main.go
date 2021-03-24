@@ -66,14 +66,16 @@ package expressions.
 	Selectors allow selecting parts of the dependency tree
 
 	X:all
-		select X and all of its dependencies, shorthand for (X + X:deps)
+		select X and all of its direct and indirect dependencies
+		shorthand for (X + X:deps)
 	X:deps
-		select dependenices of X
+		select direct and indirect dependenices of X
 
 	X:source
 		packages that have no other package importing them
 	X:nosource
-		selects excluding sources, shorthand for (X - X:source)
+		selects excluding sources
+		shorthand for (X - X:source)
 
 	X:main
 		select packages named main
