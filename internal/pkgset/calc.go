@@ -152,7 +152,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				}
 				return NewAll(set), nil
 
-			case "imports", "imps":
+			case "import", "imp":
 				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
