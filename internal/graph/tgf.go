@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/loov/goda/pkggraph"
+	"github.com/loov/goda/internal/pkggraph"
 )
 
 type TGF struct {

@@ -13,10 +13,10 @@ import (
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
 
-	"github.com/loov/goda/pkggraph"
-	"github.com/loov/goda/pkgset"
-	"github.com/loov/goda/stat"
-	"github.com/loov/goda/templates"
+	"github.com/loov/goda/internal/pkggraph"
+	"github.com/loov/goda/internal/pkgset"
+	"github.com/loov/goda/internal/stat"
+	"github.com/loov/goda/internal/templates"
 )
 
 type Command struct {

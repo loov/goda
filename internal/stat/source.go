@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/loov/goda/memory"
+	"github.com/loov/goda/internal/memory"
 )
 
 // Source contains basic analysis of arbitrary source code.

@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/loov/goda/pkgset/ast"
+	"github.com/loov/goda/internal/pkgset/ast"
 )
 
 func Parse(ctx context.Context, expr []string) (ast.Expr, error) {
