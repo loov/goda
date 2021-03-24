@@ -11,7 +11,7 @@ type Set map[string]*packages.Package
 
 // New makes a set from roots recursively
 func New(roots ...*packages.Package) Set {
-	set := make(Set, len(roots))
+	set := make(Set)
 	for _, p := range roots {
 		set.IncludeRecursive(p)
 	}
@@ -20,11 +20,29 @@ func New(roots ...*packages.Package) Set {
 
 // NewRoot makes a set from roots recursively
 func NewRoot(roots ...*packages.Package) Set {
-	set := make(Set, len(roots))
+	set := make(Set)
 	for _, p := range roots {
 		set[p.ID] = p
 	}
 	return set
+}
+
+// NewAll reincludes all the dependencies from the graph.
+func NewAll(src Set) Set {
+	set := make(Set)
+	for _, p := range src {
+		set.IncludeRecursive(p)
+	}
+	return set
+}
+
+// List returns packages in unsorted order.
+func (set Set) List() []*packages.Package {
+	dst := make([]*packages.Package, 0, len(set))
+	for _, p := range set {
+		dst = append(dst, p)
+	}
+	return dst
 }
 
 // Sorted returns packages in sorted order

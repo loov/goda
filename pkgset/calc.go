@@ -64,7 +64,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 		switch e := e.(type) {
 		case ast.Package:
 			roots, err := ctx.Load(string(e))
-			return New(roots...), err
+			return NewRoot(roots...), err
 
 		case ast.Func:
 			if e.IsContext() {
@@ -145,31 +145,19 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 
 		case ast.Select:
 			switch strings.ToLower(e.Selector) {
-			case "root":
-				p, ok := e.Expr.(ast.Package)
-				if !ok {
-					return nil, fmt.Errorf(":root cannot be used with composite expressions: %v", e)
-				}
-
-				roots, err := ctx.Load(string(p))
+			case "all":
+				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
+				return NewAll(set), nil
 
-				return NewRoot(roots...), nil
-
-			case "noroot":
-				p, ok := e.Expr.(ast.Package)
-				if !ok {
-					return nil, fmt.Errorf(":noroot cannot be used with composite expressions: %v", e)
-				}
-
-				roots, err := ctx.Load(string(p))
+			case "deps":
+				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
-
-				return Subtract(New(roots...), NewRoot(roots...)), nil
+				return Dependencies(set), nil
 
 			case "source":
 				set, err := eval(ctx, e.Expr)
@@ -186,13 +174,6 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				}
 
 				return Subtract(set, Sources(set)), nil
-
-			case "deps":
-				set, err := eval(ctx, e.Expr)
-				if err != nil {
-					return nil, err
-				}
-				return Dependencies(set), nil
 
 			default:
 				return nil, fmt.Errorf("unknown selector %v: %v", e.Selector, e)
