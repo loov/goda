@@ -278,3 +278,14 @@ func Dependencies(a Set) Set {
 	}
 	return result
 }
+
+// Main returns main pacakges.
+func Main(a Set) Set {
+	rs := Set{}
+	for pid, pkg := range a {
+		if pkg.Name == "main" {
+			rs[pid] = pkg
+		}
+	}
+	return rs
+}

@@ -175,6 +175,13 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 
 				return Subtract(set, Sources(set)), nil
 
+			case "main":
+				set, err := eval(ctx, e.Expr)
+				if err != nil {
+					return nil, err
+				}
+				return Main(set), nil
+
 			default:
 				return nil, fmt.Errorf("unknown selector %v: %v", e.Selector, e)
 			}
