@@ -70,8 +70,8 @@ func TestParsing(t *testing.T) {
 			{TRightParen, ")"},
 		},
 	}, {
-		"Reaches(github.com/loov/goda, golang.org/x/tools/...:all):deps:all",
-		"Reaches(github.com/loov/goda, golang.org/x/tools/...:all):deps:all",
+		"Reaches(github.com/loov/goda, golang.org/x/tools/...:all):imps:all",
+		"Reaches(github.com/loov/goda, golang.org/x/tools/...:all):imps:all",
 		[]Token{
 			{TFunc, "Reaches"},
 			{TLeftParen, "("},
@@ -80,7 +80,7 @@ func TestParsing(t *testing.T) {
 			{TPackage, "golang.org/x/tools/..."},
 			{TSelector, "all"},
 			{TRightParen, ")"},
-			{TSelector, "deps"},
+			{TSelector, "imps"},
 			{TSelector, "all"},
 		},
 	}, {

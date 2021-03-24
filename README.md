@@ -14,7 +14,7 @@ goda graph "github.com/loov/goda/..." | dot -Tsvg -o graph.svg
 goda graph -cluster -short "github.com/loov/goda:all" | dot -Tsvg -o graph.svg
 
 # list direct dependencies of github.com/loov/goda
-goda list "github.com/loov/goda/...:deps"
+goda list "github.com/loov/goda/...:imports"
 
 # list dependency graph that reaches flag package, including std
 goda graph -std "reach(github.com/loov/goda/...:all, flag)" | dot -Tsvg -o graph.svg
@@ -52,10 +52,10 @@ The basic syntax is that you can specify multiple packages:
 goda list github.com/loov/goda/... github.com/loov/qloc
 ```
 
-By default it will select all the specific packages. You can select the package dependencies with `:deps` and both of them with `:all`:
+By default it will select all the specific packages. You can select the package dependencies with `:imports` and both of them with `:all`:
 
 ```
-goda list github.com/loov/goda/...:deps:all
+goda list github.com/loov/goda/...:imports:all
 goda list github.com/loov/goda/...:all
 ```
 
