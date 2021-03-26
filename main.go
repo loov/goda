@@ -73,8 +73,7 @@ package expressions.
 
 	X:source
 		packages that have no other package importing them
-	X:nosource
-		selects excluding sources
+	X:-source
 		shorthand for (X - X:source)
 
 	X:main

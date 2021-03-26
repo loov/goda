@@ -144,20 +144,32 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 			}
 
 		case ast.Select:
-			switch strings.ToLower(e.Selector) {
+			selector := e.Selector
+			combine := func(source, result Set) Set { return result }
+
+			switch selector[0] {
+			case '+':
+				combine = Union
+				selector = selector[1:]
+			case '-':
+				combine = Subtract
+				selector = selector[1:]
+			}
+
+			switch strings.ToLower(selector) {
 			case "all":
 				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
-				return NewAll(set), nil
+				return combine(set, NewAll(set)), nil
 
 			case "import", "imp":
 				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
-				return DirectDependencies(set), nil
+				return combine(set, DirectDependencies(set)), nil
 
 			case "source":
 				set, err := eval(ctx, e.Expr)
@@ -165,26 +177,27 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 					return nil, err
 				}
 
-				return Sources(set), nil
+				return combine(set, Sources(set)), nil
 
-			case "nosource":
+			case "nosource": // Deprecated
 				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
 
-				return Subtract(set, Sources(set)), nil
+				return combine(set, Subtract(set, Sources(set))), nil
 
 			case "main":
 				set, err := eval(ctx, e.Expr)
 				if err != nil {
 					return nil, err
 				}
-				return Main(set), nil
+				return combine(set, Main(set)), nil
 
 			default:
 				return nil, fmt.Errorf("unknown selector %v: %v", e.Selector, e)
 			}
+
 		default:
 			return nil, fmt.Errorf("unknown token %T", e)
 		}
