@@ -66,7 +66,7 @@ func Tokenize(s string) ([]Token, error) {
 		case ':':
 			p++
 			var selector string
-			p, selector = parseIdent(p, s)
+			p, selector = parseSelector(p, s)
 			if selector == "" {
 				return tokens, fmt.Errorf("expected selector %d", p)
 			}
@@ -95,6 +95,10 @@ func isIdentFirst(p byte) bool {
 		('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || ('0' <= p && p <= '9')
 }
 
+func isPrefixOp(p byte) bool {
+	return p == '+' || p == '-'
+}
+
 func isIdent(p byte) bool {
 	return (p == '.') || (p == '@') || (p == '_') || (p == '-') || (p == '/') ||
 		('a' <= p && p <= 'z') || ('A' <= p && p <= 'Z') || ('0' <= p && p <= '9') ||
@@ -111,6 +115,22 @@ func parseIdent(start int, s string) (int, string) {
 	}
 
 	p := start
+	for p < len(s) && isIdent(s[p]) {
+		p++
+	}
+	return p, s[start:p]
+}
+
+func parseSelector(start int, s string) (int, string) {
+	if start >= len(s) {
+		return start, ""
+	}
+
+	if !isIdentFirst(s[start]) && !isPrefixOp(s[start]) {
+		return start, ""
+	}
+
+	p := start + 1
 	for p < len(s) && isIdent(s[p]) {
 		p++
 	}
