@@ -79,7 +79,7 @@ package expressions.
 	X:main
 		select packages named main
 
-	X:main
+	X:test
 		select test packages of X
 
 # Functions:
