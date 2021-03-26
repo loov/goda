@@ -13,7 +13,7 @@ func loadstd() {
 	stdonce.Do(func() {
 		standard, err := packages.Load(&packages.Config{
 			Mode:  packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports,
-			Tests: false,
+			Tests: true,
 		}, "std")
 
 		if err != nil {

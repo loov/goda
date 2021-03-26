@@ -144,16 +144,16 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 			}
 
 		case ast.Select:
-			selector := e.Selector
+			combineOp, selector := "", e.Selector
 			combine := func(source, result Set) Set { return result }
 
 			switch selector[0] {
 			case '+':
 				combine = Union
-				selector = selector[1:]
+				combineOp, selector = selector[:1], selector[1:]
 			case '-':
 				combine = Subtract
-				selector = selector[1:]
+				combineOp, selector = selector[:1], selector[1:]
 			}
 
 			switch strings.ToLower(selector) {
@@ -193,6 +193,33 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 					return nil, err
 				}
 				return combine(set, Main(set)), nil
+
+			case "test":
+				if pkg, ok := e.Expr.(ast.Package); ok {
+					switch combineOp {
+					case "+":
+						roots, err := ctx.LoadWithTests(string(pkg))
+						return NewRoot(roots...), err
+					case "-":
+						roots, err := ctx.LoadWithoutTests(string(pkg))
+						return NewRoot(roots...), err
+					case "":
+						roots, err := ctx.LoadWithTests(string(pkg))
+						withTests := NewRoot(roots...)
+						return Test(withTests), err
+					default:
+						return nil, fmt.Errorf("unhandled combine op %q", combineOp)
+					}
+				}
+
+				set, err := eval(ctx, e.Expr)
+				if err != nil {
+					return nil, err
+				}
+
+				roots, err := ctx.LoadWithTests(set.IDs()...)
+				withTests := NewRoot(roots...)
+				return combine(set, Test(withTests)), err
 
 			default:
 				return nil, fmt.Errorf("unknown selector %v: %v", e.Selector, e)

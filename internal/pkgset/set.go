@@ -2,6 +2,7 @@ package pkgset
 
 import (
 	"sort"
+	"strings"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -43,6 +44,16 @@ func (set Set) List() []*packages.Package {
 		dst = append(dst, p)
 	}
 	return dst
+}
+
+// IDs returns package ID-s in sorted order.
+func (set Set) IDs() []string {
+	rs := []string{}
+	for id := range set {
+		rs = append(rs, id)
+	}
+	sort.Strings(rs)
+	return rs
 }
 
 // Sorted returns packages in sorted order
@@ -277,6 +288,17 @@ func Main(a Set) Set {
 	rs := Set{}
 	for pid, pkg := range a {
 		if pkg.Name == "main" {
+			rs[pid] = pkg
+		}
+	}
+	return rs
+}
+
+// Test returns test packages from set.
+func Test(a Set) Set {
+	rs := Set{}
+	for pid, pkg := range a {
+		if strings.HasSuffix(pkg.ID, ".test") || strings.HasSuffix(pkg.ID, "_test") {
 			rs[pid] = pkg
 		}
 	}

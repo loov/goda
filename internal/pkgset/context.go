@@ -48,6 +48,18 @@ func (ctx Context) Load(patterns ...string) ([]*packages.Package, error) {
 	return packages.Load(ctx.Config(), replaceAliases(patterns...)...)
 }
 
+func (ctx Context) LoadWithTests(patterns ...string) ([]*packages.Package, error) {
+	config := ctx.Config()
+	config.Tests = true
+	return packages.Load(config, replaceAliases(patterns...)...)
+}
+
+func (ctx Context) LoadWithoutTests(patterns ...string) ([]*packages.Package, error) {
+	config := ctx.Config()
+	config.Tests = false
+	return packages.Load(config, replaceAliases(patterns...)...)
+}
+
 func (ctx *Context) Set(key, value string) {
 	if _, ok := envvars[strings.ToUpper(key)]; ok {
 		ctx.Env.Set(strings.ToUpper(key), value)

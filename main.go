@@ -79,6 +79,9 @@ package expressions.
 	X:main
 		select packages named main
 
+	X:main
+		select test packages of X
+
 # Functions:
 
 	reach(X, Y);
