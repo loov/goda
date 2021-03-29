@@ -7,6 +7,9 @@ _Note: the exact syntax of the command line arguments has not yet been finalized
 Cool things it can do:
 
 ```
+# All of the commands should be run in the cloned repository.
+git clone https://github.com/loov/goda && cd goda
+
 # draw a graph of packages in github.com/loov/goda
 goda graph "github.com/loov/goda/..." | dot -Tsvg -o graph.svg
 
@@ -70,6 +73,7 @@ goda list github.com/loov/goda/...:all - golang.org/x/tools/...
 Here's an example output for:
 
 ```
+git clone https://github.com/loov/goda && cd goda
 goda graph github.com/loov/goda/... | dot -Tsvg -o graph.svg
 ```
 
