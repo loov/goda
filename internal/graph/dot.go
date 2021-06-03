@@ -156,7 +156,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) {
 		}
 
 		if print {
-			fmt.Fprintf(ctx.out, "subgraph cluster_%v {\n", escapeID(tree.Path))
+			fmt.Fprintf(ctx.out, "subgraph %q {\n", "cluster_"+tree.Path)
 			if tree.Package != nil {
 				isCluster[tree.Package] = true
 				fmt.Fprintf(ctx.out, "    %v [label=\"\" tooltip=\"%v\" shape=circle %v rank=0];\n", pkgID(p), tree.Path, ctx.colorOf(p))
@@ -181,7 +181,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) {
 			tooltip := src.ID + " -> " + dst.ID
 
 			if isCluster[dst] && !srctree.HasParent(dsttree) {
-				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=cluster_%v %v];\n", pkgID(src), dstid, tooltip, dstid, ctx.colorOf(dst))
+				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=%q %v];\n", pkgID(src), dstid, tooltip, "cluster_"+dst.ID, ctx.colorOf(dst))
 			} else {
 				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
 			}

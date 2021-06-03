@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/subcommands"
@@ -141,21 +142,7 @@ type Format interface {
 }
 
 func pkgID(p *pkggraph.Node) string {
-	return escapeID(p.ID)
-}
-
-func escapeID(s string) string {
-	var d []byte
-	for _, r := range s {
-		if 'a' <= r && r <= 'z' {
-			d = append(d, byte(r))
-		} else if 'A' <= r && r <= 'Z' {
-			d = append(d, byte(r))
-		} else if '0' <= r && r <= '9' {
-			d = append(d, byte(r))
-		} else {
-			d = append(d, '_')
-		}
-	}
-	return "n_" + string(d)
+	// Go quoting rules are similar enough to dot quoting.
+	// At least enough similar to quote a Go import path.
+	return strconv.Quote(p.ID)
 }
