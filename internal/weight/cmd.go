@@ -130,13 +130,13 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		cmd.sort = ByTotalSize
 	}
 
-	sorter, ok := sortFunc[cmd.sort]
+	sorter, ok := sortTreeFunc[cmd.sort]
 	if !ok {
 		fmt.Fprintf(os.Stderr, "invalid sorting mode %q\n", cmd.sort)
 		return subcommands.ExitFailure
 	}
 
-	root.Sort(sorter)
+	root.Sort(sorter, sortSymFunc[cmd.sort])
 	sorter(trees)
 
 	if cmd.limit > 0 && cmd.limit > len(trees) {
@@ -167,7 +167,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	return subcommands.ExitSuccess
 }
 
-var sortFunc = map[Order]func([]*Tree){
+var sortTreeFunc = map[Order]func([]*Tree){
 	Default: sortBySize,
 	BySize:  sortBySize,
 	ByTotalSize: func(trees []*Tree) {
@@ -178,6 +178,15 @@ var sortFunc = map[Order]func([]*Tree){
 	},
 }
 
+var sortSymFunc = map[Order]func([]*Sym){
+	Default:     sortBySymSize,
+	BySize:      sortBySymSize,
+	ByTotalSize: sortBySymSize,
+	ByName: func(syms []*Sym) {
+		sort.Slice(syms, func(i, k int) bool { return syms[i].Name < syms[k].Name })
+	},
+}
+
 func sortBySize(trees []*Tree) {
 	sort.Slice(trees, func(i, k int) bool {
 		if trees[i].Size == trees[k].Size {
@@ -185,6 +194,10 @@ func sortBySize(trees []*Tree) {
 		}
 		return trees[i].Size > trees[k].Size
 	})
+}
+
+func sortBySymSize(syms []*Sym) {
+	sort.Slice(syms, func(i, k int) bool { return syms[i].Size > syms[k].Size })
 }
 
 type Tree struct {
@@ -228,15 +241,13 @@ func (tree *Tree) Insert(sym *Sym, parent string, suffix []string) {
 	subtree.Insert(sym, subtree.Path, suffix[1:])
 }
 
-func (tree *Tree) Sort(sortfn func([]*Tree)) {
+func (tree *Tree) Sort(sortfn func([]*Tree), sortSyms func([]*Sym)) {
 	sortfn(tree.Childs)
 	for _, child := range tree.Childs {
-		child.Sort(sortfn)
+		child.Sort(sortfn, sortSyms)
 	}
 
-	sort.Slice(tree.Syms, func(i, k int) bool {
-		return tree.Syms[i].Size > tree.Syms[k].Size
-	})
+	sortSyms(tree.Syms)
 }
 
 type Sym struct {
