@@ -16,6 +16,7 @@ import (
 	"github.com/loov/goda/internal/pkgset"
 	"github.com/loov/goda/internal/tree"
 	"github.com/loov/goda/internal/weight"
+	"github.com/loov/goda/internal/weightdiff"
 )
 
 func main() {
@@ -26,6 +27,7 @@ func main() {
 	cmds.Register(&tree.Command{}, "")
 	cmds.Register(&exec.Command{}, "")
 	cmds.Register(&weight.Command{}, "")
+	cmds.Register(&weightdiff.Command{}, "")
 	cmds.Register(&graph.Command{}, "")
 	cmds.Register(&cut.Command{}, "")
 	cmds.Register(&ExprHelp{}, "")
