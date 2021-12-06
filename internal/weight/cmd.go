@@ -1,20 +1,18 @@
 package weight
 
 import (
-	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/google/subcommands"
 
 	"github.com/loov/goda/internal/memory"
+	"github.com/loov/goda/internal/weight/nm"
 )
 
 type Command struct {
@@ -74,45 +72,15 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitUsageError
 	}
 
-	command := exec.Command("go", "tool", "nm", "-size", f.Arg(0))
-
-	reader, err := command.StdoutPipe()
+	syms, err := nm.ParseBinary(f.Arg(0))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get stdout: %v\n", err)
-		return subcommands.ExitFailure
-	}
-
-	if err := command.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to start: %v\n", err)
+		fmt.Fprintf(os.Stderr, "loading syms failed: %v\n", err)
 		return subcommands.ExitFailure
 	}
 
 	root := NewTree("")
-
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		sym, err := ParseSym(scanner.Text())
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to parse: %v\n", err)
-			return subcommands.ExitFailure
-		}
-		if sym.QualifiedName == "" {
-			continue
-		}
-
-		if len(sym.Path) > 0 && strings.HasPrefix(sym.Path[0], "go.itab.") {
-			continue
-		}
-		if len(sym.Path) > 0 && strings.HasPrefix(sym.Path[0], "type..") {
-			continue
-		}
-
+	for _, sym := range syms {
 		root.Insert(sym, "", sym.Path)
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "process failed: %v\n", err)
-		return subcommands.ExitFailure
 	}
 
 	trees := []*Tree{root}
@@ -178,11 +146,11 @@ var sortTreeFunc = map[Order]func([]*Tree){
 	},
 }
 
-var sortSymFunc = map[Order]func([]*Sym){
+var sortSymFunc = map[Order]func([]*nm.Sym){
 	Default:     sortBySymSize,
 	BySize:      sortBySymSize,
 	ByTotalSize: sortBySymSize,
-	ByName: func(syms []*Sym) {
+	ByName: func(syms []*nm.Sym) {
 		sort.Slice(syms, func(i, k int) bool { return syms[i].Name < syms[k].Name })
 	},
 }
@@ -196,7 +164,7 @@ func sortBySize(trees []*Tree) {
 	})
 }
 
-func sortBySymSize(syms []*Sym) {
+func sortBySymSize(syms []*nm.Sym) {
 	sort.Slice(syms, func(i, k int) bool { return syms[i].Size > syms[k].Size })
 }
 
@@ -209,7 +177,7 @@ type Tree struct {
 	TotalSize int64
 
 	Size int64
-	Syms []*Sym
+	Syms []*nm.Sym
 }
 
 func NewTree(name string) *Tree {
@@ -219,7 +187,7 @@ func NewTree(name string) *Tree {
 	}
 }
 
-func (tree *Tree) Insert(sym *Sym, parent string, suffix []string) {
+func (tree *Tree) Insert(sym *nm.Sym, parent string, suffix []string) {
 	tree.TotalSize += sym.Size
 
 	if len(suffix) == 0 {
@@ -241,86 +209,11 @@ func (tree *Tree) Insert(sym *Sym, parent string, suffix []string) {
 	subtree.Insert(sym, subtree.Path, suffix[1:])
 }
 
-func (tree *Tree) Sort(sortfn func([]*Tree), sortSyms func([]*Sym)) {
+func (tree *Tree) Sort(sortfn func([]*Tree), sortSyms func([]*nm.Sym)) {
 	sortfn(tree.Childs)
 	for _, child := range tree.Childs {
 		child.Sort(sortfn, sortSyms)
 	}
 
 	sortSyms(tree.Syms)
-}
-
-type Sym struct {
-	Addr uint64
-	Size int64
-	Code rune // nm code (T for text, D for data, and so on)
-
-	QualifiedName string
-	Info          string
-
-	Path []string
-	Name string
-}
-
-func ParseSym(s string) (*Sym, error) {
-	var err error
-	sym := &Sym{}
-
-	tokens := strings.Fields(s[8:])
-	if len(tokens) < 2 {
-		return nil, fmt.Errorf("invalid sym text: %q", s)
-	}
-
-	if addr := strings.TrimSpace(s[:8]); addr != "" {
-		sym.Addr, err = strconv.ParseUint(addr, 16, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid addr: %q", addr)
-		}
-	}
-
-	if size := strings.TrimSpace(tokens[0]); size != "" {
-		sym.Size, err = strconv.ParseInt(size, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid size: %q", size)
-		}
-	}
-
-	if code := strings.TrimSpace(tokens[1]); code != "" {
-		sym.Code, _ = utf8.DecodeRuneInString(code)
-	}
-
-	if len(tokens) >= 3 {
-		sym.QualifiedName = tokens[2]
-	}
-	if len(tokens) >= 4 {
-		sym.Info = strings.Join(tokens[3:], " ")
-	}
-	if sym.QualifiedName == "" {
-		return sym, nil
-	}
-
-	braceOff := strings.IndexByte(sym.QualifiedName, '(')
-	if braceOff < 0 {
-		braceOff = len(sym.QualifiedName)
-	}
-
-	slashPos := strings.LastIndexByte(sym.QualifiedName[:braceOff], '/')
-	if slashPos < 0 {
-		slashPos = 0
-	}
-
-	pointOff := strings.IndexByte(sym.QualifiedName[slashPos:braceOff], '.')
-	if pointOff < 0 {
-		pointOff = 0
-	}
-
-	p := slashPos + pointOff
-	if p > 0 {
-		sym.Path = strings.Split(sym.QualifiedName[:p], "/")
-		sym.Name = sym.QualifiedName[p+1:]
-	} else {
-		sym.Name = sym.QualifiedName
-	}
-
-	return sym, nil
 }
