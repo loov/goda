@@ -82,7 +82,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				args := extractLoadGroup(e)
 				if len(args) > 0 {
 					roots, err := ctx.Load(args...)
-					return New(roots...), err
+					return NewRoot(roots...), err
 				}
 				// fallback to union implementation
 				fallthrough
