@@ -22,10 +22,11 @@ type Command struct {
 }
 
 func (*Command) Name() string     { return "weight-diff" }
-func (*Command) Synopsis() string { return "Compare binary symbol sizes." }
+func (*Command) Synopsis() string { return "Compare binary symbol sizes. (Experimental)" }
 func (*Command) Usage() string {
 	return `weight-diff <binary1> <binary2> <binary3>:
 	Compare binary sizes and the differences.
+	(Experimental)
 `
 }
 
