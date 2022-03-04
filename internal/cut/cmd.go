@@ -34,6 +34,7 @@ func (*Command) Usage() string {
 	It shows packages whose removal would remove the most indirect dependencies.
 
 	See "help expr" for further information about expressions.
+	See "help format" for further information about formatting.
 `
 }
 

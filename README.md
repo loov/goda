@@ -68,6 +68,13 @@ You can also do basic arithmetic with these sets. For example, if you wish to ig
 goda list github.com/loov/goda/...:all - golang.org/x/tools/...
 ```
 
+To get more help about expressions or formatting:
+
+```
+goda help expr
+goda help format
+```
+
 ## Graph example
 
 Here's an example output for:

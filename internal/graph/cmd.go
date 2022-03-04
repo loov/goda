@@ -48,6 +48,7 @@ Supported output types:
 	digraph - format with each node and its edges on a single line
 
 	See "help expr" for further information about expressions.
+	See "help format" for further information about formatting.
 `
 }
 

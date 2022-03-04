@@ -31,6 +31,7 @@ func main() {
 	cmds.Register(&graph.Command{}, "")
 	cmds.Register(&cut.Command{}, "")
 	cmds.Register(&ExprHelp{}, "")
+	cmds.Register(&FormatHelp{}, "")
 
 	flag.Parse()
 	ctx := context.Background()
@@ -136,4 +137,110 @@ func (cmd *ExprHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfac
 	fmt.Fprintln(os.Stdout, result.Tree(0))
 
 	return subcommands.ExitSuccess
+}
+
+type FormatHelp struct{}
+
+func (*FormatHelp) Name() string     { return "format" }
+func (*FormatHelp) Synopsis() string { return "Help about formatting" }
+func (*FormatHelp) Usage() string {
+	return `Formatting allows to add useful information about packages.
+
+Formatting uses -f flag for specifying the output of each package.
+goda uses https://pkg.go.dev/text/template for templating and it allows
+for extensive formatting.
+
+Each package node in goda has information about the package itself,
+and it's statistics. Additionally there is a summary of downstream
+and upstream statistics:
+
+    type Node struct {
+        *Package
+
+        ImportsNodes []*Node
+
+        Stat Stat // Stats about the current node.
+        Up   Stat // Stats about upstream nodes.
+        Down Stat // Stats about downstream nodes.
+    }
+
+    type Package struct {
+        ID      string // ID is a unique identifier for a package,
+        PkgPath string // PkgPath is the full import path of the package.
+        Module  *packages.Module
+    }
+
+    type Module struct {
+        Path    string // module path
+        Version string // module version
+        Main    bool   // is this the main module?
+    }
+
+This is not the full list of information about the node, however,
+this is the most useful. To see inspect the structures in depth,
+it's possible to use:
+
+    goda list -f "{{ printf \"%#v\" .Package }}" .
+
+Statistics for package contains the following information:
+
+    type Stat struct {
+        PackageCount int64
+
+        AllFiles   Source
+        Go         Source
+        OtherFiles Source
+
+        Decls  Decls
+        Tokens Tokens
+    }
+
+The source information contains the following information:
+
+    type Source struct {
+        Files  int          // Files count in this stat.
+        Binary int          // Binary file count.
+        Size   memory.Bytes // Size in bytes of all files.
+        Lines  int          // Count of non-empty lines.
+        Blank  int          // Count of empty lines.
+    }
+
+As an example, to print total size of non-go files in a package:
+
+    goda list -f "{{.ID}} {{.Stat.OtherFiles.Size}}" ./...:all
+
+It's also possible to see information about the ast tokens and
+declarations, which can be used as an approximation of the final
+binary size.
+
+    type Decls struct {
+        Func  int64
+        Type  int64
+        Const int64
+        Var   int64
+        Other int64
+    }
+
+    type Tokens struct {
+        Code    int64
+        Comment int64
+        Basic   int64
+    }
+
+"goda cut" command additionally contains:
+
+    type Node struct {
+        Cut stat.Stat
+        ...
+    }
+
+This contains summary of packages that would be removed when that
+package would deleted from the project.
+`
+}
+func (*FormatHelp) SetFlags(f *flag.FlagSet) {}
+
+func (cmd *FormatHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+	fmt.Println("Run \"goda help format\" to see help about formatting.")
+	return subcommands.ExitUsageError
 }

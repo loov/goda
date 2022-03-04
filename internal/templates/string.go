@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"encoding/json"
 	"strings"
 	"text/template"
 )
@@ -9,6 +10,7 @@ func stringFuncs() template.FuncMap {
 	return template.FuncMap{
 		"rel":    rel,
 		"rename": rename,
+		"json":   jsonify,
 	}
 }
 
@@ -59,4 +61,12 @@ func withSlash(prefix string) string {
 		return prefix + "/"
 	}
 	return prefix
+}
+
+func jsonify(v interface{}) string {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return "unable to marshal: " + err.Error()
+	}
+	return string(data)
 }

@@ -28,6 +28,7 @@ func (*Command) Usage() string {
 	List packages using an expression.
 
 	See "help expr" for further information about expressions.
+	See "help format" for further information about formatting.
 `
 }
 

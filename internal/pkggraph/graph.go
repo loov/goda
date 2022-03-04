@@ -1,6 +1,7 @@
 package pkggraph
 
 import (
+	"encoding/json"
 	"sort"
 
 	"golang.org/x/tools/go/packages"
@@ -20,6 +21,8 @@ func (g *Graph) AddNode(n *Node) {
 }
 
 type Node struct {
+	*packages.Package
+
 	ImportsNodes []*Node
 
 	// Stats about the current node.
@@ -31,8 +34,6 @@ type Node struct {
 
 	Errors []error
 	Graph  *Graph
-
-	*packages.Package
 }
 
 func (n *Node) Pkg() *packages.Package { return n.Package }
@@ -101,4 +102,57 @@ func LoadNode(p *packages.Package) *Node {
 
 func SortNodes(xs []*Node) {
 	sort.Slice(xs, func(i, k int) bool { return xs[i].ID < xs[k].ID })
+}
+
+type flatNode struct {
+	Package struct {
+		ID              string
+		Name            string            `json:",omitempty"`
+		PkgPath         string            `json:",omitempty"`
+		Errors          []packages.Error  `json:",omitempty"`
+		GoFiles         []string          `json:",omitempty"`
+		CompiledGoFiles []string          `json:",omitempty"`
+		OtherFiles      []string          `json:",omitempty"`
+		IgnoredFiles    []string          `json:",omitempty"`
+		ExportFile      string            `json:",omitempty"`
+		Imports         map[string]string `json:",omitempty"`
+	}
+
+	ImportsNodes []string `json:",omitempty"`
+
+	Stat stat.Stat
+	Up   stat.Stat
+	Down stat.Stat
+
+	Errors []error `json:",omitempty"`
+}
+
+func (p *Node) MarshalJSON() ([]byte, error) {
+	flat := flatNode{
+		Stat:   p.Stat,
+		Up:     p.Up,
+		Down:   p.Down,
+		Errors: p.Errors,
+	}
+
+	flat.Package.ID = p.Package.ID
+	flat.Package.Name = p.Package.Name
+	flat.Package.PkgPath = p.Package.PkgPath
+	flat.Package.GoFiles = p.Package.GoFiles
+	flat.Package.CompiledGoFiles = p.Package.CompiledGoFiles
+	flat.Package.OtherFiles = p.Package.OtherFiles
+	flat.Package.IgnoredFiles = p.Package.IgnoredFiles
+	flat.Package.ExportFile = p.Package.ExportFile
+
+	for _, n := range p.ImportsNodes {
+		flat.ImportsNodes = append(flat.ImportsNodes, n.ID)
+	}
+	if len(p.Package.Imports) > 0 {
+		flat.Package.Imports = make(map[string]string, len(p.Imports))
+		for path, ipkg := range p.Imports {
+			flat.Package.Imports[path] = ipkg.ID
+		}
+	}
+
+	return json.Marshal(flat)
 }
