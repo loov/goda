@@ -12,7 +12,7 @@ var stdonce sync.Once
 func loadstd() {
 	stdonce.Do(func() {
 		standard, err := packages.Load(&packages.Config{
-			Mode:  packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports,
+			Mode:  packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports | packages.NeedModule,
 			Tests: true,
 		}, "std")
 

@@ -71,7 +71,7 @@ func (ctx *Context) Set(key, value string) {
 func (ctx Context) Config() *packages.Config {
 	config := &packages.Config{
 		Context: ctx.Context,
-		Mode:    packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports,
+		Mode:    packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports | packages.NeedModule,
 		Env:     ctx.Env,
 		Tests:   ctx.Tags.ValueOf("test") == "1",
 	}
