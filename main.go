@@ -151,7 +151,7 @@ goda uses https://pkg.go.dev/text/template for templating and it allows
 for extensive formatting.
 
 Each package node in goda has information about the package itself,
-and it's statistics. Additionally there is a summary of downstream
+and its statistics. Additionally there is a summary of downstream
 and upstream statistics:
 
     type Node struct {
