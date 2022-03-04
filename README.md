@@ -45,6 +45,9 @@ goda tree ./...:all
 
 # print stats while building a go program
 go build -a --toolexec "goda exec" .
+
+# list dependency graph in same format as "go mod graph"
+goda graph -type edges -f '{{.ID}}{{if .Module}}{{with .Module.Version}}@{{.}}{{end}}{{end}}' ./...:all
 ```
 
 Maybe you noticed that it's using some weird symbols on the command-line while specifying packages. They allow for more complex scenarios.
