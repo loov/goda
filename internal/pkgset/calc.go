@@ -134,7 +134,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 
 			case "transitive":
 				if len(e.Args) != 1 {
-					return nil, fmt.Errorf("reach requires one argument: %v", e)
+					return nil, fmt.Errorf("transitive requires one argument: %v", e)
 				}
 				args, err := evalArgs(ctx, e.Args)
 				return Transitive(args[0]), err

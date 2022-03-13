@@ -28,7 +28,7 @@ func NewRoot(roots ...*packages.Package) Set {
 	return set
 }
 
-// NewAll reincludes all the dependencies from the graph.
+// NewAll includes all the dependencies from the graph.
 func NewAll(src Set) Set {
 	set := make(Set)
 	for _, p := range src {
