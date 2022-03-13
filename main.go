@@ -48,39 +48,42 @@ func (*ExprHelp) Usage() string {
 The examples use X, Y and Z as placeholders for packages, packages paths or
 package expressions.
 
-# Basic operations
-	There are a few basic oprations specified for manipulating sets of packages.
+# Basic operations:
+
+	There are a few basic operations specified for manipulating sets of packages.
 
 	X Y Z;
 	X + Y + Z;  add(X, Y, Z);  or(X, Y, Z)
-		all packages that match X, Y and Z
+		all packages that match X, Y or Z
 
 	X - Y - Z;  subtract(X, Y, Z);  exclude(X, Y, Z)
-		packages that are used by X and not used by Y and Z
+		packages that match X but not Y or Z
 
 	shared(X, Y, Z);  intersect(X, Y, Z)
-		packages that exist in all of X, Y and Z
+		packages that match all of X, Y and Z
 
 	xor(X, Y);
-		packages that are different between X and Y
+		packages that match one of X or Y but not both
 
-# Selectors
-	Selectors allow selecting parts of the dependency tree
+# Selectors:
+
+	Selectors allow selecting parts of the dependency tree. They are
+	applied in left to right order.
 
 	X:all
 		select X and all of its direct and indirect dependencies
 	X:import, X:imp
-		select direct import of X
+		select direct imports of X
 	X:import:all, X:imp:all
 		select direct and indirect dependencies of X; X not included
 
 	X:source
-		packages that have no other package importing them
+		select packages not imported by any package in X
 	X:-source
 		shorthand for (X - X:source)
 
 	X:main
-		select packages named main
+		select packages in X named main
 
 	X:test
 		select test packages of X
@@ -107,16 +110,17 @@ package expressions.
 	purego=1(X):
 		add tag "purego" for resolving X
 
-# Example expressions
+# Example expressions:
 
 	github.com/loov/goda:import
-		all direct dependencies for "github.com/loov/goda" package
+		all direct dependencies for the "github.com/loov/goda" package
 
 	shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/templates:all)
-		packages shared by "github.com/loov/goda/pkgset" and "github.com/loov/goda/templates"
+		packages directly or indirectly imported by both
+		"github.com/loov/goda/pkgset" and "github.com/loov/goda/templates"
 
-	github.com/loov/goda/... - golang.org/x/tools/...
-		all dependencies excluding golang.org/x/tools
+	github.com/loov/goda/...:all - golang.org/x/tools/...
+		all of goda's dependencies excluding golang.org/x/tools packages
 
 	reach(github.com/loov/goda/...:all, golang.org/x/tools/go/packages)
 		packages in github.com/loov/goda/ that use golang.org/x/tools/go/packages
