@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/vcs"
 
 	"github.com/loov/goda/internal/stat"
 )
@@ -22,6 +23,7 @@ func (g *Graph) AddNode(n *Node) {
 
 type Node struct {
 	*packages.Package
+	Repo *vcs.RepoRoot
 
 	ImportsNodes []*Node
 
@@ -42,6 +44,7 @@ func (n *Node) Pkg() *packages.Package { return n.Package }
 func From(pkgs map[string]*packages.Package) *Graph {
 	g := &Graph{Packages: map[string]*Node{}}
 
+	// Create the graph nodes.
 	for _, p := range pkgs {
 		n := LoadNode(p)
 		g.Sorted = append(g.Sorted, n)
@@ -54,6 +57,7 @@ func From(pkgs map[string]*packages.Package) *Graph {
 
 	cache := allImportsCache(pkgs)
 
+	// Populate the graph's Up and Down stats.
 	for _, n := range g.Packages {
 		importsIDs := cache[n.ID]
 		for _, id := range importsIDs {
@@ -68,6 +72,7 @@ func From(pkgs map[string]*packages.Package) *Graph {
 		}
 	}
 
+	// Build node imports from package imports.
 	for _, n := range g.Packages {
 		for id := range n.Package.Imports {
 			direct, ok := g.Packages[id]
@@ -92,6 +97,12 @@ func From(pkgs map[string]*packages.Package) *Graph {
 func LoadNode(p *packages.Package) *Node {
 	node := &Node{}
 	node.Package = p
+
+	if repo, err := vcs.RepoRootForImportPath(p.PkgPath, false); err != nil {
+		node.Errors = append(node.Errors, err)
+	} else {
+		node.Repo = repo
+	}
 
 	stat, errs := stat.Package(p)
 	node.Errors = append(node.Errors, errs...)

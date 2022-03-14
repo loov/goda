@@ -32,7 +32,7 @@ func (ctx *Dot) Label(p *pkggraph.Node) string {
 }
 
 func (ctx *Dot) ClusterLabel(tree *pkggraph.Tree, parentPrinted bool) string {
-	var suffix = ""
+	suffix := ""
 	if parentPrinted && tree.Parent != nil && tree.Parent.Path != "" {
 		suffix = "./" + strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
 	}
@@ -44,7 +44,7 @@ func (ctx *Dot) ClusterLabel(tree *pkggraph.Tree, parentPrinted bool) string {
 }
 
 func (ctx *Dot) TreeLabel(tree *pkggraph.Tree, parentPrinted bool) string {
-	var suffix = ""
+	suffix := ""
 	if parentPrinted && tree.Parent != nil && tree.Parent.Path != "" {
 		suffix = strings.TrimPrefix(tree.Path, tree.Parent.Path+"/")
 	}
@@ -122,11 +122,11 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) {
 	ctx.writeGraphProperties()
 	defer fmt.Fprintf(ctx.out, "}\n")
 
-	var walk func(bool, *pkggraph.Tree)
-	root := graph.Tree()
+	root := graph.Tree(pkggraph.RepoStrategy{})
 	lookup := root.LookupTable()
 	isCluster := map[*pkggraph.Node]bool{}
 
+	var walk func(bool, *pkggraph.Tree)
 	walk = func(parentPrinted bool, tree *pkggraph.Tree) {
 		p := tree.Package
 		if len(tree.Children) == 0 {
@@ -137,9 +137,6 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) {
 		}
 
 		print := p != nil
-		if p != nil {
-			print = true
-		}
 
 		childPackageCount := 0
 		for _, child := range tree.Children {
