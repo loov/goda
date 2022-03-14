@@ -26,7 +26,7 @@ goda graph -std "reach(github.com/loov/goda/...:all, flag)" | dot -Tsvg -o graph
 goda list "shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/cut:all)""
 
 # list packages that are only imported for tests
-goda list "test=1(github.com/loov/goda/...:all) - test=0(github.com/loov/goda/...:all)"
+goda list "github.com/loov/goda/...:+test:all - github.com/loov/goda/...:all"
 
 # list packages that are imported with `purego` tag
 goda list -std "purego=1(github.com/loov/goda/...:all)"
