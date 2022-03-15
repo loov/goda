@@ -298,9 +298,15 @@ func Main(a Set) Set {
 func Test(a Set) Set {
 	rs := Set{}
 	for pid, pkg := range a {
-		if strings.HasSuffix(pkg.ID, ".test") || strings.HasSuffix(pkg.ID, "_test") {
+		if isTestPkg(pkg) {
 			rs[pid] = pkg
 		}
 	}
 	return rs
+}
+
+func isTestPkg(pkg *packages.Package) bool {
+	return strings.HasSuffix(pkg.ID, ".test") ||
+		strings.HasSuffix(pkg.ID, "_test") ||
+		strings.HasSuffix(pkg.ID, ".test]")
 }
