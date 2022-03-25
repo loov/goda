@@ -298,14 +298,14 @@ func Main(a Set) Set {
 func Test(a Set) Set {
 	rs := Set{}
 	for pid, pkg := range a {
-		if isTestPkg(pkg) {
+		if IsTestPkg(pkg) {
 			rs[pid] = pkg
 		}
 	}
 	return rs
 }
 
-func isTestPkg(pkg *packages.Package) bool {
+func IsTestPkg(pkg *packages.Package) bool {
 	return strings.HasSuffix(pkg.ID, ".test") ||
 		strings.HasSuffix(pkg.ID, "_test") ||
 		strings.HasSuffix(pkg.ID, ".test]")

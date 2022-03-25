@@ -15,7 +15,7 @@ type Digraph struct {
 	label *template.Template
 }
 
-func (ctx *Digraph) Label(p *pkggraph.Node) string {
+func (ctx *Digraph) Label(p *pkggraph.GraphNode) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
 	if err != nil {
@@ -24,8 +24,8 @@ func (ctx *Digraph) Label(p *pkggraph.Node) string {
 	return labelText.String()
 }
 
-func (ctx *Digraph) Write(graph *pkggraph.Graph) {
-	labelCache := map[*pkggraph.Node]string{}
+func (ctx *Digraph) Write(graph *pkggraph.Graph) error {
+	labelCache := map[*pkggraph.GraphNode]string{}
 	for _, node := range graph.Sorted {
 		labelCache[node] = ctx.Label(node)
 	}
@@ -36,4 +36,6 @@ func (ctx *Digraph) Write(graph *pkggraph.Graph) {
 		}
 		fmt.Fprintf(ctx.out, "\n")
 	}
+
+	return nil
 }

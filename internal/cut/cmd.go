@@ -76,15 +76,15 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	nodes := map[string]*Node{}
 	nodelist := []*Node{}
 
-	var include func(parent *Node, n *pkggraph.Node)
-	include = func(parent *Node, n *pkggraph.Node) {
+	var include func(parent *Node, n *pkggraph.GraphNode)
+	include = func(parent *Node, n *pkggraph.GraphNode) {
 		if n, ok := nodes[n.ID]; ok {
 			parent.Import(n)
 			return
 		}
 
 		node := &Node{
-			Node: n,
+			GraphNode: n,
 		}
 		nodes[n.ID] = node
 		if _, analyse := graph.Packages[n.ID]; analyse {
@@ -148,7 +148,7 @@ func Reset(stats map[string]*Node) {
 }
 
 func Erase(stat *Node) stat.Stat {
-	cut := stat.Node.Stat
+	cut := stat.Stat
 	for _, imp := range stat.Imports {
 		imp.indegree--
 		if imp.indegree == 0 {
@@ -159,7 +159,7 @@ func Erase(stat *Node) stat.Stat {
 }
 
 type Node struct {
-	*pkggraph.Node
+	*pkggraph.GraphNode
 
 	Cut stat.Stat
 
