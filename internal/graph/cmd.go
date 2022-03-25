@@ -133,16 +133,19 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	graph := pkggraph.From(result)
-	format.Write(graph)
+	if err := format.Write(graph); err != nil {
+		fmt.Fprintf(os.Stderr, "error building graph: %v\n", err)
+		return subcommands.ExitFailure
+	}
 
 	return subcommands.ExitSuccess
 }
 
 type Format interface {
-	Write(*pkggraph.Graph)
+	Write(*pkggraph.Graph) error
 }
 
-func pkgID(p *pkggraph.Node) string {
+func pkgID(p *pkggraph.GraphNode) string {
 	// Go quoting rules are similar enough to dot quoting.
 	// At least enough similar to quote a Go import path.
 	return strconv.Quote(p.ID)

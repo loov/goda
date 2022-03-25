@@ -10,7 +10,9 @@ import (
 	"github.com/loov/goda/internal/pkgset/ast"
 )
 
-func Parse(ctx context.Context, expr []string) (ast.Expr, error) {
+// Parse converts the expression represented by the expr strings into an AST
+// representation.
+func Parse(_ context.Context, expr []string) (ast.Expr, error) {
 	tokens, err := ast.Tokenize(strings.Join(expr, " "))
 	if err != nil {
 		return nil, fmt.Errorf("failed to tokenize: %v", err)
@@ -24,6 +26,7 @@ func Parse(ctx context.Context, expr []string) (ast.Expr, error) {
 	return root, nil
 }
 
+// Calc parses expr and computes the set of packages it describes.
 func Calc(parentContext context.Context, expr []string) (Set, error) {
 	if len(expr) == 0 {
 		expr = []string{"."}

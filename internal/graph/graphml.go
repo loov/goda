@@ -18,7 +18,7 @@ type GraphML struct {
 	label *template.Template
 }
 
-func (ctx *GraphML) Label(p *pkggraph.Node) string {
+func (ctx *GraphML) Label(p *pkggraph.GraphNode) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
 	if err != nil {
@@ -27,7 +27,7 @@ func (ctx *GraphML) Label(p *pkggraph.Node) string {
 	return labelText.String()
 }
 
-func (ctx *GraphML) Write(graph *pkggraph.Graph) {
+func (ctx *GraphML) Write(graph *pkggraph.Graph) error {
 	file := graphml.NewFile()
 	file.Graphs = append(file.Graphs, ctx.ConvertGraph(graph))
 
@@ -43,6 +43,8 @@ func (ctx *GraphML) Write(graph *pkggraph.Graph) {
 	if err != nil {
 		fmt.Fprintf(ctx.err, "failed to output: %v\n", err)
 	}
+
+	return nil
 }
 
 func (ctx *GraphML) ConvertGraph(graph *pkggraph.Graph) *graphml.Graph {
