@@ -145,7 +145,7 @@ type Format interface {
 	Write(*pkggraph.Graph) error
 }
 
-func pkgID(p *pkggraph.GraphNode) string {
+func pkgID(p *pkggraph.Node) string {
 	// Go quoting rules are similar enough to dot quoting.
 	// At least enough similar to quote a Go import path.
 	return strconv.Quote(p.ID)

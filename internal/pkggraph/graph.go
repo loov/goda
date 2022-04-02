@@ -11,21 +11,21 @@ import (
 )
 
 type Graph struct {
-	Packages map[string]*GraphNode
-	Sorted   []*GraphNode
+	Packages map[string]*Node
+	Sorted   []*Node
 	stat.Stat
 }
 
-func (g *Graph) AddNode(n *GraphNode) {
+func (g *Graph) AddNode(n *Node) {
 	g.Packages[n.ID] = n
 	n.Graph = g
 }
 
-type GraphNode struct {
+type Node struct {
 	*packages.Package
 	Repo *vcs.RepoRoot
 
-	ImportsNodes []*GraphNode
+	ImportsNodes []*Node
 
 	// Stats about the current node.
 	stat.Stat
@@ -38,11 +38,11 @@ type GraphNode struct {
 	Graph  *Graph
 }
 
-func (n *GraphNode) Pkg() *packages.Package { return n.Package }
+func (n *Node) Pkg() *packages.Package { return n.Package }
 
 // From creates a new graph from a map of packages.
 func From(pkgs map[string]*packages.Package) *Graph {
-	g := &Graph{Packages: map[string]*GraphNode{}}
+	g := &Graph{Packages: map[string]*Node{}}
 
 	// Create the graph nodes.
 	for _, p := range pkgs {
@@ -94,8 +94,8 @@ func From(pkgs map[string]*packages.Package) *Graph {
 	return g
 }
 
-func LoadNode(p *packages.Package) *GraphNode {
-	node := &GraphNode{}
+func LoadNode(p *packages.Package) *Node {
+	node := &Node{}
 	node.Package = p
 
 	if repo, err := vcs.RepoRootForImportPath(p.PkgPath, false); err != nil {
@@ -111,7 +111,7 @@ func LoadNode(p *packages.Package) *GraphNode {
 	return node
 }
 
-func SortNodes(xs []*GraphNode) {
+func SortNodes(xs []*Node) {
 	sort.Slice(xs, func(i, k int) bool { return xs[i].ID < xs[k].ID })
 }
 
@@ -138,7 +138,7 @@ type flatNode struct {
 	Errors []error `json:",omitempty"`
 }
 
-func (p *GraphNode) MarshalJSON() ([]byte, error) {
+func (p *Node) MarshalJSON() ([]byte, error) {
 	flat := flatNode{
 		Stat:   p.Stat,
 		Up:     p.Up,

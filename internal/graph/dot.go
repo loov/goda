@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/loov/goda/internal/pkggraph"
+	"github.com/loov/goda/internal/pkgtree"
 )
 
 type Dot struct {
@@ -22,7 +23,7 @@ type Dot struct {
 	label *template.Template
 }
 
-func (ctx *Dot) Label(p *pkggraph.GraphNode) string {
+func (ctx *Dot) Label(p *pkggraph.Node) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
 	if err != nil {
@@ -31,7 +32,7 @@ func (ctx *Dot) Label(p *pkggraph.GraphNode) string {
 	return labelText.String()
 }
 
-func (ctx *Dot) ModuleLabel(mod *pkggraph.Module) string {
+func (ctx *Dot) ModuleLabel(mod *pkgtree.Module) string {
 	lbl := mod.Mod.Path
 	if mod.Mod.Version != "" {
 		lbl += "@" + mod.Mod.Version
@@ -48,7 +49,7 @@ func (ctx *Dot) ModuleLabel(mod *pkggraph.Module) string {
 	return lbl
 }
 
-func (ctx *Dot) TreePackageLabel(tp *pkggraph.TreePackage, parentPrinted bool) string {
+func (ctx *Dot) TreePackageLabel(tp *pkgtree.Package, parentPrinted bool) string {
 	suffix := ""
 	parentPath := tp.Parent.Path()
 	if parentPrinted && tp.Parent != nil && parentPath != "" {
@@ -68,19 +69,19 @@ func (ctx *Dot) TreePackageLabel(tp *pkggraph.TreePackage, parentPrinted bool) s
 	return labelText.String()
 }
 
-func (ctx *Dot) RepoRef(repo *pkggraph.Repo) string {
+func (ctx *Dot) RepoRef(repo *pkgtree.Repo) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+repo.Path())
 }
 
-func (ctx *Dot) ModuleRef(mod *pkggraph.Module) string {
+func (ctx *Dot) ModuleRef(mod *pkgtree.Module) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+mod.Path()+"@"+mod.Mod.Version)
 }
 
-func (ctx *Dot) TreePackageRef(tp *pkggraph.TreePackage) string {
+func (ctx *Dot) TreePackageRef(tp *pkgtree.Package) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+tp.Path())
 }
 
-func (ctx *Dot) Ref(p *pkggraph.GraphNode) string {
+func (ctx *Dot) Ref(p *pkggraph.Node) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+p.ID)
 }
 
@@ -127,23 +128,23 @@ func (ctx *Dot) WriteRegular(graph *pkggraph.Graph) error {
 }
 
 func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
-	root, err := graph.Tree()
+	root, err := pkgtree.From(graph)
 	if err != nil {
 		return fmt.Errorf("failed to construct cluster tree: %v", err)
 	}
 	lookup := root.LookupTable()
-	isCluster := map[*pkggraph.GraphNode]bool{}
+	isCluster := map[*pkggraph.Node]bool{}
 
 	fmt.Fprintf(ctx.out, "digraph G {\n")
 	ctx.writeGraphProperties()
 	defer fmt.Fprintf(ctx.out, "}\n")
 
-	printed := make(map[pkggraph.TreeNode]bool)
+	printed := make(map[pkgtree.Node]bool)
 
-	var visit func(tn pkggraph.TreeNode)
-	visit = func(tn pkggraph.TreeNode) {
+	var visit func(tn pkgtree.Node)
+	visit = func(tn pkgtree.Node) {
 		switch tn := tn.(type) {
-		case *pkggraph.Repo:
+		case *pkgtree.Repo:
 			if tn.SameAsOnlyModule() {
 				break
 			}
@@ -154,7 +155,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 			fmt.Fprintf(ctx.out, "    %v\n", ctx.RepoRef(tn))
 			defer fmt.Fprintf(ctx.out, "}\n")
 
-		case *pkggraph.Module:
+		case *pkgtree.Module:
 			printed[tn] = true
 			label := ctx.ModuleLabel(tn)
 			fmt.Fprintf(ctx.out, "subgraph %q {\n", "cluster_"+tn.Path())
@@ -163,7 +164,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 			fmt.Fprintf(ctx.out, "    %v\n", ctx.ModuleRef(tn))
 			defer fmt.Fprintf(ctx.out, "}\n")
 
-		case *pkggraph.TreePackage:
+		case *pkgtree.Package:
 			printed[tn] = true
 			gn := tn.GraphNode
 			if tn.Path() == tn.Parent.Path() {
@@ -187,14 +188,14 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 	for _, src := range graph.Sorted {
 		srctree := lookup[src]
 		for _, dst := range src.ImportsNodes {
-			dstid := pkgID(dst)
-			dsttree := lookup[dst]
+			dstID := pkgID(dst)
+			dstTree := lookup[dst]
 			tooltip := src.ID + " -> " + dst.ID
 
-			if isCluster[dst] && srctree.Parent != dsttree {
-				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=%q %v];\n", pkgID(src), dstid, tooltip, "cluster_"+dst.ID, ctx.colorOf(dst))
+			if isCluster[dst] && srctree.Parent != dstTree {
+				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=%q %v];\n", pkgID(src), dstID, tooltip, "cluster_"+dst.ID, ctx.colorOf(dst))
 			} else {
-				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstid, tooltip, ctx.colorOf(dst))
+				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstID, tooltip, ctx.colorOf(dst))
 			}
 		}
 	}
@@ -202,7 +203,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 	return nil
 }
 
-func (ctx *Dot) colorOf(p *pkggraph.GraphNode) string {
+func (ctx *Dot) colorOf(p *pkggraph.Node) string {
 	if ctx.nocolor {
 		return ""
 	}
