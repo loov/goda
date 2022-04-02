@@ -1,4 +1,4 @@
-package pkggraph
+package pkgtree
 
 import (
 	"fmt"
@@ -7,12 +7,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/loov/goda/internal/pkggraph"
 	"golang.org/x/mod/module"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/vcs"
 )
 
-func (g *Graph) Tree() (*Tree, error) {
+func From(g *pkggraph.Graph) (*Tree, error) {
 	goModCachePath, err := goModCache()
 	if err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func (g *Graph) Tree() (*Tree, error) {
 		}
 	}
 
-	t.Walk(func(tn TreeNode) {
+	t.Walk(func(tn Node) {
 		if s, ok := tn.(interface{ Sort() }); ok {
 			s.Sort()
 		}
@@ -41,10 +42,10 @@ func (g *Graph) Tree() (*Tree, error) {
 	return &t, nil
 }
 
-type TreeNode interface {
+type Node interface {
 	Path() string
-	Package() *TreePackage
-	VisitChildren(func(TreeNode))
+	Package() *Package
+	VisitChildren(func(Node))
 }
 
 type Tree struct {
@@ -56,13 +57,13 @@ func (t *Tree) Path() string {
 	return ""
 }
 
-func (t *Tree) Package() *TreePackage {
+func (t *Tree) Package() *Package {
 	return nil
 }
 
-func (t *Tree) LookupTable() map[*GraphNode]*TreePackage {
-	table := map[*GraphNode]*TreePackage{}
-	t.Walk(func(tn TreeNode) {
+func (t *Tree) LookupTable() map[*pkggraph.Node]*Package {
+	table := map[*pkggraph.Node]*Package{}
+	t.Walk(func(tn Node) {
 		if pkg := tn.Package(); pkg != nil {
 			table[pkg.GraphNode] = pkg
 		}
@@ -70,7 +71,7 @@ func (t *Tree) LookupTable() map[*GraphNode]*TreePackage {
 	return table
 }
 
-func (t *Tree) NodeRepo(n *GraphNode) *Repo {
+func (t *Tree) NodeRepo(n *pkggraph.Node) *Repo {
 	repo, ok := t.Repos[n.Repo.Root]
 	if !ok {
 		repo = &Repo{
@@ -83,18 +84,18 @@ func (t *Tree) NodeRepo(n *GraphNode) *Repo {
 	return repo
 }
 
-func (t *Tree) Walk(fn func(TreeNode)) {
+func (t *Tree) Walk(fn func(Node)) {
 	fn(t)
 
-	var visit func(TreeNode)
-	visit = func(tn TreeNode) {
+	var visit func(Node)
+	visit = func(tn Node) {
 		fn(tn)
 		tn.VisitChildren(visit)
 	}
 	t.VisitChildren(visit)
 }
 
-func (t *Tree) VisitChildren(fn func(TreeNode)) {
+func (t *Tree) VisitChildren(fn func(Node)) {
 	for _, rp := range t.sortedRepos {
 		fn(t.Repos[rp])
 	}
@@ -110,7 +111,7 @@ type Repo struct {
 	Modules    map[string]*Module
 	sortedMods []string
 
-	Pkgs       map[string]*TreePackage
+	Pkgs       map[string]*Package
 	sortedPkgs []string
 }
 
@@ -118,7 +119,7 @@ func (r *Repo) Path() string {
 	return r.Root.Root
 }
 
-func (r *Repo) Package() *TreePackage {
+func (r *Repo) Package() *Package {
 	return nil
 }
 
@@ -139,13 +140,13 @@ func (r *Repo) SameAsOnlyModule() bool {
 	return module.CheckPathMajor(mod.Mod.Version, pathMajor) == nil
 }
 
-func (r *Repo) NodeModule(n *GraphNode, goModCachePath string) *Module {
+func (r *Repo) NodeModule(n *pkggraph.Node, goModCachePath string) *Module {
 	mod, ok := r.Modules[n.Module.Path]
 	if !ok {
 		mod = &Module{
 			Parent: r,
 			Mod:    n.Module,
-			Pkgs:   make(map[string]*TreePackage),
+			Pkgs:   make(map[string]*Package),
 		}
 		if n.Module.Replace == nil {
 			if rp, err := filepath.Rel(goModCachePath, n.Module.Dir); err == nil {
@@ -161,10 +162,10 @@ func (r *Repo) NodeModule(n *GraphNode, goModCachePath string) *Module {
 	return mod
 }
 
-func (r *Repo) NodePackage(n *GraphNode) *TreePackage {
+func (r *Repo) NodePackage(n *pkggraph.Node) *Package {
 	pkg, ok := r.Pkgs[n.PkgPath]
 	if !ok {
-		pkg = &TreePackage{
+		pkg = &Package{
 			Parent:    r,
 			GraphNode: n,
 		}
@@ -174,7 +175,7 @@ func (r *Repo) NodePackage(n *GraphNode) *TreePackage {
 	return pkg
 }
 
-func (r *Repo) VisitChildren(fn func(TreeNode)) {
+func (r *Repo) VisitChildren(fn func(Node)) {
 	for _, mp := range r.sortedMods {
 		fn(r.Modules[mp])
 	}
@@ -195,7 +196,7 @@ type Module struct {
 	Mod   *packages.Module
 	Local bool
 
-	Pkgs       map[string]*TreePackage
+	Pkgs       map[string]*Package
 	sortedPkgs []string
 }
 
@@ -203,14 +204,14 @@ func (m *Module) Path() string {
 	return m.Mod.Path
 }
 
-func (m *Module) Package() *TreePackage {
+func (m *Module) Package() *Package {
 	return nil
 }
 
-func (m *Module) NodePackage(n *GraphNode) *TreePackage {
+func (m *Module) NodePackage(n *pkggraph.Node) *Package {
 	pkg, ok := m.Pkgs[n.PkgPath]
 	if !ok {
-		pkg = &TreePackage{
+		pkg = &Package{
 			Parent:    m,
 			GraphNode: n,
 		}
@@ -220,7 +221,7 @@ func (m *Module) NodePackage(n *GraphNode) *TreePackage {
 	return pkg
 }
 
-func (m *Module) VisitChildren(fn func(TreeNode)) {
+func (m *Module) VisitChildren(fn func(Node)) {
 	for _, pp := range m.sortedPkgs {
 		fn(m.Pkgs[pp])
 	}
@@ -230,28 +231,28 @@ func (m *Module) Sort() {
 	sort.Strings(m.sortedPkgs)
 }
 
-type TreePackage struct {
-	Parent    TreeNode
-	GraphNode *GraphNode
+type Package struct {
+	Parent    Node
+	GraphNode *pkggraph.Node
 }
 
-func (p *TreePackage) Path() string {
+func (p *Package) Path() string {
 	return p.GraphNode.PkgPath
 }
 
-func (p *TreePackage) Package() *TreePackage {
+func (p *Package) Package() *Package {
 	return p
 }
 
-func (p *TreePackage) OnlyChild() bool {
+func (p *Package) OnlyChild() bool {
 	count := 0
-	p.Parent.VisitChildren(func(TreeNode) {
+	p.Parent.VisitChildren(func(Node) {
 		count++
 	})
 	return count == 1
 }
 
-func (p *TreePackage) VisitChildren(_ func(TreeNode)) {}
+func (p *Package) VisitChildren(_ func(Node)) {}
 
 func goModCache() (string, error) {
 	cmd := exec.Command("go", "env", "GOMODCACHE")

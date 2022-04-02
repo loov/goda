@@ -15,7 +15,7 @@ type Edges struct {
 	label *template.Template
 }
 
-func (ctx *Edges) Label(p *pkggraph.GraphNode) string {
+func (ctx *Edges) Label(p *pkggraph.Node) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
 	if err != nil {
@@ -25,7 +25,7 @@ func (ctx *Edges) Label(p *pkggraph.GraphNode) string {
 }
 
 func (ctx *Edges) Write(graph *pkggraph.Graph) error {
-	labelCache := map[*pkggraph.GraphNode]string{}
+	labelCache := map[*pkggraph.Node]string{}
 	for _, node := range graph.Sorted {
 		labelCache[node] = ctx.Label(node)
 	}

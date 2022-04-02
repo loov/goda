@@ -18,7 +18,7 @@ type GraphML struct {
 	label *template.Template
 }
 
-func (ctx *GraphML) Label(p *pkggraph.GraphNode) string {
+func (ctx *GraphML) Label(p *pkggraph.Node) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
 	if err != nil {

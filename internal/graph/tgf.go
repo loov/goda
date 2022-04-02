@@ -15,7 +15,7 @@ type TGF struct {
 	label *template.Template
 }
 
-func (ctx *TGF) Label(p *pkggraph.GraphNode) string {
+func (ctx *TGF) Label(p *pkggraph.Node) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
 	if err != nil {
@@ -25,7 +25,7 @@ func (ctx *TGF) Label(p *pkggraph.GraphNode) string {
 }
 
 func (ctx *TGF) Write(graph *pkggraph.Graph) error {
-	indexCache := map[*pkggraph.GraphNode]int64{}
+	indexCache := map[*pkggraph.Node]int64{}
 	for i, node := range graph.Sorted {
 		label := ctx.Label(node)
 		indexCache[node] = int64(i + 1)
