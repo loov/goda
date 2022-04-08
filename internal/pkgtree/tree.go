@@ -77,6 +77,7 @@ func (t *Tree) NodeRepo(n *pkggraph.Node) *Repo {
 		repo = &Repo{
 			Root:    n.Repo,
 			Modules: make(map[string]*Module),
+			Pkgs:    make(map[string]*Package),
 		}
 		t.Repos[n.Repo.Root] = repo
 		t.sortedRepos = append(t.sortedRepos, n.Repo.Root)
@@ -163,14 +164,14 @@ func (r *Repo) NodeModule(n *pkggraph.Node, goModCachePath string) *Module {
 }
 
 func (r *Repo) NodePackage(n *pkggraph.Node) *Package {
-	pkg, ok := r.Pkgs[n.PkgPath]
+	pkg, ok := r.Pkgs[n.ID]
 	if !ok {
 		pkg = &Package{
 			Parent:    r,
 			GraphNode: n,
 		}
-		r.Pkgs[n.PkgPath] = pkg
-		r.sortedPkgs = append(r.sortedPkgs, n.PkgPath)
+		r.Pkgs[n.ID] = pkg
+		r.sortedPkgs = append(r.sortedPkgs, n.ID)
 	}
 	return pkg
 }
@@ -209,14 +210,14 @@ func (m *Module) Package() *Package {
 }
 
 func (m *Module) NodePackage(n *pkggraph.Node) *Package {
-	pkg, ok := m.Pkgs[n.PkgPath]
+	pkg, ok := m.Pkgs[n.ID]
 	if !ok {
 		pkg = &Package{
 			Parent:    m,
 			GraphNode: n,
 		}
-		m.Pkgs[n.PkgPath] = pkg
-		m.sortedPkgs = append(m.sortedPkgs, n.PkgPath)
+		m.Pkgs[n.ID] = pkg
+		m.sortedPkgs = append(m.sortedPkgs, n.ID)
 	}
 	return pkg
 }
