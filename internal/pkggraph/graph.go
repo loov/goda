@@ -47,11 +47,9 @@ func From(pkgs map[string]*packages.Package) *Graph {
 	// Create the graph nodes.
 	for _, p := range pkgs {
 		n := LoadNode(p)
-		if len(n.Errors) == 0 {
-			g.Sorted = append(g.Sorted, n)
-			g.AddNode(n)
-			g.Stat.Add(n.Stat)
-		}
+		g.Sorted = append(g.Sorted, n)
+		g.AddNode(n)
+		g.Stat.Add(n.Stat)
 	}
 	SortNodes(g.Sorted)
 
