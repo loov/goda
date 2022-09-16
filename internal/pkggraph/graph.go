@@ -102,7 +102,7 @@ func LoadNode(p *packages.Package) *Node {
 		node.Errors = append(node.Errors, err)
 		node.Repo = &vcs.RepoRoot{
 			VCS:  &vcs.Cmd{},
-			Repo: p.PkgPath, // maybe it's possible to use `PkgPath` here instead or find one from `p.Module.???`
+			Repo: p.PkgPath,
 			Root: p.PkgPath,
 		}
 	} else {
