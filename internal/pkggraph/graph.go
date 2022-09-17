@@ -100,6 +100,11 @@ func LoadNode(p *packages.Package) *Node {
 
 	if repo, err := vcs.RepoRootForImportPath(p.PkgPath, false); err != nil {
 		node.Errors = append(node.Errors, err)
+		node.Repo = &vcs.RepoRoot{
+			VCS:  &vcs.Cmd{},
+			Repo: p.PkgPath,
+			Root: p.PkgPath,
+		}
 	} else {
 		node.Repo = repo
 	}
