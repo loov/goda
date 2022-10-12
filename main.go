@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/pprof"
 
 	"github.com/google/subcommands"
 
@@ -20,6 +21,8 @@ import (
 )
 
 func main() {
+	cpuProfile := flag.String("cpuprofile", "", "profile cpu usage")
+
 	cmds := subcommands.NewCommander(flag.CommandLine, path.Base(os.Args[0]))
 	cmds.Register(cmds.HelpCommand(), "")
 
@@ -34,8 +37,25 @@ func main() {
 	cmds.Register(&FormatHelp{}, "")
 
 	flag.Parse()
-	ctx := context.Background()
-	os.Exit(int(cmds.Execute(ctx)))
+
+	os.Exit(func() int {
+		ctx := context.Background()
+		if *cpuProfile != "" {
+			f, err := os.Create(*cpuProfile)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "unable to create file: %v\n", err)
+				return -1
+			}
+			defer func() { _ = f.Close() }()
+
+			if err := pprof.StartCPUProfile(f); err != nil {
+				fmt.Fprintf(os.Stderr, "could not start CPU profile: %v\n", err)
+			}
+			defer pprof.StopCPUProfile()
+		}
+
+		return int(cmds.Execute(ctx))
+	}())
 }
 
 type ExprHelp struct{}
