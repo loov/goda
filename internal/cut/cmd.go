@@ -52,6 +52,10 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		return subcommands.ExitFailure
 	}
 
+	if !cmd.printStandard {
+		go pkgset.LoadStd()
+	}
+
 	result, err := pkgset.Calc(ctx, f.Args())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())

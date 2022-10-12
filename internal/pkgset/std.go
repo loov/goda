@@ -9,10 +9,11 @@ import (
 var stdpkgs Set
 var stdonce sync.Once
 
-func loadstd() {
+// LoadStd preloads the std package list.
+func LoadStd() {
 	stdonce.Do(func() {
 		standard, err := packages.Load(&packages.Config{
-			Mode:  packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports | packages.NeedModule,
+			Mode:  packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedModule,
 			Tests: true,
 		}, "std")
 
@@ -26,14 +27,14 @@ func loadstd() {
 
 // IsStd returns whether *packages.Package is a std package
 func IsStd(p *packages.Package) bool {
-	loadstd()
+	LoadStd()
 
 	return IsStdName(p.ID)
 }
 
 // IsStdName returns whether id corresponds to a standard package
 func IsStdName(id string) bool {
-	loadstd()
+	LoadStd()
 
 	_, ok := stdpkgs[id]
 	return ok
@@ -41,7 +42,7 @@ func IsStdName(id string) bool {
 
 // Std returns the standard package set
 func Std() Set {
-	loadstd()
+	LoadStd()
 
 	return stdpkgs.Clone()
 }
