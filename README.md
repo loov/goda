@@ -1,5 +1,7 @@
 # Goda
 
+[![go-recipes](https://raw.githubusercontent.com/nikolaydubina/go-recipes/main/badge.svg?raw=true)](https://github.com/nikolaydubina/go-recipes)
+
 Goda is a Go dependency analysis toolkit. It contains tools to figure out what your program is using.
 
 _Note: the exact syntax of the command line arguments has not yet been finalized. So expect some changes to it._
