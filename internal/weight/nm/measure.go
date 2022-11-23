@@ -65,12 +65,17 @@ func parseLine(s string) (*Sym, error) {
 	var err error
 	sym := &Sym{}
 
-	tokens := strings.Fields(s[8:])
+	wp := strings.IndexByte(s, ' ')
+	if wp < 0 {
+		return nil, fmt.Errorf("invalid sym text: %q", s)
+	}
+
+	tokens := strings.Fields(s[wp:])
 	if len(tokens) < 2 {
 		return nil, fmt.Errorf("invalid sym text: %q", s)
 	}
 
-	if addr := strings.TrimSpace(s[:8]); addr != "" {
+	if addr := strings.TrimSpace(s[:wp]); addr != "" {
 		sym.Addr, err = strconv.ParseUint(addr, 16, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid addr: %q", addr)
@@ -80,7 +85,7 @@ func parseLine(s string) (*Sym, error) {
 	if size := strings.TrimSpace(tokens[0]); size != "" {
 		sym.Size, err = strconv.ParseInt(size, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid size: %q", size)
+			return nil, fmt.Errorf("invalid size %q: %q", s, size)
 		}
 	}
 
