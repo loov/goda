@@ -87,6 +87,11 @@ func parseLine(s string) (*Sym, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid size %q: %q", s, size)
 		}
+
+		// ignore external sym size
+		if sym.Size == 4294967296 {
+			sym.Size = 0
+		}
 	}
 
 	if code := strings.TrimSpace(tokens[1]); code != "" {
