@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -65,27 +66,57 @@ func parseLine(s string) (*Sym, error) {
 	var err error
 	sym := &Sym{}
 
-	wp := strings.IndexByte(s, ' ')
-	if wp < 0 {
+	tokens := strings.Fields(s)
+	if len(tokens) <= 2 {
 		return nil, fmt.Errorf("invalid sym text: %q", s)
 	}
 
-	tokens := strings.Fields(s[wp:])
-	if len(tokens) < 2 {
-		return nil, fmt.Errorf("invalid sym text: %q", s)
+	addrField := ""
+	sizeField := ""
+	typeField := ""
+	nameField := ""
+	infoField := ""
+
+	isSymType := func(s string) bool {
+		return len(s) == 1 && unicode.IsLetter(rune(s[0]))
 	}
 
-	if addr := strings.TrimSpace(s[:wp]); addr != "" {
-		sym.Addr, err = strconv.ParseUint(addr, 16, 64)
+	switch {
+	case isSymType(tokens[1]):
+		// in some cases addr is not printed
+		sizeField = tokens[0]
+		typeField = tokens[1]
+		if len(tokens) > 2 {
+			nameField = tokens[2]
+		}
+		if len(tokens) > 3 {
+			infoField = strings.Join(tokens[3:], " ")
+		}
+	case isSymType(tokens[2]):
+		addrField = tokens[0]
+		sizeField = tokens[1]
+		typeField = tokens[2]
+		if len(tokens) > 3 {
+			nameField = tokens[3]
+		}
+		if len(tokens) > 4 {
+			infoField = strings.Join(tokens[4:], " ")
+		}
+	default:
+		return nil, fmt.Errorf("unable to find type in sym: %q", s)
+	}
+
+	if addrField != "" {
+		sym.Addr, err = strconv.ParseUint(addrField, 16, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid addr: %q", addr)
+			return nil, fmt.Errorf("invalid addr: %q", addrField)
 		}
 	}
 
-	if size := strings.TrimSpace(tokens[0]); size != "" {
-		sym.Size, err = strconv.ParseInt(size, 10, 64)
+	if sizeField != "" {
+		sym.Size, err = strconv.ParseInt(sizeField, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid size %q: %q", s, size)
+			return nil, fmt.Errorf("invalid size %q: %q", s, sizeField)
 		}
 
 		// ignore external sym size
@@ -94,16 +125,13 @@ func parseLine(s string) (*Sym, error) {
 		}
 	}
 
-	if code := strings.TrimSpace(tokens[1]); code != "" {
+	if code := strings.TrimSpace(typeField); code != "" {
 		sym.Code, _ = utf8.DecodeRuneInString(code)
 	}
 
-	if len(tokens) >= 3 {
-		sym.QualifiedName = tokens[2]
-	}
-	if len(tokens) >= 4 {
-		sym.Info = strings.Join(tokens[3:], " ")
-	}
+	sym.QualifiedName = nameField
+	sym.Info = infoField
+
 	if sym.QualifiedName == "" {
 		return sym, nil
 	}
