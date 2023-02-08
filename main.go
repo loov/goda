@@ -11,6 +11,7 @@ import (
 	"github.com/google/subcommands"
 
 	"github.com/loov/goda/internal/cut"
+	"github.com/loov/goda/internal/deadcode"
 	"github.com/loov/goda/internal/exec"
 	"github.com/loov/goda/internal/graph"
 	"github.com/loov/goda/internal/list"
@@ -35,6 +36,8 @@ func main() {
 	cmds.Register(&cut.Command{}, "")
 	cmds.Register(&ExprHelp{}, "")
 	cmds.Register(&FormatHelp{}, "")
+
+	cmds.Register(&deadcode.Command{}, "tool")
 
 	flag.Parse()
 
