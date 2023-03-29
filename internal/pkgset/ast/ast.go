@@ -13,6 +13,15 @@ type Expr interface {
 
 type Package string
 
+type Sequence struct {
+	Exprs []Expr
+}
+
+type Assignment struct {
+	Name Package
+	Expr Expr
+}
+
 type Select struct {
 	Expr     Expr
 	Selector string
@@ -22,6 +31,16 @@ type Func struct {
 	Name string
 	Args []Expr
 }
+
+func (v Sequence) String() string {
+	var exprs []string
+	for _, x := range v.Exprs {
+		exprs = append(exprs, x.String())
+	}
+	return strings.Join(exprs, "; ")
+}
+
+func (v Assignment) String() string { return v.Name.String() + " := " + v.Expr.String() }
 
 func (p Package) String() string { return string(p) }
 
@@ -35,6 +54,18 @@ func (f Func) String() string {
 	return f.Name + "(" + strings.Join(args, ", ") + ")"
 }
 
+func (v Sequence) Tree(ident int) string {
+	var exprs []string
+	for _, x := range v.Exprs {
+		exprs = append(exprs, x.Tree(ident+1))
+	}
+	return strings.Join(exprs, "\n")
+}
+
+func (v Assignment) Tree(ident int) string {
+	return v.Name.String() + " := " + v.Expr.Tree(ident+1)
+}
+
 func (p Package) Tree(ident int) string { return strings.Repeat("  ", ident) + string(p) + "\n" }
 
 func (s Select) Tree(ident int) string {
@@ -42,10 +73,15 @@ func (s Select) Tree(ident int) string {
 }
 
 func (f Func) Tree(ident int) string {
-	result := strings.Repeat("  ", ident) + f.Name + "{\n"
+	name := f.Name
+	if name == "" {
+		name = "+"
+	}
+	result := strings.Repeat("  ", ident) + name + "{\n"
 	for _, arg := range f.Args {
 		result += arg.Tree(ident + 1)
 	}
+	result += strings.Repeat("  ", ident) + "}"
 	return result
 }
 
@@ -58,14 +94,29 @@ func Parse(tokens []Token) (Expr, error) {
 		return nil, nil
 	}
 
-	p, expr, err := parseCombine(0, tokens, false)
-	if err != nil {
-		return expr, err
+	var seq Sequence
+
+	p := 0
+	for p < len(tokens) {
+		var expr Expr
+		var err error
+		p, expr, err = parseCombine(p, tokens, false)
+		if expr != nil {
+			seq.Exprs = append(seq.Exprs, expr)
+		}
+		if err != nil {
+			return seq, err
+		}
 	}
+
 	if p != len(tokens) {
 		panic("failed to parse")
 	}
-	return expr, nil
+
+	if len(seq.Exprs) == 1 {
+		return seq.Exprs[0], nil
+	}
+	return seq, nil
 }
 
 func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, error) {
@@ -83,6 +134,27 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 		switch tok.Kind {
 		case TPackage:
 			p++
+
+			if p < len(tokens) && tokens[p].Kind == TAssign {
+				p++
+				if len(exprs) != 0 {
+					return p, combine(exprs), errors.New("expected \"<package> := <expr>;\"")
+				}
+
+				assign := Assignment{
+					Name: Package(tok.Text),
+				}
+
+				var arg Expr
+				p, arg, err = parseCombine(p, tokens, false)
+				if err != nil {
+					return p, arg, err
+				}
+
+				assign.Expr = arg
+				return p, assign, nil
+			}
+
 			expr = Package(tok.Text)
 
 		case TFunc, TLeftParen:
@@ -159,6 +231,10 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 			return p, nil, fmt.Errorf("unexpected selector %q %#v", tokens[p].Kind, tokens[p])
 
 		case TRightParen, TComma:
+			p++
+			return p, combine(exprs), nil
+
+		case TSemicolon:
 			p++
 			return p, combine(exprs), nil
 

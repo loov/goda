@@ -21,6 +21,8 @@ const (
 	TLeftParen  Kind = '('
 	TRightParen Kind = ')'
 	TPackage    Kind = 'p'
+	TAssign     Kind = '='
+	TSemicolon  Kind = ';'
 )
 
 func (k Kind) String() string { return string(k) }
@@ -65,12 +67,17 @@ func Tokenize(s string) ([]Token, error) {
 			emit(TRightParen, ")")
 		case ':':
 			p++
-			var selector string
-			p, selector = parseSelector(p, s)
-			if selector == "" {
-				return tokens, fmt.Errorf("expected selector %d", p)
+			if p < len(s) && s[p] == '=' { // detect ":="
+				p++
+				emit(TAssign, ":=")
+			} else {
+				var selector string
+				p, selector = parseSelector(p, s)
+				if selector == "" {
+					return tokens, fmt.Errorf("expected selector %d", p)
+				}
+				emit(TSelector, selector)
 			}
-			emit(TSelector, selector)
 		case '+', '-':
 			op := string(s[p])
 			p++
@@ -82,6 +89,9 @@ func Tokenize(s string) ([]Token, error) {
 		case ',':
 			p++
 			emit(TComma, ",")
+		case ';':
+			p++
+			emit(TSemicolon, ";")
 		default:
 			return tokens, fmt.Errorf("unknown symbol at %d: %s", p, string(s[p]))
 		}

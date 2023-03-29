@@ -125,6 +125,19 @@ func TestParsing(t *testing.T) {
 			{TRightParen, ")"},
 			{TSelector, "+test"},
 		},
+	}, {
+		"q:=x:+test;y+q",
+		"q := x:+test; +(y, q)",
+		[]Token{
+			{TPackage, "q"},
+			{TAssign, ":="},
+			{TPackage, "x"},
+			{TSelector, "+test"},
+			{TSemicolon, ";"},
+			{TPackage, "y"},
+			{TOp, "+"},
+			{TPackage, "q"},
+		},
 	}}
 
 	for _, test := range tests {
