@@ -13,7 +13,10 @@ import (
 // Parse converts the expression represented by the expr strings into an AST
 // representation.
 func Parse(_ context.Context, expr []string) (ast.Expr, error) {
-	tokens, err := ast.Tokenize(strings.Join(expr, " "))
+	full := strings.Join(expr, " ")
+	full = strings.ReplaceAll(full, "\n", ";")
+
+	tokens, err := ast.Tokenize(full)
 	if err != nil {
 		return nil, fmt.Errorf("failed to tokenize: %v", err)
 	}
@@ -65,7 +68,34 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 			return nil, errors.New("empty expression")
 		}
 		switch e := e.(type) {
+		case ast.Sequence:
+			var last Set
+			for _, expr := range e.Exprs {
+				r, err := eval(ctx, expr)
+				if err != nil {
+					return r, err
+				}
+				last = r
+			}
+			return last, nil
+
+		case ast.Assignment:
+			r, err := eval(ctx, e.Expr)
+			if err != nil {
+				return r, err
+			}
+
+			if _, exists := ctx.Variables[string(e.Name)]; exists {
+				return nil, fmt.Errorf("variable %q already exists", e.Name)
+			}
+			ctx.Variables[string(e.Name)] = r
+
+			return r, nil
+
 		case ast.Package:
+			if set, isVar := ctx.Variables[string(e)]; isVar {
+				return set, nil
+			}
 			roots, err := ctx.Load(string(e))
 			return NewRoot(roots...), err
 
@@ -84,8 +114,21 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 			case "":
 				args := extractLoadGroup(e)
 				if len(args) > 0 {
-					roots, err := ctx.Load(args...)
-					return NewRoot(roots...), err
+					var vars []Set
+					var pkgs []string
+
+					for _, arg := range args {
+						if set, ok := ctx.Variables[arg]; ok {
+							vars = append(vars, set)
+						} else {
+							pkgs = append(pkgs, arg)
+						}
+					}
+
+					roots, err := ctx.Load(pkgs...)
+					root := NewRoot(roots...)
+					vars = append(vars, root)
+					return UnionAll(vars...), err
 				}
 				// fallback to union implementation
 				fallthrough
@@ -241,8 +284,9 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 	}
 
 	return eval(&Context{
-		Context: parentContext,
-		Env:     Strings(os.Environ()),
+		Context:   parentContext,
+		Env:       Strings(os.Environ()),
+		Variables: map[string]Set{},
 	}, rootExpr)
 }
 

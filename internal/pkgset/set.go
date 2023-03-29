@@ -129,6 +129,23 @@ func Union(a, b Set) Set {
 	return r
 }
 
+// UnionAll includes packages from both sets
+func UnionAll(xs ...Set) Set {
+	if len(xs) == 0 {
+		return Set{}
+	}
+
+	r := xs[0].Clone()
+	for _, b := range xs[1:] {
+		for pid, p := range b {
+			if _, exists := r[pid]; !exists {
+				r[pid] = p
+			}
+		}
+	}
+	return r
+}
+
 // Subtract returns packages that exist in a, but not in b
 func Subtract(a, b Set) Set {
 	r := a.Clone()
