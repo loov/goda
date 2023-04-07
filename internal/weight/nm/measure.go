@@ -78,7 +78,7 @@ func parseLine(s string) (*Sym, error) {
 	infoField := ""
 
 	isSymType := func(s string) bool {
-		return len(s) == 1 && unicode.IsLetter(rune(s[0]))
+		return len(s) == 1 && (unicode.IsLetter(rune(s[0]))  || s[0] == '_')
 	}
 
 	switch {

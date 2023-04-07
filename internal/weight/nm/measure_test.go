@@ -16,6 +16,7 @@ var validLines = []string{
 	`1091ca0        192 T type:.eq.[2]interface {}`,
 	`1060160        160 T type:.eq.[2]runtime.Frame`,
 	`1001fa0        256 T type:.eq.[6]internal/cpu.option`,
+	`       0          0 _ go.go`,
 }
 
 func TestParseLine(t *testing.T) {
