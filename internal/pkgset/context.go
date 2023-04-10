@@ -34,13 +34,16 @@ type Context struct {
 	Context context.Context
 	Tags    Strings
 	Env     Strings
+
+	Variables map[string]Set
 }
 
 func (ctx Context) Clone() *Context {
 	return &Context{
-		Context: ctx.Context,
-		Tags:    ctx.Tags.Clone(),
-		Env:     ctx.Env.Clone(),
+		Context:   ctx.Context,
+		Tags:      ctx.Tags.Clone(),
+		Env:       ctx.Env.Clone(),
+		Variables: ctx.Variables,
 	}
 }
 
