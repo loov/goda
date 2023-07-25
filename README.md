@@ -23,7 +23,7 @@ goda list "github.com/loov/goda/...:import"
 goda graph -std "reach(github.com/loov/goda/...:all, flag)" | dot -Tsvg -o graph.svg
 
 # list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
-goda list "shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/cut:all)""
+goda list "shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/cut:all)"
 
 # list packages that are only imported for tests
 goda list "github.com/loov/goda/...:+test:all - github.com/loov/goda/...:all"
@@ -58,9 +58,10 @@ The basic syntax is that you can specify multiple packages:
 goda list github.com/loov/goda/... github.com/loov/qloc
 ```
 
-By default it will select all the specific packages. You can select the package dependencies with `:import` and both of them with `:all`:
+By default it will select all the specific packages. You can select the package's direct dependencies with `:import`, direct and indirect dependencies with `:import:all`, the package and all of its direct and indirect dependencies with `:all`:
 
 ```
+goda list github.com/loov/goda/...:import
 goda list github.com/loov/goda/...:import:all
 goda list github.com/loov/goda/...:all
 ```
