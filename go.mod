@@ -1,6 +1,6 @@
 module github.com/loov/goda
 
-go 1.18
+go 1.20
 
 require (
 	github.com/google/subcommands v1.2.0

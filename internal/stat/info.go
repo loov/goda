@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"os"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -44,7 +44,7 @@ func Package(p *packages.Package) (Stat, []error) {
 	fset := token.NewFileSet()
 
 	for _, filename := range p.GoFiles {
-		src, err := ioutil.ReadFile(filename)
+		src, err := os.ReadFile(filename)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to read %q: %w", filename, err))
 			continue
