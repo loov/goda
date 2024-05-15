@@ -4,6 +4,12 @@ Goda is a Go dependency analysis toolkit. It contains tools to figure out what y
 
 _Note: the exact syntax of the command line arguments has not yet been finalized. So expect some changes to it._
 
+To install:
+
+```
+go install github.com/loov/goda@latest
+```
+
 Cool things it can do:
 
 ```
