@@ -4,13 +4,19 @@ Goda is a Go dependency analysis toolkit. It contains tools to figure out what y
 
 _Note: the exact syntax of the command line arguments has not yet been finalized. So expect some changes to it._
 
-To install:
+### Installation
+
+To install, you'll need a recent version of Go and then you can install via:
 
 ```
 go install github.com/loov/goda@latest
 ```
 
-Cool things it can do:
+The commands assume that your GOBIN is reachable on path.
+
+The graph visualizations require [GraphViz](https://graphviz.org/) for rendering the graph.
+
+## Cool things it can do
 
 ```
 # All of the commands should be run in the cloned repository.
