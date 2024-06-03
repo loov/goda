@@ -33,7 +33,7 @@ func (*Command) Usage() string {
 }
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&cmd.format, "f", "{{.Command}} {{.PackageName}} user:{{.UserTime}} system:{{.SystemTime}} in:{{.InputsSize}} out:{{.OutputSize}}", "formatting")
+	f.StringVar(&cmd.format, "f", "{{.Command}} {{.PackageName}} user:{{.UserTime}} system:{{.SystemTime}}{{with .MaximumResidentSetSize}} maxrss:{{.}}{{end}} in:{{.InputsSize}} out:{{.OutputSize}}", "formatting")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -66,6 +66,8 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	if command.ProcessState != nil {
 		info.UserTime = command.ProcessState.UserTime()
 		info.SystemTime = command.ProcessState.SystemTime()
+
+		info.Usage = TryGetUsage(command.ProcessState)
 	}
 
 	ParseArgs(&info, args)
@@ -94,6 +96,8 @@ type Info struct {
 	PackageName string
 	Args        []string
 
+	Usage
+
 	Output     string
 	OutputSize memory.Bytes
 
@@ -105,6 +109,25 @@ type Info struct {
 
 	UserTime   time.Duration
 	SystemTime time.Duration
+}
+
+type Usage struct {
+	HasUsage bool
+
+	MaximumResidentSetSize     memory.Bytes // maxrss
+	IntegralSharedMemorySize   memory.Bytes // ixrss
+	IntegralUnsharedDataSize   memory.Bytes // idrss
+	IntegralUnsharedStackSize  memory.Bytes // isrss
+	PageReclaims               int64        // minflt, soft page faults
+	PageFaults                 int64        // majflt, hard page faults
+	Swaps                      int64        // nswap
+	BlockInputOperations       int64        // inblock
+	BlockOutputOperations      int64        // oublock
+	IPCMessagesSent            int64        // msgsnd
+	IPCMessagesReceived        int64        // msgrcv
+	SignalsReceived            int64        // nsignals
+	VoluntaryContextSwitches   int64        // nvcsw
+	InvoluntaryContextSwitches int64        // nivcsw
 }
 
 func ParseArgs(info *Info, args []string) {
