@@ -67,7 +67,7 @@ func parseLine(s string) (*Sym, error) {
 	sym := &Sym{}
 
 	tokens := strings.Fields(s)
-	if len(tokens) <= 2 {
+	if len(tokens) < 2 {
 		return nil, fmt.Errorf("invalid sym text: %q", s)
 	}
 
