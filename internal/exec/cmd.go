@@ -101,7 +101,7 @@ type Info struct {
 	Output     string
 	OutputSize memory.Bytes
 
-	Inputs     []string
+	Inputs     []Input
 	InputsSize memory.Bytes
 
 	Start  time.Time
@@ -109,6 +109,11 @@ type Info struct {
 
 	UserTime   time.Duration
 	SystemTime time.Duration
+}
+
+type Input struct {
+	Path string
+	Size memory.Bytes
 }
 
 type Usage struct {
@@ -158,7 +163,7 @@ func ParseArgs(info *Info, args []string) {
 
 			ext := filepath.Ext(args[i])
 			if ext == ".a" || ext == ".o" || ext == ".h" || ext == ".s" || ext == ".c" || ext == ".go" {
-				info.Inputs = append(info.Inputs, args[i])
+				info.Inputs = append(info.Inputs, Input{Path: args[i]})
 			}
 		}
 	}
@@ -170,9 +175,11 @@ func ParseArgs(info *Info, args []string) {
 		}
 	}
 
-	for _, input := range info.Inputs {
-		if stat, err := os.Lstat(input); err == nil {
-			info.InputsSize += memory.Bytes(stat.Size())
+	for i, input := range info.Inputs {
+		if stat, err := os.Lstat(input.Path); err == nil {
+			size := memory.Bytes(stat.Size())
+			info.Inputs[i].Size = size
+			info.InputsSize += size
 		}
 	}
 }
