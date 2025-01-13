@@ -255,6 +255,12 @@ binary size.
 
     type Node struct {
         Cut stat.Stat
+
+        Imports    []*Node
+        ImportedBy []*Node
+
+        InDegree  int // alias for len(ImportedBy)
+        OutDegree int // alias for len(Imports)
         ...
     }
 
