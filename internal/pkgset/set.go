@@ -283,6 +283,28 @@ func DirectDependencies(a Set) Set {
 	return rs
 }
 
+// ModuleDependencies returns packages that are direct or indirect dependencies of a,
+// which are part of modules of package a.
+func ModuleDependencies(a Set) Set {
+	modules := map[string]struct{}{}
+	for _, p := range a {
+		if p.Module != nil {
+			modules[p.Module.Path] = struct{}{}
+		}
+	}
+
+	rs := a.Clone()
+	a.WalkDependencies(func(p *packages.Package) {
+		if p.Module != nil {
+			if _, ok := modules[p.Module.Path]; ok {
+				rs[p.ID] = p
+			}
+		}
+	})
+
+	return rs
+}
+
 // Main returns main pacakges.
 func Main(a Set) Set {
 	rs := Set{}

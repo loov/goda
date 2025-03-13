@@ -167,6 +167,13 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				}
 				return combine(set, NewAll(set)), nil
 
+			case "mod", "module":
+				set, err := eval(ctx, e.Expr)
+				if err != nil {
+					return nil, err
+				}
+				return ModuleDependencies(set), nil
+
 			case "import", "imp":
 				set, err := eval(ctx, e.Expr)
 				if err != nil {

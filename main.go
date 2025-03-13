@@ -97,6 +97,10 @@ package expressions.
 	X:import:all, X:imp:all
 		select direct and indirect dependencies of X; X not included
 
+	X:module, X:mod
+		select X and all of its direct and indirect dependencies that
+		belong to the modules of X
+
 	X:source
 		select packages not imported by any package in X
 	X:-source

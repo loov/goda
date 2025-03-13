@@ -25,6 +25,9 @@ git clone https://github.com/loov/goda && cd goda
 # draw a graph of packages in github.com/loov/goda
 goda graph "github.com/loov/goda/..." | dot -Tsvg -o graph.svg
 
+# draw a graph of command github.com/loov/goda, within the module
+goda graph "github.com/loov/goda:mod" | dot -Tsvg -o graph.svg
+
 # draw a dependency graph of github.com/loov/goda and dependencies
 goda graph -cluster -short "github.com/loov/goda:all" | dot -Tsvg -o graph.svg
 
