@@ -100,7 +100,7 @@ Here's an example output for:
 
 ```
 git clone https://github.com/loov/goda && cd goda
-goda graph github.com/loov/goda/... | dot -Tsvg -o graph.svg
+goda graph github.com/loov/goda:mod | dot -Tsvg -o graph.svg
 ```
 
 ![github.com/loov/goda dependency graph](./graph.svg)
