@@ -205,11 +205,11 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 }
 
 func (ctx *Dot) colorOf(p *pkggraph.Node) string {
-	if ctx.nocolor {
-		return ""
-	}
 	if p.Color != "" {
 		return "color=" + strconv.Quote(p.Color)
+	}
+	if ctx.nocolor {
+		return ""
 	}
 
 	hash := sha256.Sum256([]byte(p.PkgPath))
