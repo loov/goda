@@ -90,6 +90,12 @@ package expressions.
 	Selectors allow selecting parts of the dependency tree. They are
 	applied in left to right order.
 
+	For all selectors it's possible to use shorthands:
+
+		X:+S is a shorthand for X + X:S
+		X:-S is a shorthand for X - X:S
+
+
 	X:all
 		select X and all of its direct and indirect dependencies
 	X:import, X:imp
@@ -103,8 +109,6 @@ package expressions.
 
 	X:source
 		select packages not imported by any package in X
-	X:-source
-		shorthand for (X - X:source)
 
 	X:main
 		select packages in X named main
