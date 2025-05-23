@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/vcs"
 
 	"github.com/loov/goda/internal/stat"
 )
@@ -23,7 +22,6 @@ func (g *Graph) AddNode(n *Node) {
 
 type Node struct {
 	*packages.Package
-	Repo *vcs.RepoRoot
 
 	ImportsNodes []*Node
 
@@ -97,17 +95,6 @@ func From(pkgs map[string]*packages.Package) *Graph {
 func LoadNode(p *packages.Package) *Node {
 	node := &Node{}
 	node.Package = p
-
-	if repo, err := vcs.RepoRootForImportPath(p.PkgPath, false); err != nil {
-		node.Errors = append(node.Errors, err)
-		node.Repo = &vcs.RepoRoot{
-			VCS:  &vcs.Cmd{},
-			Repo: p.PkgPath,
-			Root: p.PkgPath,
-		}
-	} else {
-		node.Repo = repo
-	}
 
 	stat, errs := stat.Package(p)
 	node.Errors = append(node.Errors, errs...)

@@ -10,7 +10,6 @@ import (
 	"github.com/loov/goda/internal/pkggraph"
 	"golang.org/x/mod/module"
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/vcs"
 )
 
 func From(g *pkggraph.Graph) (*Tree, error) {
@@ -72,15 +71,19 @@ func (t *Tree) LookupTable() map[*pkggraph.Node]*Package {
 }
 
 func (t *Tree) NodeRepo(n *pkggraph.Node) *Repo {
-	repo, ok := t.Repos[n.Repo.Root]
+	rootPath := n.PkgPath
+	if n.Module != nil {
+		rootPath = n.Module.Path
+	}
+	repo, ok := t.Repos[rootPath]
 	if !ok {
 		repo = &Repo{
-			Root:    n.Repo,
+			Root:    rootPath,
 			Modules: make(map[string]*Module),
 			Pkgs:    make(map[string]*Package),
 		}
-		t.Repos[n.Repo.Root] = repo
-		t.sortedRepos = append(t.sortedRepos, n.Repo.Root)
+		t.Repos[rootPath] = repo
+		t.sortedRepos = append(t.sortedRepos, rootPath)
 	}
 	return repo
 }
@@ -107,7 +110,7 @@ func (t *Tree) Sort() {
 }
 
 type Repo struct {
-	Root *vcs.RepoRoot
+	Root string
 
 	Modules    map[string]*Module
 	sortedMods []string
@@ -117,7 +120,7 @@ type Repo struct {
 }
 
 func (r *Repo) Path() string {
-	return r.Root.Root
+	return r.Root
 }
 
 func (r *Repo) Package() *Package {
