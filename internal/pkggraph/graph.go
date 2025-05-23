@@ -22,6 +22,7 @@ func (g *Graph) AddNode(n *Node) {
 
 type Node struct {
 	*packages.Package
+	Color string
 
 	ImportsNodes []*Node
 

@@ -24,6 +24,7 @@ type Command struct {
 	labelFormat string
 
 	nocolor bool
+	colors  exprColors
 
 	clusters bool
 	shortID  bool
@@ -56,6 +57,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 
 	f.BoolVar(&cmd.nocolor, "nocolor", false, "disable coloring")
+	f.Var(&cmd.colors, "color", "specify a color for packages in a given expr (e.g. `-color red=./...`)")
 
 	f.StringVar(&cmd.docs, "docs", "https://pkg.go.dev/", "override the docs url to use")
 
@@ -137,6 +139,19 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	graph := pkggraph.From(result)
+	for _, color := range cmd.colors {
+		target, err := pkgset.Calc(ctx, []string{color.Expr})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to evaluate color expression %q: %v", color.Expr, err)
+			continue
+		}
+		for id := range target {
+			if n, ok := graph.Packages[id]; ok {
+				n.Color = color.Color
+			}
+		}
+	}
+
 	if err := format.Write(graph); err != nil {
 		fmt.Fprintf(os.Stderr, "error building graph: %v\n", err)
 		return subcommands.ExitFailure
@@ -153,4 +168,53 @@ func pkgID(p *pkggraph.Node) string {
 	// Go quoting rules are similar enough to dot quoting.
 	// At least enough similar to quote a Go import path.
 	return strconv.Quote(p.ID)
+}
+
+// exprColors allows to define coloring for the given package set.
+type exprColors []exprColor
+
+// exprColor defines a color for an expression.
+type exprColor struct {
+	Color string
+	Expr  string
+}
+
+// Set implements flag.Value.
+func (c *exprColors) Set(v string) error {
+	for _, v := range strings.Split(v, ";") {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		var x exprColor
+		if err := x.Set(v); err != nil {
+			return err
+		}
+		*c = append(*c, x)
+	}
+	return nil
+}
+
+// String implements flag.Value.
+func (c *exprColors) String() string {
+	var xs []string
+	for _, x := range *c {
+		xs = append(xs, x.String())
+	}
+	return strings.Join(xs, ";")
+}
+
+// Set implements flag.Value.
+func (c *exprColor) Set(v string) error {
+	color, expr, ok := strings.Cut(v, "=")
+	if !ok {
+		return fmt.Errorf("invalid expression coloring %q", v)
+	}
+	c.Color, c.Expr = color, expr
+	return nil
+}
+
+// String implements flag.Value.
+func (c *exprColor) String() string {
+	return c.Color + "=" + c.Expr
 }

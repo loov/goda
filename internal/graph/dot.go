@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -206,6 +207,9 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 func (ctx *Dot) colorOf(p *pkggraph.Node) string {
 	if ctx.nocolor {
 		return ""
+	}
+	if p.Color != "" {
+		return "color=" + strconv.Quote(p.Color)
 	}
 
 	hash := sha256.Sum256([]byte(p.PkgPath))
