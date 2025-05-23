@@ -292,11 +292,14 @@ func Sources(a Set) Set {
 func DisjointSources(a Set) Set {
 	incoming := map[string]int{}
 
-	for _, p := range a {
+	a.WalkAllDependencies(func(p *packages.Package) {
+		if _, ok := a[p.ID]; ok {
+			return
+		}
 		for _, dep := range p.Imports {
 			incoming[dep.ID]++
 		}
-	}
+	})
 
 	result := New()
 	for _, p := range a {
