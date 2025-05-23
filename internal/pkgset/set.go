@@ -267,8 +267,9 @@ func Transitive(a Set) Set {
 	return result
 }
 
-// Sources returns packages that don't have incoming edges.
-func Sources(a Set) Set {
+// SourcesOfAll returns packages that don't have incoming edges,
+// looking at all dependencies in the set.
+func SourcesOfAll(a Set) Set {
 	incoming := map[string]int{}
 
 	a.WalkAllDependencies(func(p *packages.Package) {
@@ -287,9 +288,9 @@ func Sources(a Set) Set {
 	return result
 }
 
-// DisjointSources returns packages that don't have incoming edges,
+// Sources returns packages that don't have incoming edges,
 // but only considering the current set.
-func DisjointSources(a Set) Set {
+func Sources(a Set) Set {
 	incoming := map[string]int{}
 
 	a.WalkAllDependencies(func(p *packages.Package) {

@@ -51,7 +51,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	if !cmd.printStandard {
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
-	roots := pkgset.DisjointSources(result)
+	roots := pkgset.Sources(result)
 
 	printed := map[string]bool{}
 
