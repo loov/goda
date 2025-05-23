@@ -71,7 +71,7 @@ func (t *Tree) LookupTable() map[*pkggraph.Node]*Package {
 }
 
 func (t *Tree) NodeRepo(n *pkggraph.Node) *Repo {
-	rootPath := n.PkgPath
+	rootPath := n.ID
 	if n.Module != nil {
 		rootPath = n.Module.Path
 	}

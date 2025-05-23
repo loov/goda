@@ -267,7 +267,7 @@ func Transitive(a Set) Set {
 	return result
 }
 
-// Sources returns packages that don't have incoming edges
+// Sources returns packages that don't have incoming edges.
 func Sources(a Set) Set {
 	incoming := map[string]int{}
 
@@ -276,6 +276,27 @@ func Sources(a Set) Set {
 			incoming[dep.ID]++
 		}
 	})
+
+	result := New()
+	for _, p := range a {
+		if incoming[p.ID] == 0 {
+			result[p.ID] = p
+		}
+	}
+
+	return result
+}
+
+// DisjointSources returns packages that don't have incoming edges,
+// but only considering the current set.
+func DisjointSources(a Set) Set {
+	incoming := map[string]int{}
+
+	for _, p := range a {
+		for _, dep := range p.Imports {
+			incoming[dep.ID]++
+		}
+	}
 
 	result := New()
 	for _, p := range a {
