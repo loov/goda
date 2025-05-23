@@ -74,7 +74,8 @@ func (set Set) Walk(fn func(*packages.Package)) {
 	}
 }
 
-func (set Set) WalkDependencies(fn func(*packages.Package)) {
+// WalkAllDependencies walks all dependencies of the set, including ones not part of the set.
+func (set Set) WalkAllDependencies(fn func(*packages.Package)) {
 	seen := map[string]bool{}
 	var walk func(*packages.Package)
 	walk = func(p *packages.Package) {
@@ -270,7 +271,7 @@ func Transitive(a Set) Set {
 func Sources(a Set) Set {
 	incoming := map[string]int{}
 
-	a.WalkDependencies(func(p *packages.Package) {
+	a.WalkAllDependencies(func(p *packages.Package) {
 		for _, dep := range p.Imports {
 			incoming[dep.ID]++
 		}
@@ -311,7 +312,7 @@ func ModuleDependencies(a Set) Set {
 	}
 
 	rs := a.Clone()
-	a.WalkDependencies(func(p *packages.Package) {
+	a.WalkAllDependencies(func(p *packages.Package) {
 		if p.Module != nil {
 			if _, ok := modules[p.Module.Path]; ok {
 				rs[p.ID] = p
