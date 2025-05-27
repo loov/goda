@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -25,6 +26,7 @@ type Command struct {
 
 	nocolor bool
 	colors  exprColors
+	groups  groupActions
 
 	clusters bool
 	shortID  bool
@@ -63,6 +65,15 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 
 	f.StringVar(&cmd.outputType, "type", "dot", "output type (dot, graphml, digraph, edges, tgf)")
 	f.StringVar(&cmd.labelFormat, "f", "", "label formatting")
+
+	f.BoolFunc("collapse-modules", "collapse all modules into a single node", func(v string) error {
+		cmd.groups = append(cmd.groups, groupAction{Kind: "collapse-modules", Pat: ""})
+		return nil
+	})
+	f.BoolFunc("group-modules", "group all modules into a subgraph", func(v string) error {
+		cmd.groups = append(cmd.groups, groupAction{Kind: "group-modules", Pat: ""})
+		return nil
+	})
 
 	f.BoolVar(&cmd.clusters, "cluster", false, "create clusters")
 	f.BoolVar(&cmd.shortID, "short", false, "use short package id-s inside clusters")
@@ -152,6 +163,49 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 	}
 
+	forAllMatchingPackages := func(pat string, fn func(*pkggraph.Node)) {
+		for _, pkg := range graph.Packages {
+			if pat == "" {
+				fn(pkg)
+			} else {
+				ok, err := path.Match(pat, pkg.ID)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "pattern matching failed: %v\n", err)
+					return
+				}
+				if ok {
+					fn(pkg)
+				}
+			}
+
+		}
+	}
+
+	for _, action := range cmd.groups {
+		switch action.Kind {
+		case "collapse-modules":
+			forAllMatchingPackages(action.Pat, func(pkg *pkggraph.Node) {
+				if pkg.Module == nil {
+					return
+				}
+
+				module := graph.EnsureGroup(pkg.Package.Module.Path)
+				module.Collapsed = true
+				module.AddNode(pkg)
+			})
+		case "group-modules":
+			forAllMatchingPackages(action.Pat, func(pkg *pkggraph.Node) {
+				if pkg.Module == nil {
+					return
+				}
+
+				module := graph.EnsureGroup(pkg.Package.Module.Path)
+				module.Collapsed = false
+				module.AddNode(pkg)
+			})
+		}
+	}
+
 	if err := format.Write(graph); err != nil {
 		fmt.Fprintf(os.Stderr, "error building graph: %v\n", err)
 		return subcommands.ExitFailure
@@ -168,6 +222,79 @@ func pkgID(p *pkggraph.Node) string {
 	// Go quoting rules are similar enough to dot quoting.
 	// At least enough similar to quote a Go import path.
 	return strconv.Quote(p.ID)
+}
+
+func groupID(p *pkggraph.Group) string {
+	// Go quoting rules are similar enough to dot quoting.
+	// At least enough similar to quote a Go import path.
+	return strconv.Quote("group-" + p.ID)
+}
+
+type groupActions []groupAction
+
+type groupAction struct {
+	Kind string
+	Pat  string
+}
+
+type groupActionCollapseModules struct{ *groupActions }
+
+func (c *groupActionCollapseModules) Set(v string) error {
+	*c.groupActions = append(*c.groupActions, groupAction{
+		Kind: "collapse-modules",
+		Pat:  v,
+	})
+	return nil
+}
+
+type groupActionGroupModules struct{ *groupActions }
+
+func (c *groupActionGroupModules) Set(v string) error {
+	*c.groupActions = append(*c.groupActions, groupAction{
+		Kind: "group-modules",
+		Pat:  v,
+	})
+	return nil
+}
+
+// Set implements flag.Value.
+func (c *groupActions) Set(v string) error {
+	for _, v := range strings.Split(v, ";") {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		var x groupAction
+		if err := x.Set(v); err != nil {
+			return err
+		}
+		*c = append(*c, x)
+	}
+	return nil
+}
+
+// String implements flag.Value.
+func (c *groupActions) String() string {
+	var xs []string
+	for _, x := range *c {
+		xs = append(xs, x.String())
+	}
+	return strings.Join(xs, ";")
+}
+
+// Set implements flag.Value.
+func (c *groupAction) Set(v string) error {
+	kind, pat, ok := strings.Cut(v, "=")
+	if !ok {
+		return fmt.Errorf("invalid expression coloring %q", v)
+	}
+	c.Kind, c.Pat = kind, pat
+	return nil
+}
+
+// String implements flag.Value.
+func (c *groupAction) String() string {
+	return c.Kind + "=" + c.Pat
 }
 
 // exprColors allows to define coloring for the given package set.

@@ -2,6 +2,8 @@ package pkggraph
 
 import (
 	"encoding/json"
+	"maps"
+	"slices"
 	"sort"
 
 	"golang.org/x/tools/go/packages"
@@ -10,6 +12,9 @@ import (
 )
 
 type Graph struct {
+	Groups       map[string]*Group
+	SortedGroups []*Group
+
 	Packages map[string]*Node
 	Sorted   []*Node
 	stat.Stat
@@ -18,6 +23,60 @@ type Graph struct {
 func (g *Graph) AddNode(n *Node) {
 	g.Packages[n.ID] = n
 	n.Graph = g
+}
+
+type Group struct {
+	ID        string
+	Collapsed bool
+	Color     string
+	Nodes     []*Node
+
+	stat.Stat
+}
+
+func (g *Group) FirstModule() *packages.Module {
+	for _, n := range g.Nodes {
+		if n.Module != nil {
+			return n.Module
+		}
+	}
+	return nil
+}
+
+func (g *Group) AddNode(n *Node) {
+	if n.Group != nil {
+		n.Group.RemoveNode(n)
+	}
+
+	g.Nodes = append(g.Nodes, n)
+	n.Group = g
+	g.Stat.Add(n.Stat)
+}
+
+func (g *Group) RemoveNode(n *Node) {
+	if n.Group != g {
+		return
+	}
+	g.Stat.Sub(n.Stat)
+	n.Group = nil
+
+	i := slices.Index(g.Nodes, n)
+	if i < 0 {
+		return
+	}
+	g.Nodes = slices.Delete(g.Nodes, i, i+1)
+}
+
+func (g *Group) ImportsNodes() []*Node {
+	xs := map[*Node]struct{}{}
+	for _, n := range g.Nodes {
+		for _, dep := range n.ImportsNodes {
+			xs[dep] = struct{}{}
+		}
+	}
+	nodes := slices.Collect(maps.Keys(xs))
+	SortNodes(nodes)
+	return nodes
 }
 
 type Node struct {
@@ -35,13 +94,17 @@ type Node struct {
 
 	Errors []error
 	Graph  *Graph
+	Group  *Group // optional
 }
 
 func (n *Node) Pkg() *packages.Package { return n.Package }
 
 // From creates a new graph from a map of packages.
 func From(pkgs map[string]*packages.Package) *Graph {
-	g := &Graph{Packages: map[string]*Node{}}
+	g := &Graph{
+		Groups:   map[string]*Group{},
+		Packages: map[string]*Node{},
+	}
 
 	// Create the graph nodes.
 	for _, p := range pkgs {
@@ -91,6 +154,19 @@ func From(pkgs map[string]*packages.Package) *Graph {
 	}
 
 	return g
+}
+
+func (g *Graph) EnsureGroup(id string) *Group {
+	k, ok := g.Groups[id]
+	if !ok {
+		k = &Group{
+			ID: id,
+		}
+		g.Groups[id] = k
+		g.SortedGroups = append(g.SortedGroups, k)
+		sort.Slice(g.SortedGroups, func(i, k int) bool { return g.SortedGroups[i].ID < g.SortedGroups[k].ID })
+	}
+	return k
 }
 
 func LoadNode(p *packages.Package) *Node {

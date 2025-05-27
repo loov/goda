@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 	"text/template"
@@ -27,6 +28,15 @@ type Dot struct {
 func (ctx *Dot) Label(p *pkggraph.Node) string {
 	var labelText strings.Builder
 	err := ctx.label.Execute(&labelText, p)
+	if err != nil {
+		fmt.Fprintf(ctx.err, "template error: %v\n", err)
+	}
+	return labelText.String()
+}
+
+func (ctx *Dot) GroupLabel(g *pkggraph.Group) string {
+	var labelText strings.Builder
+	err := ctx.label.Execute(&labelText, g)
 	if err != nil {
 		fmt.Fprintf(ctx.err, "template error: %v\n", err)
 	}
@@ -78,6 +88,14 @@ func (ctx *Dot) ModuleRef(mod *pkgtree.Module) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+mod.Path()+"@"+mod.Mod.Version)
 }
 
+func (ctx *Dot) GroupRef(g *pkggraph.Group) string {
+	mod := g.FirstModule()
+	if mod == nil {
+		return ""
+	}
+	return fmt.Sprintf(`href=%q`, ctx.docs+mod.Path+"@"+mod.Version)
+}
+
 func (ctx *Dot) TreePackageRef(tp *pkgtree.Package) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+tp.Path())
 }
@@ -115,13 +133,88 @@ func (ctx *Dot) WriteRegular(graph *pkggraph.Graph) error {
 	ctx.writeGraphProperties()
 	defer fmt.Fprintf(ctx.out, "}\n")
 
-	for _, n := range graph.Sorted {
+	printNode := func(n *pkggraph.Node) {
 		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" %v %v];\n", pkgID(n), ctx.Label(n), ctx.Ref(n), ctx.colorOf(n))
 	}
 
+	for _, group := range graph.SortedGroups {
+		if len(group.Nodes) == 0 {
+			continue
+		}
+
+		if group.Collapsed {
+			// TODO: make it different from regular nodes
+			fmt.Fprintf(ctx.out, "    %v [label=\"%v\" %v %v];\n", groupID(group), ctx.GroupLabel(group), ctx.GroupRef(group), ctx.colorOfGroup(group))
+		} else {
+			func() {
+				fmt.Fprintf(ctx.out, "subgraph %q {\n", "cluster_"+group.ID)
+				fmt.Fprintf(ctx.out, "    label=\"%v\"\n", ctx.GroupLabel(group))
+				fmt.Fprintf(ctx.out, "    %v\n", ctx.GroupRef(group))
+				defer fmt.Fprintf(ctx.out, "}\n")
+
+				for _, n := range group.Nodes {
+					printNode(n)
+				}
+			}()
+		}
+	}
+
+	for _, n := range graph.Sorted {
+		if n.Group == nil {
+			printNode(n)
+		}
+	}
+
+	for _, src := range graph.SortedGroups {
+		if !src.Collapsed {
+			continue
+		}
+
+		linked := map[*pkggraph.Group]bool{}
+		for _, dst := range src.ImportsNodes() {
+
+			gid := ""
+			if dst.Group != nil {
+				gid = dst.Group.ID
+			}
+			fmt.Fprintf(os.Stderr, "link %v -> %v [%v]\n", src.ID, dst.ID, gid)
+
+			if dst.Group == nil || !dst.Group.Collapsed {
+				fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", groupID(src), pkgID(dst), ctx.colorOf(dst))
+				fmt.Fprintf(os.Stderr, "  skip because collapsed or no group id\n")
+				continue
+			}
+			if linked[dst.Group] {
+				fmt.Fprintf(os.Stderr, "  skip because already linked\n")
+				continue
+			}
+			if src == dst.Group {
+				fmt.Fprintf(os.Stderr, "  skip because self link\n")
+				continue
+			}
+
+			// import something from a collapsed group
+			linked[dst.Group] = true
+			fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", groupID(src), groupID(dst.Group), ctx.colorOfGroup(dst.Group))
+		}
+	}
+
 	for _, src := range graph.Sorted {
+		if src.Group != nil && src.Group.Collapsed {
+			continue
+		}
+
+		linked := map[*pkggraph.Group]bool{}
 		for _, dst := range src.ImportsNodes {
-			fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", pkgID(src), pkgID(dst), ctx.colorOf(dst))
+			if dst.Group == nil || !dst.Group.Collapsed {
+				fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", pkgID(src), pkgID(dst), ctx.colorOf(dst))
+			} else {
+				if linked[dst.Group] {
+					continue
+				}
+				linked[dst.Group] = true
+				fmt.Fprintf(ctx.out, "    %v -> %v [%v];\n", pkgID(src), groupID(dst.Group), ctx.colorOfGroup(dst.Group))
+			}
 		}
 	}
 
@@ -213,6 +306,19 @@ func (ctx *Dot) colorOf(p *pkggraph.Node) string {
 	}
 
 	hash := sha256.Sum256([]byte(p.PkgPath))
+	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+	return "color=" + hslahex(hue, 0.9, 0.3, 0.7)
+}
+
+func (ctx *Dot) colorOfGroup(p *pkggraph.Group) string {
+	if p.Color != "" {
+		return "color=" + strconv.Quote(p.Color)
+	}
+	if ctx.nocolor {
+		return ""
+	}
+
+	hash := sha256.Sum256([]byte(p.ID))
 	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
 	return "color=" + hslahex(hue, 0.9, 0.3, 0.7)
 }
