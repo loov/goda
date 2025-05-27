@@ -35,6 +35,14 @@ func (s *Stat) Add(b Stat) {
 	s.Tokens.Add(b.Tokens)
 }
 
+func (s *Stat) Sub(b Stat) {
+	s.PackageCount -= b.PackageCount
+	s.Go.Sub(b.Go)
+	s.OtherFiles.Sub(b.OtherFiles)
+	s.Decls.Sub(b.Decls)
+	s.Tokens.Sub(b.Tokens)
+}
+
 func Package(p *packages.Package) (Stat, []error) {
 	var info Stat
 	var errs []error

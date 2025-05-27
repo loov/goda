@@ -22,6 +22,14 @@ func (s *Decls) Add(b Decls) {
 	s.Other += b.Other
 }
 
+func (s *Decls) Sub(b Decls) {
+	s.Func -= b.Func
+	s.Type -= b.Type
+	s.Const -= b.Const
+	s.Var -= b.Var
+	s.Other -= b.Other
+}
+
 func (s *Decls) Total() int64 {
 	return s.Func + s.Type + s.Const + s.Var + s.Other
 }

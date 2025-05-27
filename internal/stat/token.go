@@ -14,6 +14,12 @@ func (stat *Tokens) Add(b Tokens) {
 	stat.Basic += b.Basic
 }
 
+func (stat *Tokens) Sub(b Tokens) {
+	stat.Code -= b.Code
+	stat.Comment -= b.Comment
+	stat.Basic -= b.Basic
+}
+
 func TokensFromAst(f *ast.File) Tokens {
 	stat := Tokens{}
 
