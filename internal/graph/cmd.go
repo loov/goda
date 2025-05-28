@@ -116,9 +116,10 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 	case "graphml":
 		format = &GraphML{
-			out:   os.Stdout,
-			err:   os.Stderr,
-			label: label,
+			out:     os.Stdout,
+			err:     os.Stderr,
+			label:   label,
+			nocolor: cmd.nocolor,
 		}
 	default:
 		fmt.Fprintf(os.Stderr, "unknown output type %q\n", cmd.outputType)

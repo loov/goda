@@ -10,6 +10,11 @@ func hslahex(h, s, l, a float64) string {
 	return fmt.Sprintf("\"#%02x%02x%02x%02x\"", sat8(r), sat8(g), sat8(b), sat8(xa))
 }
 
+func hslhex(h, s, l float64) string {
+	r, g, b, _ := hsla(h, s, l, 1)
+	return fmt.Sprintf("#%02x%02x%02x", sat8(r), sat8(g), sat8(b))
+}
+
 func hue(v1, v2, h float64) float64 {
 	if h < 0 {
 		h += 1
