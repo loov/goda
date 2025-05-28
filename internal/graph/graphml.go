@@ -77,7 +77,7 @@ func (ctx *GraphML) ConvertGraph(graph *pkggraph.Graph) *graphml.Graph {
 				Source: node.ID,
 				Target: imp.ID,
 			}
-			ctx.addYedEdgeAttr(&edge.Attrs, "yedgelabel", label, node)
+			ctx.addYedEdgeAttr(&edge.Attrs, "yedgelabel", label, imp)
 			out.Edge = append(out.Edge, edge)
 		}
 	}
