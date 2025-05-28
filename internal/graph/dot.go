@@ -214,5 +214,5 @@ func (ctx *Dot) colorOf(p *pkggraph.Node) string {
 
 	hash := sha256.Sum256([]byte(p.PkgPath))
 	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
-	return "color=" + hslahex(hue, 0.9, 0.3, 0.7)
+	return "color=\"" + hslahex(hue, 0.9, 0.3, 0.7) + "\""
 }

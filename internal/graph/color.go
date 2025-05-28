@@ -7,7 +7,7 @@ import (
 
 func hslahex(h, s, l, a float64) string {
 	r, g, b, xa := hsla(h, s, l, a)
-	return fmt.Sprintf("\"#%02x%02x%02x%02x\"", sat8(r), sat8(g), sat8(b), sat8(xa))
+	return fmt.Sprintf("#%02x%02x%02x%02x", sat8(r), sat8(g), sat8(b), sat8(xa))
 }
 
 func hslhex(h, s, l float64) string {

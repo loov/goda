@@ -48,6 +48,8 @@ Supported output types:
 
 	digraph - format with each node and its edges on a single line
 
+	mermaid - mermaid flowchart
+
 	See "help expr" for further information about expressions.
 	See "help format" for further information about formatting.
 `
@@ -95,6 +97,15 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			nocolor:  cmd.nocolor,
 			shortID:  cmd.shortID,
 			label:    label,
+		}
+	case "mermaid":
+		format = &Mermaid{
+			out:     os.Stdout,
+			err:     os.Stderr,
+			docs:    cmd.docs,
+			nocolor: cmd.nocolor,
+			shortID: cmd.shortID,
+			label:   label,
 		}
 	case "digraph":
 		format = &Digraph{
