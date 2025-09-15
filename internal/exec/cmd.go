@@ -23,7 +23,7 @@ type Command struct {
 func (*Command) Name() string     { return "exec" }
 func (*Command) Synopsis() string { return "Run command with extended statistics." }
 func (*Command) Usage() string {
-	return `calc <command>:
+	return `exec <command>:
 	Run command with extended statistics.
 
 	Example:
