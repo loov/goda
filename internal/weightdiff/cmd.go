@@ -91,31 +91,27 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 
 		count := 0
-		min, max := int64(0), int64(0)
+		minsize, maxsize := int64(0), int64(0)
 		for _, xs := range symSets {
 			sym := xs[symname]
 			row.Syms = append(row.Syms, sym)
 			if sym != nil {
 				if count == 0 {
-					min, max = sym.Size, sym.Size
+					minsize, maxsize = sym.Size, sym.Size
 				} else {
-					if sym.Size < min {
-						min = sym.Size
-					}
-					if sym.Size > max {
-						max = sym.Size
-					}
+					minsize = min(minsize, sym.Size)
+					maxsize = max(maxsize, sym.Size)
 				}
 				count++
 			} else {
-				min = 0
+				minsize = 0
 			}
 		}
 
 		if count == 1 {
-			row.Diff = max
+			row.Diff = maxsize
 		} else {
-			row.Diff = max - min
+			row.Diff = maxsize - minsize
 		}
 		rows = append(rows, row)
 	}
