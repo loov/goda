@@ -8,6 +8,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/google/subcommands"
@@ -48,9 +49,16 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	}
 
 	binaries := []string{}
+	aliases := []string{}
 	symnameSet := map[string]struct{}{}
 	symSets := []map[string]*nm.Sym{}
 	for _, binary := range f.Args() {
+		alias := binary
+		if a, b, ok := strings.Cut(binary, "="); ok {
+			alias = a
+			binary = b
+		}
+
 		syms, err := nm.ParseBinary(binary)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "loading syms failed: %v\n", err)
@@ -70,6 +78,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		}
 
 		binaries = append(binaries, binary)
+		aliases = append(aliases, alias)
 		symSets = append(symSets, symset)
 	}
 
@@ -156,11 +165,11 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	defer func() { _ = w.Flush() }()
 
 	fmt.Fprintf(w, "name")
-	for i, bin := range binaries {
+	for i, bin := range aliases {
 		if i == 0 {
-			fmt.Fprintf(w, "\t%v", bin)
+			fmt.Fprintf(w, "\t%6v", bin)
 		} else {
-			fmt.Fprintf(w, "\t%v\t  delta", bin)
+			fmt.Fprintf(w, "\t%6v\t  delta", bin)
 		}
 	}
 	if len(binaries) > 2 {
