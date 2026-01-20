@@ -39,7 +39,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
 }
 
-func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	if f.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "missing binary arguments\n")
 		return subcommands.ExitUsageError

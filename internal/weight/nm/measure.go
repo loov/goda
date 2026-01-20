@@ -172,15 +172,9 @@ func parseLine(s string) (*Sym, error) {
 		braceOff = len(sym.QualifiedName)
 	}
 
-	slashPos := strings.LastIndexByte(sym.QualifiedName[:braceOff], '/')
-	if slashPos < 0 {
-		slashPos = 0
-	}
+	slashPos := max(strings.LastIndexByte(sym.QualifiedName[:braceOff], '/'), 0)
 
-	pointOff := strings.IndexByte(sym.QualifiedName[slashPos:braceOff], '.')
-	if pointOff < 0 {
-		pointOff = 0
-	}
+	pointOff := max(strings.IndexByte(sym.QualifiedName[slashPos:braceOff], '.'), 0)
 
 	p := slashPos + pointOff
 	if p > 0 {

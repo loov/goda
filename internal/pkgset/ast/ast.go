@@ -77,12 +77,13 @@ func (f Func) Tree(ident int) string {
 	if name == "" {
 		name = "+"
 	}
-	result := strings.Repeat("  ", ident) + name + "{\n"
+	var result strings.Builder
+	result.WriteString(strings.Repeat("  ", ident) + name + "{\n")
 	for _, arg := range f.Args {
-		result += arg.Tree(ident + 1)
+		result.WriteString(arg.Tree(ident + 1))
 	}
-	result += strings.Repeat("  ", ident) + "}"
-	return result
+	result.WriteString(strings.Repeat("  ", ident) + "}")
+	return result.String()
 }
 
 func (f Func) IsContext() bool {

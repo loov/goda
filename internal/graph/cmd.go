@@ -70,7 +70,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.shortID, "short", false, "use short package id-s inside clusters")
 }
 
-func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	if cmd.labelFormat == "" {
 		switch cmd.outputType {
 		case "dot":
@@ -193,7 +193,7 @@ type exprColor struct {
 
 // Set implements flag.Value.
 func (c *exprColors) Set(v string) error {
-	for _, v := range strings.Split(v, ";") {
+	for v := range strings.SplitSeq(v, ";") {
 		v = strings.TrimSpace(v)
 		if v == "" {
 			continue

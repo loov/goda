@@ -43,7 +43,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.format, "f", "{{.ID}}", "formatting")
 }
 
-func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	t, err := templates.Parse(cmd.format)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "invalid format string: %v\n", err)

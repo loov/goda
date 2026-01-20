@@ -46,8 +46,8 @@ func replace(id string, prefix, replacement string) (string, bool) {
 	}
 
 	prefix = withSlash(prefix)
-	if strings.HasPrefix(id, prefix) {
-		id = strings.TrimPrefix(id, prefix)
+	if after, ok := strings.CutPrefix(id, prefix); ok {
+		id = after
 		if replacement != "" {
 			replacement = withSlash(replacement)
 		}
@@ -63,7 +63,7 @@ func withSlash(prefix string) string {
 	return prefix
 }
 
-func jsonify(v interface{}) string {
+func jsonify(v any) string {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return "unable to marshal: " + err.Error()

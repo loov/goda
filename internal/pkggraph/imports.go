@@ -1,6 +1,7 @@
 package pkggraph
 
 import (
+	"slices"
 	"sort"
 
 	"golang.org/x/tools/go/packages"
@@ -46,10 +47,5 @@ func includePackageID(xs []string, p string) []string {
 }
 
 func hasPackageID(xs []string, p string) bool {
-	for _, x := range xs {
-		if x == p {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(xs, p)
 }

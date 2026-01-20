@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -50,7 +51,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.format, "f", "{{.ID}}\t{{.InDegree}}\t{{.Cut.PackageCount}}\t{{.Cut.AllFiles.Size}}\t{{.Cut.Go.Lines}}", "info formatting")
 }
 
-func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	t, err := templates.Parse(cmd.format)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "invalid label string: %v\n", err)
@@ -204,10 +205,5 @@ func (parent *Node) Import(child *Node) {
 }
 
 func hasPackage(xs []*Node, p *Node) bool {
-	for _, x := range xs {
-		if x == p {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(xs, p)
 }

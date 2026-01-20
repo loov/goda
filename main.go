@@ -156,7 +156,7 @@ package expressions.
 }
 func (*ExprHelp) SetFlags(f *flag.FlagSet) {}
 
-func (cmd *ExprHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *ExprHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	if f.NArg() == 0 {
 		return subcommands.ExitUsageError
 	}
@@ -278,7 +278,7 @@ package would deleted from the project.
 }
 func (*FormatHelp) SetFlags(f *flag.FlagSet) {}
 
-func (cmd *FormatHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *FormatHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	fmt.Println("Run \"goda help format\" to see help about formatting.")
 	return subcommands.ExitUsageError
 }

@@ -69,7 +69,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.IntVar(&cmd.minimum, "minimum", 1024, "minimum size to print")
 }
 
-func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	if f.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "missing binary argument\n")
 		return subcommands.ExitUsageError

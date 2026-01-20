@@ -36,7 +36,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.format, "f", "{{.Command}} {{.PackageName}} user:{{.UserTime}} system:{{.SystemTime}}{{with .MaximumResidentSetSize}} maxrss:{{.}}{{end}} in:{{.InputsSize}} out:{{.OutputSize}}", "formatting")
 }
 
-func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
 	if f.NArg() == 0 {
 		return subcommands.ExitSuccess
 	}

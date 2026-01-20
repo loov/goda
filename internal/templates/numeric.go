@@ -16,16 +16,16 @@ func numericFuncs() template.FuncMap {
 		"mul": mul,
 
 		"float": toFloat64,
-		"int":   func(v interface{}) int64 { return int64(toFloat64(v)) },
-		"round": func(v interface{}) float64 { return math.Round(toFloat64(v)) },
+		"int":   func(v any) int64 { return int64(toFloat64(v)) },
+		"round": func(v any) float64 { return math.Round(toFloat64(v)) },
 
-		"log":   func(v interface{}) float64 { return math.Log(toFloat64(v)) },
-		"log10": func(v interface{}) float64 { return math.Log10(toFloat64(v)) },
-		"log2":  func(v interface{}) float64 { return math.Log2(toFloat64(v)) },
+		"log":   func(v any) float64 { return math.Log(toFloat64(v)) },
+		"log10": func(v any) float64 { return math.Log10(toFloat64(v)) },
+		"log2":  func(v any) float64 { return math.Log2(toFloat64(v)) },
 	}
 }
 
-func add(xs ...interface{}) float64 {
+func add(xs ...any) float64 {
 	if len(xs) == 0 {
 		return math.NaN()
 	}
@@ -36,7 +36,7 @@ func add(xs ...interface{}) float64 {
 	return total
 }
 
-func div(xs ...interface{}) float64 {
+func div(xs ...any) float64 {
 	if len(xs) == 0 {
 		return math.NaN()
 	}
@@ -47,7 +47,7 @@ func div(xs ...interface{}) float64 {
 	return total
 }
 
-func sub(xs ...interface{}) float64 {
+func sub(xs ...any) float64 {
 	if len(xs) == 0 {
 		return math.NaN()
 	}
@@ -58,7 +58,7 @@ func sub(xs ...interface{}) float64 {
 	return total
 }
 
-func mul(xs ...interface{}) float64 {
+func mul(xs ...any) float64 {
 	if len(xs) == 0 {
 		return math.NaN()
 	}
@@ -69,7 +69,7 @@ func mul(xs ...interface{}) float64 {
 	return total
 }
 
-func toFloat64(v interface{}) float64 {
+func toFloat64(v any) float64 {
 	switch v := v.(type) {
 	case float64:
 		return v

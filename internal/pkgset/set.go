@@ -1,6 +1,7 @@
 package pkgset
 
 import (
+	"maps"
 	"sort"
 	"strings"
 
@@ -109,9 +110,8 @@ func (set Set) IncludeRecursive(p *packages.Package) {
 // Clone makes a copy of the set
 func (set Set) Clone() Set {
 	r := make(Set, len(set))
-	for pid, p := range set {
-		r[pid] = p // TODO: make a deep clone
-	}
+	// TODO: make a deep clone
+	maps.Copy(r, set)
 	return r
 }
 
