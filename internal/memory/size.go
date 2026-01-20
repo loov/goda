@@ -39,3 +39,32 @@ func ToString(size int64) string {
 
 	return sign + strconv.Itoa(int(size)) + "B"
 }
+
+// ToStringShort returns a given size in bytes as a human size string.
+// Examples: ToStringShort(1) ==> "1B"; ToStringShort(1000) ==> "1K"
+func ToStringShort(size int64) string {
+	sign := ""
+	if size < 0 {
+		sign = "-"
+		size = -size
+	}
+
+	s := float64(size)
+
+	switch {
+	case s >= (1<<60)*2/3:
+		return fmt.Sprintf("%s%.1fE", sign, s/(1<<60))
+	case s >= (1<<50)*2/3:
+		return fmt.Sprintf("%s%.1fP", sign, s/(1<<50))
+	case s >= (1<<40)*2/3:
+		return fmt.Sprintf("%s%.1fT", sign, s/(1<<40))
+	case s >= (1<<30)*2/3:
+		return fmt.Sprintf("%s%.1fG", sign, s/(1<<30))
+	case s >= (1<<20)*2/3:
+		return fmt.Sprintf("%s%.1fM", sign, s/(1<<20))
+	case s >= (1<<10)*2/3:
+		return fmt.Sprintf("%s%.1fK", sign, s/(1<<10))
+	}
+
+	return sign + strconv.Itoa(int(size)) + "B"
+}

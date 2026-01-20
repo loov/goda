@@ -21,6 +21,7 @@ type Command struct {
 	miss      bool
 	minimum   int64
 	allsyms   bool
+	color     bool
 }
 
 func (*Command) Name() string     { return "weight-diff" }
@@ -37,6 +38,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.miss, "miss", false, "include missing entries")
 	f.Int64Var(&cmd.minimum, "minimum", 1024, "minimum abs(total delta) difference to print")
 	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
+	f.BoolVar(&cmd.color, "color", false, "color delta based on sign")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
@@ -127,7 +129,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		return strconv.Itoa(int(v))
 	}
 	if cmd.humanized {
-		sizeToString = memory.ToString
+		sizeToString = memory.ToStringShort
 	}
 
 	symSizeToString := func(sym *nm.Sym) string {
@@ -141,6 +143,9 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		if v == 0 {
 			return "~"
 		} else if v > 0 {
+			if cmd.color {
+				return "\x1b[7m" + "+" + sizeToString(v) + "\x1b[0m"
+			}
 			return "+" + sizeToString(v)
 		} else {
 			return sizeToString(v)
@@ -155,7 +160,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		if i == 0 {
 			fmt.Fprintf(w, "\t%v", bin)
 		} else {
-			fmt.Fprintf(w, "\t%v\t∆", bin)
+			fmt.Fprintf(w, "\t%v\t  delta", bin)
 		}
 	}
 	if len(binaries) > 2 {
@@ -172,13 +177,13 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		fmt.Fprintf(w, "%v", row.QualifiedName)
 		for i, cell := range row.Cells {
 			if i == 0 {
-				fmt.Fprintf(w, "\t%v", symSizeToString(cell.Sym))
+				fmt.Fprintf(w, "\t%6v", symSizeToString(cell.Sym))
 			} else {
-				fmt.Fprintf(w, "\t%v\t%v", symSizeToString(cell.Sym), deltaToString(cell.Delta))
+				fmt.Fprintf(w, "\t%6v\t%7v", symSizeToString(cell.Sym), deltaToString(cell.Delta))
 			}
 		}
 		if len(binaries) > 2 {
-			fmt.Fprintf(w, "\t%v\n", deltaToString(row.TotalDelta))
+			fmt.Fprintf(w, "\t%7v\n", deltaToString(row.TotalDelta))
 		} else {
 			fmt.Fprintf(w, "\n")
 		}
