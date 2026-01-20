@@ -1,6 +1,7 @@
 package weightdiff
 
 import (
+	"cmp"
 	"context"
 	"flag"
 	"fmt"
@@ -129,9 +130,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		rows = append(rows, row)
 	}
 
-	sort.Slice(rows, func(i, k int) bool {
-		a, b := &rows[i], &rows[k]
-		return abs(a.TotalDelta) > abs(b.TotalDelta)
+	slices.SortFunc(rows, func(a, b Row) int {
+		r := cmp.Compare(abs(a.TotalDelta), abs(b.TotalDelta))
+		if r != 0 {
+			return -r
+		}
+		return cmp.Compare(a.QualifiedName, b.QualifiedName)
 	})
 
 	sizeToString := func(v int64) string {
