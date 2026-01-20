@@ -77,11 +77,18 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	}
 	sort.Strings(symnames)
 
+	type Cell struct {
+		*nm.Sym
+		Delta int64   // pre + delta = cur
+	}
 	type Row struct {
 		QualifiedName string
 
-		Diff int64
-		Syms []*nm.Sym
+		Cells []Cell
+		Delta []int64
+
+		TotalDelta  int64
+		MaxAbsDelta int64
 	}
 
 	rows := []Row{}
@@ -90,35 +97,30 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			QualifiedName: symname,
 		}
 
-		count := 0
-		minsize, maxsize := int64(0), int64(0)
+		lastSize := int64(0)
 		for _, xs := range symSets {
 			sym := xs[symname]
-			row.Syms = append(row.Syms, sym)
-			if sym != nil {
-				if count == 0 {
-					minsize, maxsize = sym.Size, sym.Size
-				} else {
-					minsize = min(minsize, sym.Size)
-					maxsize = max(maxsize, sym.Size)
-				}
-				count++
-			} else {
-				minsize = 0
-			}
+			size := sym.MaybeSize()
+			row.Cells = append(row.Cells, Cell{
+				Sym: sym,
+				Delta: size - lastSize,
+			})
+			lastSize = size
 		}
 
-		if count == 1 {
-			row.Diff = maxsize
-		} else {
-			row.Diff = maxsize - minsize
+		for _, cell := range row.Cells[1:] {
+			if cell.Sym != nil {
+				row.MaxAbsDelta = max(row.MaxAbsDelta, abs(cell.Delta))
+			}
 		}
+		row.TotalDelta = row.Cells[len(row.Cells)-1].MaybeSize() - row.Cells[0].MaybeSize()
+
 		rows = append(rows, row)
 	}
 
 	sort.Slice(rows, func(i, k int) bool {
 		a, b := &rows[i], &rows[k]
-		return abs(a.Diff) > abs(b.Diff)
+		return abs(a.TotalDelta) > abs(b.TotalDelta)
 	})
 
 	sizeToString := func(v int64) string {
@@ -128,29 +130,58 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		sizeToString = memory.ToString
 	}
 
+	symSizeToString := func(sym *nm.Sym) string {
+		if sym == nil {
+			return "-"
+		}
+		return sizeToString(sym.Size)
+	}
+
+	deltaToString := func(v int64) string {
+		if v == 0 {
+			return "~"
+		} else if v > 0 {
+			return "+" + sizeToString(v)
+		} else {
+			return sizeToString(v)
+		}
+	}
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, ' ', 0)
 	defer func() { _ = w.Flush() }()
 
-	fmt.Fprintf(w, "name\tdiff")
-	for _, bin := range binaries {
-		fmt.Fprintf(w, "\t%v", bin)
+	fmt.Fprintf(w, "name")
+	for i, bin := range binaries {
+		if i == 0 {
+			fmt.Fprintf(w, "\t%v", bin)
+		} else {
+			fmt.Fprintf(w, "\t%v\t∆", bin)
+		}
 	}
-	fmt.Fprintf(w, "\n")
+	if len(binaries) > 2 {
+		fmt.Fprintf(w, "\ttotal ∆\n")
+	} else {
+		fmt.Fprintf(w, "\n")
+	}
 
 	for _, row := range rows {
-		if abs(row.Diff) < cmd.minimum {
+		if abs(row.TotalDelta) < cmd.minimum {
 			continue
 		}
 
-		fmt.Fprintf(w, "%v\t%v", row.QualifiedName, sizeToString(row.Diff))
-		for _, sym := range row.Syms {
-			if sym == nil {
-				fmt.Fprintf(w, "\t-")
+		fmt.Fprintf(w, "%v", row.QualifiedName)
+		for i, cell := range row.Cells {
+			if i == 0 {
+				fmt.Fprintf(w, "\t%v", symSizeToString(cell.Sym))
 			} else {
-				fmt.Fprintf(w, "\t%v", sizeToString(sym.Size))
+				fmt.Fprintf(w, "\t%v\t%v", symSizeToString(cell.Sym), deltaToString(cell.Delta))
 			}
 		}
-		fmt.Fprintf(w, "\n")
+		if len(binaries) > 2 {
+			fmt.Fprintf(w, "\t%v\n", deltaToString(row.TotalDelta))
+		} else {
+			fmt.Fprintf(w, "\n")
+		}
 	}
 
 	return subcommands.ExitSuccess

@@ -52,6 +52,13 @@ type Sym struct {
 	Name string
 }
 
+func (sym *Sym) MaybeSize() int64 {
+	if sym == nil {
+		return 0
+	}
+	return sym.Size
+}
+
 func ParseBinary(binary string) ([]*Sym, error) {
 	command := exec.Command("go", "tool", "nm", "-size", binary)
 
