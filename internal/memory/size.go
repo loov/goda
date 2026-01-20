@@ -53,17 +53,17 @@ func ToStringShort(size int64) string {
 
 	switch {
 	case s >= (1<<60)*2/3:
-		return fmt.Sprintf("%s%.1fE", sign, s/(1<<60))
+		return fmt.Sprintf("%s%.2fE", sign, s/(1<<60))
 	case s >= (1<<50)*2/3:
-		return fmt.Sprintf("%s%.1fP", sign, s/(1<<50))
+		return fmt.Sprintf("%s%.2fP", sign, s/(1<<50))
 	case s >= (1<<40)*2/3:
-		return fmt.Sprintf("%s%.1fT", sign, s/(1<<40))
+		return fmt.Sprintf("%s%.2fT", sign, s/(1<<40))
 	case s >= (1<<30)*2/3:
-		return fmt.Sprintf("%s%.1fG", sign, s/(1<<30))
+		return fmt.Sprintf("%s%.2fG", sign, s/(1<<30))
 	case s >= (1<<20)*2/3:
-		return fmt.Sprintf("%s%.1fM", sign, s/(1<<20))
+		return fmt.Sprintf("%s%.2fM", sign, s/(1<<20))
 	case s >= (1<<10)*2/3:
-		return fmt.Sprintf("%s%.1fK", sign, s/(1<<10))
+		return fmt.Sprintf("%s%.2fK", sign, s/(1<<10))
 	}
 
 	return sign + strconv.Itoa(int(size)) + "B"

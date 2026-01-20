@@ -24,6 +24,7 @@ type Command struct {
 	minimum   int64
 	allsyms   bool
 	color     bool
+	cumulative     bool
 }
 
 func (*Command) Name() string     { return "weight-diff" }
@@ -41,6 +42,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.Int64Var(&cmd.minimum, "minimum", 1024, "minimum abs(total delta) difference to print")
 	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
 	f.BoolVar(&cmd.color, "color", false, "color delta based on sign")
+	f.BoolVar(&cmd.cumulative, "cum", false, "include cumulative total of deltas")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
@@ -171,35 +173,42 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	fmt.Fprintf(w, "name")
 	for i, bin := range aliases {
 		if i == 0 {
-			fmt.Fprintf(w, "\t%6v", bin)
+			fmt.Fprintf(w, "\t%7v", bin)
 		} else {
-			fmt.Fprintf(w, "\t%6v\t  delta", bin)
+			fmt.Fprintf(w, "\t%7v\t  delta", bin)
 		}
 	}
 	if len(binaries) > 2 {
-		fmt.Fprintf(w, "\ttotal ∆\n")
-	} else {
-		fmt.Fprintf(w, "\n")
+		fmt.Fprintf(w, "\ttotal ∆")
+	}
+	if cmd.cumulative {
+		fmt.Fprintf(w, "\tcum. ∆")
 	}
 
+	fmt.Fprintf(w, "\n")
+
+	cumulative := int64(0)
 	for _, row := range rows {
 		if abs(row.TotalDelta) < cmd.minimum {
 			continue
 		}
+		cumulative += row.TotalDelta
 
 		fmt.Fprintf(w, "%v", row.QualifiedName)
 		for i, cell := range row.Cells {
 			if i == 0 {
-				fmt.Fprintf(w, "\t%6v", symSizeToString(cell.Sym))
+				fmt.Fprintf(w, "\t%7v", symSizeToString(cell.Sym))
 			} else {
-				fmt.Fprintf(w, "\t%6v\t%7v", symSizeToString(cell.Sym), deltaToString(cell.Delta))
+				fmt.Fprintf(w, "\t%7v\t%8v", symSizeToString(cell.Sym), deltaToString(cell.Delta))
 			}
 		}
 		if len(binaries) > 2 {
-			fmt.Fprintf(w, "\t%7v\n", deltaToString(row.TotalDelta))
-		} else {
-			fmt.Fprintf(w, "\n")
+			fmt.Fprintf(w, "\t%8v", deltaToString(row.TotalDelta))
 		}
+		if cmd.cumulative {
+			fmt.Fprintf(w, "\t%8v", deltaToString(cumulative))
+		}
+		fmt.Fprintf(w, "\n")
 	}
 
 	return subcommands.ExitSuccess
