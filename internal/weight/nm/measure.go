@@ -10,10 +10,40 @@ import (
 	"unicode/utf8"
 )
 
+// Code represents the type of a symbol in the nm output.
+type Code rune
+
+const (
+	CodeText          Code = 'T' // text (code) section
+	CodeTextLocal     Code = 't' // text (code) section, local
+	CodeData          Code = 'D' // initialized data section
+	CodeDataLocal     Code = 'd' // initialized data section, local
+	CodeBSS           Code = 'B' // uninitialized data (BSS) section
+	CodeBSSLocal      Code = 'b' // uninitialized data (BSS) section, local
+	CodeReadOnly      Code = 'R' // read-only data section
+	CodeReadOnlyLocal Code = 'r' // read-only data section, local
+	CodeUndefined     Code = 'U' // undefined symbol
+	CodeCommon        Code = 'C' // common symbol (uninitialized data)
+	CodeWeak          Code = 'W' // weak symbol
+	CodeWeakLocal     Code = 'w' // weak symbol, local
+)
+
+// ConsumesBinary returns true if the symbol consumes binary space.
+func (code Code) ConsumesBinary() bool {
+	switch code {
+	case CodeText, CodeTextLocal,
+		CodeData, CodeDataLocal,
+		CodeReadOnly, CodeReadOnlyLocal:
+		return true
+	default:
+		return false
+	}
+}
+
 type Sym struct {
 	Addr uint64
 	Size int64
-	Code rune // nm code (T for text, D for data, and so on)
+	Code Code // nm code (T for text, D for data, and so on)
 
 	QualifiedName string
 	Info          string
@@ -126,7 +156,8 @@ func parseLine(s string) (*Sym, error) {
 	}
 
 	if code := strings.TrimSpace(typeField); code != "" {
-		sym.Code, _ = utf8.DecodeRuneInString(code)
+		tmp, _ := utf8.DecodeRuneInString(code)
+		sym.Code = Code(tmp)
 	}
 
 	sym.QualifiedName = nameField

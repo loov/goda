@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ type Command struct {
 	sort       Order
 	cumulative bool
 	humanized  bool
+	allsyms    bool
 	minimum    int
 }
 
@@ -62,6 +64,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.Var(&cmd.sort, "sort", "sorting mode (size, totalsize, name)")
 	f.BoolVar(&cmd.cumulative, "cum", false, "print cumulative size (deprecated, use -sort)")
 	f.BoolVar(&cmd.humanized, "h", false, "humanized size output")
+	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
 
 	f.IntVar(&cmd.minimum, "minimum", 1024, "minimum size to print")
 }
@@ -76,6 +79,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "loading syms failed: %v\n", err)
 		return subcommands.ExitFailure
+	}
+
+	if !cmd.allsyms {
+		syms = slices.DeleteFunc(syms, func(sym *nm.Sym) bool {
+			return !sym.Code.ConsumesBinary()
+		})
 	}
 
 	root := NewTree("")

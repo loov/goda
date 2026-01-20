@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"text/tabwriter"
@@ -19,6 +20,7 @@ type Command struct {
 	humanized bool
 	miss      bool
 	minimum   int64
+	allsyms   bool
 }
 
 func (*Command) Name() string     { return "weight-diff" }
@@ -34,6 +36,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.humanized, "h", false, "humanized size output")
 	f.BoolVar(&cmd.miss, "miss", false, "include missing entries")
 	f.Int64Var(&cmd.minimum, "minimum", 1024, "minimum size difference to print")
+	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -50,6 +53,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "loading syms failed: %v\n", err)
 			return subcommands.ExitFailure
+		}
+
+		if !cmd.allsyms {
+			syms = slices.DeleteFunc(syms, func(sym *nm.Sym) bool {
+				return !sym.Code.ConsumesBinary()
+			})
 		}
 
 		symset := map[string]*nm.Sym{}
