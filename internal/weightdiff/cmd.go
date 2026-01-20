@@ -35,7 +35,7 @@ func (*Command) Usage() string {
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.humanized, "h", false, "humanized size output")
 	f.BoolVar(&cmd.miss, "miss", false, "include missing entries")
-	f.Int64Var(&cmd.minimum, "minimum", 1024, "minimum size difference to print")
+	f.Int64Var(&cmd.minimum, "minimum", 1024, "minimum abs(total delta) difference to print")
 	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
 }
 
