@@ -14,22 +14,28 @@ func (bytes Bytes) String() string {
 // ToString returns a given size in bytes as a human size string.
 // Examples: ToString(1) ==> "1B"; ToString(1000) ==> "1KB"
 func ToString(size int64) string {
+	sign := ""
+	if size < 0 {
+		sign = "-"
+		size = -size
+	}
+
 	s := float64(size)
 
 	switch {
 	case s >= (1<<60)*2/3:
-		return fmt.Sprintf("%.1fEB", s/(1<<60))
+		return fmt.Sprintf("%s%.1fEB", sign, s/(1<<60))
 	case s >= (1<<50)*2/3:
-		return fmt.Sprintf("%.1fPB", s/(1<<50))
+		return fmt.Sprintf("%s%.1fPB", sign, s/(1<<50))
 	case s >= (1<<40)*2/3:
-		return fmt.Sprintf("%.1fTB", s/(1<<40))
+		return fmt.Sprintf("%s%.1fTB", sign, s/(1<<40))
 	case s >= (1<<30)*2/3:
-		return fmt.Sprintf("%.1fGB", s/(1<<30))
+		return fmt.Sprintf("%s%.1fGB", sign, s/(1<<30))
 	case s >= (1<<20)*2/3:
-		return fmt.Sprintf("%.1fMB", s/(1<<20))
+		return fmt.Sprintf("%s%.1fMB", sign, s/(1<<20))
 	case s >= (1<<10)*2/3:
-		return fmt.Sprintf("%.1fKB", s/(1<<10))
+		return fmt.Sprintf("%s%.1fKB", sign, s/(1<<10))
 	}
 
-	return strconv.Itoa(int(size)) + "B"
+	return sign + strconv.Itoa(int(size)) + "B"
 }
