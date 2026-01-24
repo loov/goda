@@ -2,6 +2,7 @@ package nm
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -62,6 +63,9 @@ func (sym *Sym) MaybeSize() int64 {
 func ParseBinary(binary string) ([]*Sym, error) {
 	command := exec.Command("go", "tool", "nm", "-size", binary)
 
+	var stderr bytes.Buffer
+	command.Stderr = &stderr
+
 	reader, err := command.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stdout: %w", err)
@@ -74,7 +78,9 @@ func ParseBinary(binary string) ([]*Sym, error) {
 	var syms []*Sym
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		sym, err := parseLine(scanner.Text())
+		line := scanner.Text()
+
+		sym, err := parseLine(line)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse: %w", err)
 		}
@@ -94,6 +100,10 @@ func ParseBinary(binary string) ([]*Sym, error) {
 
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("scanning failed: %w", err)
+	}
+
+	if err := command.Wait(); err != nil {
+		return nil, fmt.Errorf("nm failed: %w: %s", err, stderr.String())
 	}
 
 	return syms, nil

@@ -19,12 +19,12 @@ import (
 )
 
 type Command struct {
-	humanized bool
-	miss      bool
-	minimum   int64
-	allsyms   bool
-	color     bool
-	cumulative     bool
+	humanized  bool
+	miss       bool
+	minimum    int64
+	allsyms    bool
+	color      bool
+	cumulative bool
 }
 
 func (*Command) Name() string     { return "weight-diff" }
@@ -93,7 +93,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 
 	type Cell struct {
 		*nm.Sym
-		Delta int64   // pre + delta = cur
+		Delta int64 // pre + delta = cur
 	}
 	type Row struct {
 		QualifiedName string
@@ -116,7 +116,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			sym := xs[symname]
 			size := sym.MaybeSize()
 			row.Cells = append(row.Cells, Cell{
-				Sym: sym,
+				Sym:   sym,
 				Delta: size - lastSize,
 			})
 			lastSize = size
