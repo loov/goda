@@ -105,10 +105,40 @@ func parseDumpDep(r io.Reader) (callers map[string][]string, reflectMethodSyms m
 			target = target[:idx]
 		}
 
+		// Skip linker metadata symbols that don't represent actual function calls.
+		// "type:" are type descriptors and "go:" are compiler-generated metadata
+		// (go:info, go:itab, go:string). Following these edges would incorrectly
+		// pull in packages that merely reference the same types.
+		if isLinkerMetadata(source) || isLinkerMetadata(target) {
+			continue
+		}
+
 		callers[target] = append(callers[target], source)
 	}
 
 	return callers, reflectMethodSyms
+}
+
+// isLinkerMetadata returns true if the symbol is a linker metadata symbol
+// rather than a real function call.
+func isLinkerMetadata(sym string) bool {
+	// Type descriptors and compiler-generated metadata.
+	if strings.HasPrefix(sym, "type:") || strings.HasPrefix(sym, "go:") {
+		return true
+	}
+	// Static temporary data (e.g., "main..stmp_12").
+	if strings.Contains(sym, "..stmp_") {
+		return true
+	}
+	// Stack object, argument info, and open-coded defer metadata.
+	if strings.HasSuffix(sym, ".stkobj") ||
+		strings.HasSuffix(sym, ".opendefer") ||
+		strings.HasSuffix(sym, ".argliveinfo") ||
+		strings.HasSuffix(sym, ".arginfo0") ||
+		strings.HasSuffix(sym, ".arginfo1") {
+		return true
+	}
+	return false
 }
 
 // packageFromSymbol extracts the package path from a linker symbol name.
