@@ -94,6 +94,34 @@ goda help expr
 goda help format
 ```
 
+### Reducing binary sizes
+
+One of the main purposes of `goda` is to help reduce binary sizes and dependencies.
+Most of the tooling has been designed with that goal in mind.
+
+A few commands deserve special mention, beyond graph inspection:
+
+To find packages with the fewest dependents and the largest size impact:
+
+```
+goda cut ./...:all
+```
+
+To inspect binary size by summing up symbol sizes per package:
+
+```
+goda weight <binary>
+```
+
+To find out why binary size changed between multiple versions:
+
+```
+goda weight-diff <1> <2> <3>
+```
+
+_Note: Go 1.26 and older Go versions may list some symbols that are not present in the
+binary size, due to [Issue #77301](https://github.com/golang/go/issues/77301)._
+
 ## Graph example
 
 Here's an example output for:
