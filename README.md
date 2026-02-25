@@ -113,6 +113,12 @@ To inspect binary size by summing up symbol sizes per package:
 goda weight <binary>
 ```
 
+To find packages that prevent dead code elimination (e.g. due to `reflect.Value.MethodByName`):
+
+```
+goda graph -std "deadcode(github.com/loov/goda/...)"
+```
+
 To find out why binary size changed between multiple versions:
 
 ```

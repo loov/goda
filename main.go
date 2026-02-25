@@ -127,6 +127,10 @@ package expressions.
 	transitive(X);
 		a transitive reduction in package dependencies
 
+	deadcode(X);
+		packages from X that reach a dependency which disables dead code
+		elimination (e.g. reflect.Value.MethodByName)
+
 # Tags and OS:
 
 	test=1(X);

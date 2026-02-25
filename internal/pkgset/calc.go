@@ -185,6 +185,16 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				args, err := evalArgs(ctx, e.Args)
 				return Transitive(args[0]), err
 
+			case "deadcode":
+				if len(e.Args) != 1 {
+					return nil, fmt.Errorf("deadcode requires one argument: %v", e)
+				}
+				args, err := evalArgs(ctx, e.Args)
+				if err != nil {
+					return nil, err
+				}
+				return Deadcode(ctx.Context, args[0])
+
 			default:
 				return nil, fmt.Errorf("unknown func %v: %v", e.Name, e)
 			}
