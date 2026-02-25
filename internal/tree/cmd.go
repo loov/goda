@@ -53,14 +53,16 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	}
 	roots := pkgset.Sources(result)
 
-	printed := map[string]bool{}
+	lineNr := 0
+	printed := map[string]int{}
 
 	var visit func(int, string, *packages.Package, bool)
 	visit = func(ident int, parentID string, p *packages.Package, last bool) {
+		lineNr++
 		if last {
-			fmt.Fprint(os.Stdout, strings.Repeat("  ", ident), "  └ ")
+			fmt.Fprintf(os.Stdout, "%-4d%s  └ ", lineNr, strings.Repeat("  ", ident))
 		} else {
-			fmt.Fprint(os.Stdout, strings.Repeat("  ", ident), "  ├ ")
+			fmt.Fprintf(os.Stdout, "%-4d%s  ├ ", lineNr, strings.Repeat("  ", ident))
 		}
 
 		type packageWithImporter struct {
@@ -75,13 +77,17 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
 		}
 
-		if printed[p.ID] || pkgset.IsStd(p) {
+		if line, ok := printed[p.ID]; ok {
+			fmt.Fprintf(os.Stdout, " @%d\n", line)
+			return
+		}
+		if pkgset.IsStd(p) {
 			fmt.Fprintln(os.Stdout, " ~")
 			return
 		}
 		fmt.Fprintln(os.Stdout)
 
-		printed[p.ID] = true
+		printed[p.ID] = lineNr
 		keys := []string{}
 		for id := range p.Imports {
 			if _, ok := result[id]; !ok {
