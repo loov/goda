@@ -88,22 +88,21 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		fmt.Fprintln(os.Stdout)
 
 		printed[p.ID] = lineNr
-		keys := []string{}
-		for id := range p.Imports {
-			if _, ok := result[id]; !ok {
+		deps := []*packages.Package{}
+		for _, dep := range p.Imports {
+			if _, ok := result[dep.ID]; !ok {
 				continue
 			}
-			keys = append(keys, id)
+			deps = append(deps, dep)
 		}
 
-		sort.Strings(keys)
-		for i, id := range keys {
-			dep := p.Imports[id]
-			visit(ident+1, p.ID, dep, i == len(keys)-1)
+		sort.Slice(deps, func(i, k int) bool { return deps[i].ID < deps[k].ID })
+		for i, dep := range deps {
+			visit(ident+1, p.ID, dep, i == len(deps)-1)
 		}
 	}
 
-	for _, root := range roots {
+	for _, root := range roots.Sorted() {
 		visit(0, "\x00", root, false)
 	}
 

@@ -289,18 +289,15 @@ func SourcesOfAll(a Set) Set {
 }
 
 // Sources returns packages that don't have incoming edges,
-// but only considering the current set.
+// only considering edges between packages in the set.
 func Sources(a Set) Set {
 	incoming := map[string]int{}
 
-	a.WalkAllDependencies(func(p *packages.Package) {
-		if _, ok := a[p.ID]; ok {
-			return
-		}
+	for _, p := range a {
 		for _, dep := range p.Imports {
 			incoming[dep.ID]++
 		}
-	})
+	}
 
 	result := New()
 	for _, p := range a {
