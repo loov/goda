@@ -254,14 +254,18 @@ func Transitive(a Set) Set {
 		}
 	}
 
-	for _, p := range result {
+	for id, p := range result {
 		indirectDeps := make(map[string]struct{})
 		for _, c := range p.Imports {
 			includeDeps(c, indirectDeps)
 		}
+		// packages are shared with other sets, so copy before modifying imports
+		cp := *p
+		cp.Imports = maps.Clone(p.Imports)
 		for dep := range indirectDeps {
-			delete(p.Imports, dep)
+			delete(cp.Imports, dep)
 		}
+		result[id] = &cp
 	}
 
 	return result
