@@ -1,6 +1,8 @@
 package pkgset
 
 import (
+	"fmt"
+	"os"
 	"sync"
 
 	"golang.org/x/tools/go/packages"
@@ -18,7 +20,8 @@ func LoadStd() {
 		}, "std")
 
 		if err != nil {
-			panic(err)
+			fmt.Fprintf(os.Stderr, "failed to load std packages: %v\n", err)
+			os.Exit(1)
 		}
 
 		stdpkgs = New(standard...)

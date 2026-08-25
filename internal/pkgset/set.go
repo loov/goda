@@ -339,7 +339,6 @@ func Test(a Set) Set {
 }
 
 func IsTestPkg(pkg *packages.Package) bool {
-	return strings.HasSuffix(pkg.ID, ".test") ||
-		strings.HasSuffix(pkg.ID, "_test") ||
-		strings.HasSuffix(pkg.ID, ".test]")
+	// test variants are "pkg.test" or "pkg [pkg.test]" / "pkg_test [pkg.test]"
+	return strings.HasSuffix(pkg.ID, ".test") || strings.HasSuffix(pkg.ID, ".test]")
 }
