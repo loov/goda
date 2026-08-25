@@ -23,21 +23,20 @@ func (stat *Tokens) Sub(b Tokens) {
 func TokensFromAst(f *ast.File) Tokens {
 	stat := Tokens{}
 
-	ast.Inspect(f, func(n ast.Node) bool {
-		if n == nil {
-			return true
-		}
+	// comment groups are reachable both via Doc fields and f.Comments,
+	// so count them once from f.Comments and skip them during inspection.
+	stat.Comment = int64(len(f.Comments))
 
+	ast.Inspect(f, func(n ast.Node) bool {
 		switch n.(type) {
-		default:
-			stat.Code++
+		case nil:
 		case *ast.BasicLit:
 			stat.Basic++
-		case *ast.CommentGroup, *ast.Comment:
-			stat.Comment++
+		case *ast.CommentGroup:
 			return false
+		default:
+			stat.Code++
 		}
-
 		return true
 	})
 
