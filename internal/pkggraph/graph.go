@@ -147,6 +147,7 @@ func (p *Node) MarshalJSON() ([]byte, error) {
 	flat.Package.OtherFiles = p.Package.OtherFiles
 	flat.Package.IgnoredFiles = p.Package.IgnoredFiles
 	flat.Package.ExportFile = p.Package.ExportFile
+	flat.Package.Errors = p.Package.Errors
 
 	for _, n := range p.ImportsNodes {
 		flat.ImportsNodes = append(flat.ImportsNodes, n.ID)

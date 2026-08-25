@@ -1,8 +1,8 @@
 package pkggraph
 
 import (
+	"maps"
 	"slices"
-	"sort"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -19,13 +19,14 @@ func allImportsCache(pkgs map[string]*packages.Package) map[string][]string {
 		// prevent cycles
 		cache[p.ID] = []string{}
 
-		var xs []string
+		set := map[string]struct{}{}
 		for _, child := range p.Imports {
-			xs = includePackageID(xs, child.ID)
+			set[child.ID] = struct{}{}
 			for _, pkg := range fetch(child) {
-				xs = includePackageID(xs, pkg)
+				set[pkg] = struct{}{}
 			}
 		}
+		xs := slices.Sorted(maps.Keys(set))
 		cache[p.ID] = xs
 
 		return xs
@@ -36,16 +37,4 @@ func allImportsCache(pkgs map[string]*packages.Package) map[string][]string {
 	}
 
 	return cache
-}
-
-func includePackageID(xs []string, p string) []string {
-	if !hasPackageID(xs, p) {
-		xs = append(xs, p)
-		sort.Strings(xs)
-	}
-	return xs
-}
-
-func hasPackageID(xs []string, p string) bool {
-	return slices.Contains(xs, p)
 }
