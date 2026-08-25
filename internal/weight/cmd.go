@@ -121,7 +121,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	}
 
 	sizeToString := func(v int64) string {
-		return strconv.Itoa(int(v))
+		return strconv.FormatInt(v, 10)
 	}
 	if cmd.humanized {
 		sizeToString = memory.ToString
