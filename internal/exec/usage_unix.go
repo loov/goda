@@ -4,6 +4,7 @@ package exec
 
 import (
 	"os"
+	"runtime"
 	"syscall"
 
 	"github.com/loov/goda/internal/memory"
@@ -15,13 +16,19 @@ func TryGetUsage(state *os.ProcessState) Usage {
 		return Usage{}
 	}
 
+	// linux reports the rss fields in kilobytes, darwin and the bsds in bytes.
+	rss := memory.Bytes(1)
+	if runtime.GOOS == "linux" {
+		rss = 1024
+	}
+
 	return Usage{
 		HasUsage: true,
 
-		MaximumResidentSetSize:     memory.Bytes(usage.Maxrss),
-		IntegralSharedMemorySize:   memory.Bytes(usage.Ixrss),
-		IntegralUnsharedDataSize:   memory.Bytes(usage.Idrss),
-		IntegralUnsharedStackSize:  memory.Bytes(usage.Isrss),
+		MaximumResidentSetSize:     memory.Bytes(usage.Maxrss) * rss,
+		IntegralSharedMemorySize:   memory.Bytes(usage.Ixrss) * rss,
+		IntegralUnsharedDataSize:   memory.Bytes(usage.Idrss) * rss,
+		IntegralUnsharedStackSize:  memory.Bytes(usage.Isrss) * rss,
 		PageReclaims:               int64(usage.Minflt),
 		PageFaults:                 int64(usage.Majflt),
 		Swaps:                      int64(usage.Nswap),
