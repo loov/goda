@@ -3,27 +3,58 @@ package pkgset
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"io"
+	"maps"
+	"os"
 	"os/exec"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // Deadcode returns packages from the set that directly or indirectly call
 // a function annotated with <ReflectMethod> in the linker dependency graph.
 // This is typically caused by reflect.Value.MethodByName or similar calls,
 // which force the linker to keep all interface methods alive.
-func Deadcode(ctx context.Context, pkgs Set) (Set, error) {
-	ids := pkgs.IDs()
-	if len(ids) == 0 {
-		return New(), nil
+func Deadcode(ctx *Context, pkgs Set) (Set, error) {
+	mains := Main(pkgs)
+	maps.DeleteFunc(mains, func(_ string, p *packages.Package) bool { return IsTestPkg(p) })
+	if len(mains) == 0 {
+		return nil, fmt.Errorf("deadcode requires at least one main package")
 	}
 
-	args := []string{"build", "-ldflags=-dumpdep", "-o", "/dev/null"}
-	args = append(args, ids...)
+	result := make(Set)
+	// ponytail: one build per main so that "main.*" symbols map to the right package;
+	// mains are few and builds are cached.
+	for _, mainID := range mains.IDs() {
+		reachable, err := reflectMethodCallers(ctx, mainID)
+		if err != nil {
+			return nil, err
+		}
+		for sym := range reachable {
+			pkg := packageFromSymbol(sym)
+			if pkg == "main" {
+				pkg = mainID
+			}
+			if p, ok := pkgs[pkg]; ok {
+				result[pkg] = p
+			}
+		}
+	}
+	return result, nil
+}
 
-	cmd := exec.CommandContext(ctx, "go", args...)
+// reflectMethodCallers builds mainID and returns all symbols that transitively
+// reach a <ReflectMethod> symbol in the linker dependency graph.
+func reflectMethodCallers(ctx *Context, mainID string) (map[string]bool, error) {
+	config := ctx.Config()
+	args := []string{"build", "-ldflags=-dumpdep", "-o", os.DevNull}
+	args = append(args, config.BuildFlags...)
+	args = append(args, mainID)
+
+	cmd := exec.CommandContext(ctx.Context, "go", args...)
+	cmd.Env = append(os.Environ(), config.Env...)
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -49,20 +80,7 @@ func Deadcode(ctx context.Context, pkgs Set) (Set, error) {
 	for sym := range reflectMethodSyms {
 		walk(sym)
 	}
-
-	// Extract packages from reachable symbols and intersect with input set.
-	result := make(Set)
-	for sym := range reachable {
-		pkg := packageFromSymbol(sym)
-		if pkg == "" {
-			continue
-		}
-		if p, ok := pkgs[pkg]; ok {
-			result[pkg] = p
-		}
-	}
-
-	return result, nil
+	return reachable, nil
 }
 
 // parseDumpDep parses the output of `go build -ldflags="-dumpdep"`.
@@ -186,5 +204,6 @@ func packageFromSymbol(sym string) string {
 		return ""
 	}
 
-	return prefix + pkgName
+	// The linker escapes '.' in the last path element, e.g. "gopkg.in/yaml%2ev3".
+	return prefix + strings.ReplaceAll(pkgName, "%2e", ".")
 }

@@ -129,7 +129,8 @@ package expressions.
 
 	deadcode(X);
 		packages from X that reach a dependency which disables dead code
-		elimination (e.g. reflect.Value.MethodByName)
+		elimination (e.g. reflect.Value.MethodByName);
+		X must contain at least one main package, which is built to find them
 
 # Tags and OS:
 

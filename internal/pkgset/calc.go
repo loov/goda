@@ -193,7 +193,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				if err != nil {
 					return nil, err
 				}
-				return Deadcode(ctx.Context, args[0])
+				return Deadcode(ctx, args[0])
 
 			default:
 				return nil, fmt.Errorf("unknown func %v: %v", e.Name, e)
