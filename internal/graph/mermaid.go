@@ -3,7 +3,7 @@ package graph
 import (
 	"fmt"
 	"io"
-	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/loov/goda/internal/pkggraph"
@@ -22,12 +22,9 @@ type Mermaid struct {
 
 func (ctx *Mermaid) Label(p *pkggraph.Node) string { return renderLabel(ctx.label, ctx.err, p) }
 
-var rxMermaidID = regexp.MustCompile("[^a-zA-Z0-9]+")
-
-func (ctx *Mermaid) PkgID(p *pkggraph.Node) string {
-	// Go quoting rules are similar enough to dot quoting.
-	// At least enough similar to quote a Go import path.
-	return rxMermaidID.ReplaceAllString(p.ID, "_")
+// mermaidLabel quotes a label for mermaid, which has no backslash escapes.
+func mermaidLabel(s string) string {
+	return `"` + strings.ReplaceAll(s, `"`, "#quot;") + `"`
 }
 
 func (ctx *Mermaid) Ref(p *pkggraph.Node) string {
@@ -37,9 +34,15 @@ func (ctx *Mermaid) Ref(p *pkggraph.Node) string {
 func (ctx *Mermaid) Write(graph *pkggraph.Graph) error {
 	fmt.Fprintf(ctx.out, "flowchart LR\n")
 
+	// sanitized paths can collide (a-b vs a_b), so use positional ids.
+	ids := map[*pkggraph.Node]string{}
+	for i, n := range graph.Sorted {
+		ids[n] = fmt.Sprintf("n%d", i)
+	}
+
 	for _, n := range graph.Sorted {
-		nid := ctx.PkgID(n)
-		fmt.Fprintf(ctx.out, "    %v[%q]\n", nid, ctx.Label(n))
+		nid := ids[n]
+		fmt.Fprintf(ctx.out, "    %v[%v]\n", nid, mermaidLabel(ctx.Label(n)))
 
 		fmt.Fprintf(ctx.out, "    click %v %q _blank\n", nid, ctx.Ref(n))
 
@@ -50,9 +53,9 @@ func (ctx *Mermaid) Write(graph *pkggraph.Graph) error {
 
 	linkIndex := 0
 	for _, src := range graph.Sorted {
-		srcid := ctx.PkgID(src)
+		srcid := ids[src]
 		for _, dst := range src.ImportsNodes {
-			dstid := ctx.PkgID(dst)
+			dstid := ids[dst]
 			fmt.Fprintf(ctx.out, "    %v --> %v\n", srcid, dstid)
 			if color := ctx.strokeColorOf(dst); color != "" {
 				fmt.Fprintf(ctx.out, "    linkStyle %v stroke:%v\n", linkIndex, color)

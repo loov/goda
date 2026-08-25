@@ -56,6 +56,12 @@ func (ctx *Dot) TreePackageLabel(tp *pkgtree.Package, parentPrinted bool) string
 	return ctx.Label(tp.GraphNode)
 }
 
+// dotQuote escapes s for use inside a double-quoted DOT string,
+// keeping template escapes such as \l and \n intact.
+func dotQuote(s string) string {
+	return strings.ReplaceAll(s, `"`, `\"`)
+}
+
 func (ctx *Dot) RepoRef(repo *pkgtree.Repo) string {
 	return fmt.Sprintf(`href=%q`, ctx.docs+repo.Path())
 }
@@ -106,7 +112,7 @@ func (ctx *Dot) WriteRegular(graph *pkggraph.Graph) error {
 	defer fmt.Fprintf(ctx.out, "}\n")
 
 	for _, n := range graph.Sorted {
-		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" %v %v];\n", pkgID(n), ctx.Label(n), ctx.Ref(n), ctx.colorOf(n))
+		fmt.Fprintf(ctx.out, "    %v [label=\"%v\" %v %v];\n", pkgID(n), dotQuote(ctx.Label(n)), ctx.Ref(n), ctx.colorOf(n))
 	}
 
 	for _, src := range graph.Sorted {
@@ -150,15 +156,15 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 			printed[tn] = true
 			label := ctx.ModuleLabel(tn)
 			fmt.Fprintf(ctx.out, "subgraph %q {\n", "cluster_"+tn.Path())
-			fmt.Fprintf(ctx.out, "    label=\"%v\"\n", label)
-			fmt.Fprintf(ctx.out, "    tooltip=\"%v\"\n", label)
+			fmt.Fprintf(ctx.out, "    label=\"%v\"\n", dotQuote(label))
+			fmt.Fprintf(ctx.out, "    tooltip=\"%v\"\n", dotQuote(label))
 			fmt.Fprintf(ctx.out, "    %v\n", ctx.ModuleRef(tn))
 			defer fmt.Fprintf(ctx.out, "}\n")
 
 		case *pkgtree.Package:
 			printed[tn] = true
 			gn := tn.GraphNode
-			if tn.Path() == tn.Parent.Path() {
+			if gn.ID == tn.Parent.Path() { // the module's root package, not its test variant
 				isCluster[tn.GraphNode] = true
 				shape := "circle"
 				if tn.OnlyChild() {
@@ -166,9 +172,9 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 				}
 				fmt.Fprintf(ctx.out, "    %v [label=\"\" tooltip=\"%v\" shape=%v %v rank=0];\n", pkgID(gn), tn.Path(), shape, ctx.colorOf(gn))
 			} else {
-				label := ctx.TreePackageLabel(tn, printed[tn.Parent])
+				label := dotQuote(ctx.TreePackageLabel(tn, printed[tn.Parent]))
 				href := ctx.TreePackageRef(tn)
-				fmt.Fprintf(ctx.out, "    %v [label=\"%v\" tooltip=\"%v\" %v %v];\n", pkgID(gn), label, tn.Path(), href, ctx.colorOf(gn))
+				fmt.Fprintf(ctx.out, "    %v [label=\"%v\" tooltip=\"%v\" %v %v];\n", pkgID(gn), label, dotQuote(gn.ID), href, ctx.colorOf(gn))
 			}
 		}
 
@@ -181,7 +187,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 		for _, dst := range src.ImportsNodes {
 			dstID := pkgID(dst)
 			dstTree := lookup[dst]
-			tooltip := src.ID + " -> " + dst.ID
+			tooltip := dotQuote(src.ID + " -> " + dst.ID)
 
 			if isCluster[dst] && srctree.Parent != dstTree.Parent {
 				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=%q %v];\n", pkgID(src), dstID, tooltip, "cluster_"+dst.ID, ctx.colorOf(dst))

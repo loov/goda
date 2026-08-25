@@ -37,12 +37,7 @@ func (ctx *GraphML) Write(graph *pkggraph.Graph) error {
 
 	enc := xml.NewEncoder(ctx.out)
 	enc.Indent("", "\t")
-	err := enc.Encode(file)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "failed to output: %v\n", err)
-	}
-
-	return nil
+	return enc.Encode(file)
 }
 
 func (ctx *GraphML) ConvertGraph(graph *pkggraph.Graph) *graphml.Graph {
@@ -69,7 +64,7 @@ func (ctx *GraphML) ConvertGraph(graph *pkggraph.Graph) *graphml.Graph {
 				Source: node.ID,
 				Target: imp.ID,
 			}
-			ctx.addYedEdgeAttr(&edge.Attrs, "yedgelabel", label, imp)
+			ctx.addYedEdgeAttr(&edge.Attrs, "yedgelabel", imp)
 			out.Edge = append(out.Edge, edge)
 		}
 	}
@@ -83,7 +78,9 @@ func (ctx *GraphML) addYedLabelAttr(attrs *graphml.Attrs, key, value string, nod
 	}
 	var buf bytes.Buffer
 	buf.WriteString(`<y:ShapeNode>`)
-	fmt.Fprintf(&buf, `<y:Fill color="%v" transparent="false" />`, ctx.colorOf(node))
+	if color := ctx.colorOf(node); color != "" {
+		fmt.Fprintf(&buf, `<y:Fill color="%v" transparent="false" />`, color)
+	}
 	buf.WriteString(`<y:NodeLabel>`)
 	if err := xml.EscapeText(&buf, []byte(value)); err != nil {
 		// this shouldn't ever happen
@@ -94,13 +91,14 @@ func (ctx *GraphML) addYedLabelAttr(attrs *graphml.Attrs, key, value string, nod
 	*attrs = append(*attrs, graphml.Attr{Key: key, Value: buf.Bytes()})
 }
 
-func (ctx *GraphML) addYedEdgeAttr(attrs *graphml.Attrs, key, value string, node *pkggraph.Node) {
-	if value == "" {
+func (ctx *GraphML) addYedEdgeAttr(attrs *graphml.Attrs, key string, node *pkggraph.Node) {
+	color := ctx.colorOf(node)
+	if color == "" {
 		return
 	}
 	var buf bytes.Buffer
 	buf.WriteString(`<y:PolyLineEdge>`)
-	fmt.Fprintf(&buf, `<y:LineStyle color="%v" type="line" width="1.0" />`, ctx.colorOf(node))
+	fmt.Fprintf(&buf, `<y:LineStyle color="%v" type="line" width="1.0" />`, color)
 	buf.WriteString(`</y:PolyLineEdge>`)
 	*attrs = append(*attrs, graphml.Attr{Key: key, Value: buf.Bytes()})
 }
