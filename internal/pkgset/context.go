@@ -2,6 +2,8 @@ package pkgset
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -48,19 +50,37 @@ func (ctx Context) Clone() *Context {
 }
 
 func (ctx Context) Load(patterns ...string) ([]*packages.Package, error) {
-	return packages.Load(ctx.Config(), replaceAliases(patterns...)...)
+	return load(ctx.Config(), patterns...)
 }
 
 func (ctx Context) LoadWithTests(patterns ...string) ([]*packages.Package, error) {
 	config := ctx.Config()
 	config.Tests = true
-	return packages.Load(config, replaceAliases(patterns...)...)
+	return load(config, patterns...)
 }
 
 func (ctx Context) LoadWithoutTests(patterns ...string) ([]*packages.Package, error) {
 	config := ctx.Config()
 	config.Tests = false
-	return packages.Load(config, replaceAliases(patterns...)...)
+	return load(config, patterns...)
+}
+
+// load wraps packages.Load and reports patterns that failed to resolve,
+// which packages.Load only records as placeholder packages with a ListError.
+func load(config *packages.Config, patterns ...string) ([]*packages.Package, error) {
+	roots, err := packages.Load(config, replaceAliases(patterns...)...)
+	if err != nil {
+		return roots, err
+	}
+	var errs []error
+	for _, p := range roots {
+		for _, e := range p.Errors {
+			if e.Kind == packages.ListError {
+				errs = append(errs, fmt.Errorf("%v: %v", p.ID, e.Msg))
+			}
+		}
+	}
+	return roots, errors.Join(errs...)
 }
 
 func (ctx *Context) Set(key, value string) {
