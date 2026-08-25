@@ -37,8 +37,8 @@ goda list "github.com/loov/goda/...:import"
 # list dependency graph that reaches flag package, including std
 goda graph -std "reach(github.com/loov/goda/...:all, flag)" | dot -Tsvg -o graph.svg
 
-# list packages shared by github.com/loov/goda/pkgset and github.com/loov/goda/cut
-goda list "shared(github.com/loov/goda/pkgset:all, github.com/loov/goda/cut:all)"
+# list packages shared by github.com/loov/goda/internal/pkgset and github.com/loov/goda/internal/cut
+goda list "shared(github.com/loov/goda/internal/pkgset:all, github.com/loov/goda/internal/cut:all)"
 
 # list packages that are only imported for tests
 goda list "github.com/loov/goda/...:+test:all - github.com/loov/goda/...:all"

@@ -25,6 +25,7 @@ func main() {
 
 	cmds := subcommands.NewCommander(flag.CommandLine, path.Base(os.Args[0]))
 	cmds.Register(cmds.HelpCommand(), "")
+	cmds.Register(cmds.FlagsCommand(), "")
 
 	cmds.Register(&list.Command{}, "")
 	cmds.Register(&tree.Command{}, "")
@@ -279,11 +280,20 @@ binary size.
 
 This contains summary of packages that would be removed when that
 package would deleted from the project.
+
+Additional template functions:
+
+    add, sub, mul, div  arithmetic on numbers, e.g. {{div .Stat.Go.Lines 1000}}
+    float, int, round   numeric conversions
+    log, log2, log10    logarithms
+    rel PREFIX ID       replace PREFIX in ID with "./"
+    rename P R ... ID   replace prefix P with R in ID (multiple pairs allowed)
+    json V              encode V as JSON, e.g. {{json .Stat}}
 `
 }
 func (*FormatHelp) SetFlags(f *flag.FlagSet) {}
 
 func (cmd *FormatHelp) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
-	fmt.Println("Run \"goda help format\" to see help about formatting.")
-	return subcommands.ExitUsageError
+	fmt.Print(cmd.Usage())
+	return subcommands.ExitSuccess
 }
