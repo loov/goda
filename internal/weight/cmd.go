@@ -1,12 +1,12 @@
 package weight
 
 import (
+	"cmp"
 	"context"
 	"flag"
 	"fmt"
 	"os"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -148,10 +148,12 @@ var sortTreeFunc = map[Order]func([]*Tree){
 	Default: sortBySize,
 	BySize:  sortBySize,
 	ByTotalSize: func(trees []*Tree) {
-		sort.Slice(trees, func(i, k int) bool { return trees[i].TotalSize > trees[k].TotalSize })
+		slices.SortFunc(trees, func(a, b *Tree) int {
+			return cmp.Or(cmp.Compare(b.TotalSize, a.TotalSize), cmp.Compare(a.Path, b.Path))
+		})
 	},
 	ByName: func(trees []*Tree) {
-		sort.Slice(trees, func(i, k int) bool { return trees[i].Path < trees[k].Path })
+		slices.SortFunc(trees, func(a, b *Tree) int { return cmp.Compare(a.Path, b.Path) })
 	},
 }
 
@@ -160,21 +162,20 @@ var sortSymFunc = map[Order]func([]*nm.Sym){
 	BySize:      sortBySymSize,
 	ByTotalSize: sortBySymSize,
 	ByName: func(syms []*nm.Sym) {
-		sort.Slice(syms, func(i, k int) bool { return syms[i].Name < syms[k].Name })
+		slices.SortFunc(syms, func(a, b *nm.Sym) int { return cmp.Compare(a.Name, b.Name) })
 	},
 }
 
 func sortBySize(trees []*Tree) {
-	sort.Slice(trees, func(i, k int) bool {
-		if trees[i].Size == trees[k].Size {
-			return trees[i].TotalSize > trees[k].TotalSize
-		}
-		return trees[i].Size > trees[k].Size
+	slices.SortFunc(trees, func(a, b *Tree) int {
+		return cmp.Or(cmp.Compare(b.Size, a.Size), cmp.Compare(b.TotalSize, a.TotalSize), cmp.Compare(a.Path, b.Path))
 	})
 }
 
 func sortBySymSize(syms []*nm.Sym) {
-	sort.Slice(syms, func(i, k int) bool { return syms[i].Size > syms[k].Size })
+	slices.SortFunc(syms, func(a, b *nm.Sym) int {
+		return cmp.Or(cmp.Compare(b.Size, a.Size), cmp.Compare(a.Name, b.Name))
+	})
 }
 
 type Tree struct {
