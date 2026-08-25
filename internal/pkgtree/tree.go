@@ -74,6 +74,9 @@ func (t *Tree) NodeRepo(n *pkggraph.Node) *Repo {
 	rootPath := n.ID
 	if n.Module != nil {
 		rootPath = n.Module.Path
+		if prefix, _, ok := module.SplitPathVersion(rootPath); ok {
+			rootPath = prefix
+		}
 	}
 	repo, ok := t.Repos[rootPath]
 	if !ok {

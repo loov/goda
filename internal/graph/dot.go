@@ -75,7 +75,11 @@ func (ctx *Dot) RepoRef(repo *pkgtree.Repo) string {
 }
 
 func (ctx *Dot) ModuleRef(mod *pkgtree.Module) string {
-	return fmt.Sprintf(`href=%q`, ctx.docs+mod.Path()+"@"+mod.Mod.Version)
+	ref := ctx.docs + mod.Path()
+	if mod.Mod.Version != "" {
+		ref += "@" + mod.Mod.Version
+	}
+	return fmt.Sprintf(`href=%q`, ref)
 }
 
 func (ctx *Dot) TreePackageRef(tp *pkgtree.Package) string {
@@ -193,7 +197,7 @@ func (ctx *Dot) WriteClusters(graph *pkggraph.Graph) error {
 			dstTree := lookup[dst]
 			tooltip := src.ID + " -> " + dst.ID
 
-			if isCluster[dst] && srctree.Parent != dstTree {
+			if isCluster[dst] && srctree.Parent != dstTree.Parent {
 				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" lhead=%q %v];\n", pkgID(src), dstID, tooltip, "cluster_"+dst.ID, ctx.colorOf(dst))
 			} else {
 				fmt.Fprintf(ctx.out, "    %v -> %v [tooltip=\"%v\" %v];\n", pkgID(src), dstID, tooltip, ctx.colorOf(dst))
