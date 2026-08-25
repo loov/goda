@@ -10,7 +10,7 @@ type File struct {
 	XMLNS             string   `xml:"xmlns,attr"`
 	XMLNSXSI          string   `xml:"xmlns:xsi,attr"`
 	XMLNSY            string   `xml:"xmlns:y,attr"`
-	XSISchemaLocation string   `xml:"xsi:schemalocation,attr"`
+	XSISchemaLocation string   `xml:"xsi:schemaLocation,attr"`
 
 	Key    []Key    `xml:"key"`
 	Graphs []*Graph `xml:"graph"`
