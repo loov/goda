@@ -116,7 +116,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	root.Sort(sorter, sortSymFunc[cmd.sort])
 	sorter(trees)
 
-	if cmd.limit > 0 && cmd.limit > len(trees) {
+	if cmd.limit > 0 && cmd.limit < len(trees) {
 		trees = trees[:cmd.limit]
 	}
 
