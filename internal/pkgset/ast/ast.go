@@ -187,6 +187,9 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 					break
 				}
 			}
+			if tokens[p-1].Kind != TRightParen {
+				return p, combine(exprs), errors.New("missing ')'")
+			}
 
 			if tok.Kind == TLeftParen {
 				if len(funcexpr.Args) != 1 {

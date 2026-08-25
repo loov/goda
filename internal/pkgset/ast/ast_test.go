@@ -172,3 +172,15 @@ func TestParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestParseUnbalanced(t *testing.T) {
+	for _, input := range []string{"fmt ( os", "reach(fmt, os", "(fmt"} {
+		tokens, err := Tokenize(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Parse(tokens); err == nil {
+			t.Errorf("parse %q: expected error", input)
+		}
+	}
+}
