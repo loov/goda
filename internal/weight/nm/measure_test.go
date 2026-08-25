@@ -25,6 +25,29 @@ var validLines = []string{
 	`    5b07         79 ? .file`,
 }
 
+func TestParseLineFields(t *testing.T) {
+	tests := []struct {
+		line       string
+		path, name string
+	}{
+		{`115d4a0        256 D time.utcLoc`, "time", "utcLoc"},
+		{`10018d8f0        800 T encoding/json/v2.(*typedArshalers[go.shape.struct { encoding/json/jsontext.s }]).lookup`, "encoding/json/v2", "(*typedArshalers[go.shape.struct { encoding/json/jsontext.s }]).lookup"},
+		{`10018dc10        176 T cmp.Or[go.shape.interface { Error() string }]`, "cmp", "Or[go.shape.interface { Error() string }]"},
+		{`1000 16 T reflect.TypeAssert[encoding/json.Marshaler]`, "reflect", "TypeAssert[encoding/json.Marshaler]"},
+		{`           16781312 U _mmap`, "", "_mmap"},
+		{`                  0 U`, "", ""},
+	}
+	for _, test := range tests {
+		sym, err := parseLine(test.line)
+		if err != nil {
+			t.Fatalf("%q: %v", test.line, err)
+		}
+		if got := strings.Join(sym.Path, "/"); got != test.path || sym.Name != test.name {
+			t.Errorf("%q:\n got %q %q\nwant %q %q", test.line, got, sym.Name, test.path, test.name)
+		}
+	}
+}
+
 func TestParseLine(t *testing.T) {
 	for _, line := range validLines {
 		_, err := parseLine(line)

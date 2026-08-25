@@ -1,7 +1,6 @@
 package nm
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"os/exec"
@@ -47,7 +46,6 @@ type Sym struct {
 	Code Code // nm code (T for text, D for data, and so on)
 
 	QualifiedName string
-	Info          string
 
 	Path []string
 	Name string
@@ -66,21 +64,14 @@ func ParseBinary(binary string) ([]*Sym, error) {
 	var stderr bytes.Buffer
 	command.Stderr = &stderr
 
-	reader, err := command.StdoutPipe()
+	output, err := command.Output()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get stdout: %w", err)
-	}
-
-	if err := command.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start: %w", err)
+		return nil, fmt.Errorf("nm failed: %w: %s", err, stderr.String())
 	}
 
 	var syms []*Sym
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		sym, err := parseLine(line)
+	for line := range strings.Lines(string(output)) {
+		sym, err := parseLine(strings.TrimSuffix(line, "\n"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse: %w", err)
 		}
@@ -88,22 +79,11 @@ func ParseBinary(binary string) ([]*Sym, error) {
 			continue
 		}
 
-		if len(sym.Path) > 0 && strings.HasPrefix(sym.Path[0], "go.itab.") {
-			continue
-		}
-		if len(sym.Path) > 0 && strings.HasPrefix(sym.Path[0], "type..") {
+		if strings.HasPrefix(sym.QualifiedName, "go:itab.") || strings.HasPrefix(sym.QualifiedName, "type:.") {
 			continue
 		}
 
 		syms = append(syms, sym)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("scanning failed: %w", err)
-	}
-
-	if err := command.Wait(); err != nil {
-		return nil, fmt.Errorf("nm failed: %w: %s", err, stderr.String())
 	}
 
 	return syms, nil
@@ -118,40 +98,24 @@ func parseLine(s string) (*Sym, error) {
 		return nil, fmt.Errorf("invalid sym text: %q", s)
 	}
 
-	addrField := ""
-	sizeField := ""
-	typeField := ""
-	nameField := ""
-	infoField := ""
-
 	isSymType := func(s string) bool {
 		return len(s) == 1 && (unicode.IsLetter(rune(s[0])) || s[0] == '_' || s[0] == '?')
 	}
 
+	// "[addr] size type name", where name may contain spaces.
+	var addrField, sizeField, typeField string
+	rest := s
 	switch {
 	case isSymType(tokens[1]):
-		// in some cases addr is not printed
-		sizeField = tokens[0]
-		typeField = tokens[1]
-		if len(tokens) > 2 {
-			nameField = tokens[2]
-		}
-		if len(tokens) > 3 {
-			infoField = strings.Join(tokens[3:], " ")
-		}
+		sizeField, typeField = tokens[0], tokens[1]
+		rest = skipFields(rest, 2)
 	case isSymType(tokens[2]):
-		addrField = tokens[0]
-		sizeField = tokens[1]
-		typeField = tokens[2]
-		if len(tokens) > 3 {
-			nameField = tokens[3]
-		}
-		if len(tokens) > 4 {
-			infoField = strings.Join(tokens[4:], " ")
-		}
+		addrField, sizeField, typeField = tokens[0], tokens[1], tokens[2]
+		rest = skipFields(rest, 3)
 	default:
 		return nil, fmt.Errorf("unable to find type in sym: %q", s)
 	}
+	sym.QualifiedName = strings.TrimSpace(rest)
 
 	if addrField != "" {
 		sym.Addr, err = strconv.ParseUint(addrField, 16, 64)
@@ -160,37 +124,29 @@ func parseLine(s string) (*Sym, error) {
 		}
 	}
 
-	if sizeField != "" {
-		sym.Size, err = strconv.ParseInt(sizeField, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid size %q: %q", s, sizeField)
-		}
-
-		// ignore external sym size
-		if sym.Size == 4294967296 {
-			sym.Size = 0
-		}
+	sym.Size, err = strconv.ParseInt(sizeField, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid size %q: %q", s, sizeField)
+	}
+	// ignore external sym size
+	if sym.Size == 4294967296 {
+		sym.Size = 0
 	}
 
-	if code := strings.TrimSpace(typeField); code != "" {
-		tmp, _ := utf8.DecodeRuneInString(code)
-		sym.Code = Code(tmp)
-	}
-
-	sym.QualifiedName = nameField
-	sym.Info = infoField
+	tmp, _ := utf8.DecodeRuneInString(typeField)
+	sym.Code = Code(tmp)
 
 	if sym.QualifiedName == "" {
 		return sym, nil
 	}
 
-	braceOff := strings.IndexByte(sym.QualifiedName, '(')
-	if braceOff < 0 {
-		braceOff = len(sym.QualifiedName)
+	// package path ends before the first '(' or '[' (receiver or type args)
+	braceOff := len(sym.QualifiedName)
+	if i := strings.IndexAny(sym.QualifiedName, "(["); i >= 0 {
+		braceOff = i
 	}
 
 	slashPos := max(strings.LastIndexByte(sym.QualifiedName[:braceOff], '/'), 0)
-
 	pointOff := max(strings.IndexByte(sym.QualifiedName[slashPos:braceOff], '.'), 0)
 
 	p := slashPos + pointOff
@@ -202,4 +158,17 @@ func parseLine(s string) (*Sym, error) {
 	}
 
 	return sym, nil
+}
+
+// skipFields drops the first n whitespace separated fields from s.
+func skipFields(s string, n int) string {
+	for range n {
+		s = strings.TrimLeftFunc(s, unicode.IsSpace)
+		if i := strings.IndexFunc(s, unicode.IsSpace); i >= 0 {
+			s = s[i:]
+		} else {
+			s = ""
+		}
+	}
+	return s
 }
