@@ -146,7 +146,7 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 
 				var op func(a, b Set) Set
 				switch strings.ToLower(e.Name) {
-				case " ", "+", "add", "or":
+				case "", "+", "add", "or":
 					op = Union
 				case "-", "subtract", "exclude":
 					op = Subtract
