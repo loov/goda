@@ -102,8 +102,9 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		}
 	}
 
-	for _, root := range roots.Sorted() {
-		visit(0, "\x00", root, false)
+	sorted := roots.Sorted()
+	for i, root := range sorted {
+		visit(0, "\x00", root, i == len(sorted)-1)
 	}
 
 	return subcommands.ExitSuccess
