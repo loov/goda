@@ -1,13 +1,13 @@
 package cut
 
 import (
+	"cmp"
 	"context"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"slices"
-	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -82,50 +82,30 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 
 	graph := pkggraph.From(result)
 
+	// pkggraph.From only links nodes inside the graph, so a flat two-pass build suffices.
 	nodes := map[string]*Node{}
 	nodelist := []*Node{}
-
-	var include func(parent *Node, n *pkggraph.Node)
-	include = func(parent *Node, n *pkggraph.Node) {
-		if n, ok := nodes[n.ID]; ok {
-			parent.Import(n)
-			return
-		}
-
-		node := &Node{
-			Node: n,
-		}
-		nodes[n.ID] = node
-		if _, analyse := graph.Packages[n.ID]; analyse {
-			nodelist = append(nodelist, node)
-		}
-
-		parent.Import(node)
-		for _, child := range n.ImportsNodes {
-			include(node, child)
-		}
-	}
-
 	for _, n := range graph.Sorted {
-		include(nil, n)
+		node := &Node{Node: n}
+		nodes[n.ID] = node
+		nodelist = append(nodelist, node)
 	}
-
-	for _, p := range nodes {
-		if !cmd.printStandard && pkgset.IsStd(p.Package) {
-			continue
+	for _, node := range nodelist {
+		for _, child := range node.ImportsNodes {
+			node.Import(nodes[child.ID])
 		}
 	}
 
 	for _, node := range nodelist {
-		Reset(nodes)
 		node.Cut = Erase(node)
 	}
 
-	sort.Slice(nodelist, func(i, k int) bool {
-		if nodelist[i].InDegree() == nodelist[k].InDegree() {
-			return nodelist[i].Cut.PackageCount > nodelist[k].Cut.PackageCount
-		}
-		return nodelist[i].InDegree() < nodelist[k].InDegree()
+	slices.SortFunc(nodelist, func(a, b *Node) int {
+		return cmp.Or(
+			cmp.Compare(a.InDegree(), b.InDegree()),
+			cmp.Compare(b.Cut.PackageCount, a.Cut.PackageCount),
+			cmp.Compare(a.ID, b.ID),
+		)
 	})
 
 	failed := false
@@ -160,19 +140,27 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	return subcommands.ExitSuccess
 }
 
-func Reset(stats map[string]*Node) {
-	for _, stat := range stats {
-		stat.indegree = len(stat.ImportedBy)
-	}
-}
-
-func Erase(stat *Node) stat.Stat {
-	cut := stat.Stat
-	for _, imp := range stat.Imports {
-		imp.indegree--
-		if imp.indegree == 0 {
-			cut.Add(Erase(imp))
+// Erase returns the stats of packages that become unreachable when root is removed.
+func Erase(root *Node) stat.Stat {
+	var touched []*Node
+	var erase func(n *Node) stat.Stat
+	erase = func(n *Node) stat.Stat {
+		cut := n.Stat
+		for _, imp := range n.Imports {
+			if imp.indegree == len(imp.ImportedBy) {
+				touched = append(touched, imp)
+			}
+			imp.indegree--
+			if imp.indegree == 0 {
+				cut.Add(erase(imp))
+			}
 		}
+		return cut
+	}
+	cut := erase(root)
+	// restore only what we touched instead of resetting every node
+	for _, n := range touched {
+		n.indegree = len(n.ImportedBy)
 	}
 	return cut
 }
@@ -198,14 +186,10 @@ func (parent *Node) Import(child *Node) {
 		return
 	}
 
-	if !hasPackage(parent.Imports, child) {
+	if !slices.Contains(parent.Imports, child) {
 		child.indegree++
 		child.ImportedBy = append(child.ImportedBy, parent)
 
 		parent.Imports = append(parent.Imports, child)
 	}
-}
-
-func hasPackage(xs []*Node, p *Node) bool {
-	return slices.Contains(xs, p)
 }
