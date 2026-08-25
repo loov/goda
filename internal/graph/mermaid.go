@@ -1,11 +1,9 @@
 package graph
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"io"
 	"regexp"
-	"strings"
 	"text/template"
 
 	"github.com/loov/goda/internal/pkggraph"
@@ -22,14 +20,7 @@ type Mermaid struct {
 	label *template.Template
 }
 
-func (ctx *Mermaid) Label(p *pkggraph.Node) string {
-	var labelText strings.Builder
-	err := ctx.label.Execute(&labelText, p)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "template error: %v\n", err)
-	}
-	return labelText.String()
-}
+func (ctx *Mermaid) Label(p *pkggraph.Node) string { return renderLabel(ctx.label, ctx.err, p) }
 
 var rxMermaidID = regexp.MustCompile("[^a-zA-Z0-9]+")
 
@@ -43,24 +34,14 @@ func (ctx *Mermaid) Ref(p *pkggraph.Node) string {
 	return ctx.docs + p.ID
 }
 
-func (ctx *Mermaid) writeGraphProperties() {
-}
-
 func (ctx *Mermaid) Write(graph *pkggraph.Graph) error {
-	return ctx.WriteRegular(graph)
-}
-
-func (ctx *Mermaid) WriteRegular(graph *pkggraph.Graph) error {
 	fmt.Fprintf(ctx.out, "flowchart LR\n")
-	ctx.writeGraphProperties()
 
 	for _, n := range graph.Sorted {
 		nid := ctx.PkgID(n)
 		fmt.Fprintf(ctx.out, "    %v[%q]\n", nid, ctx.Label(n))
 
-		if ref := ctx.Ref(n); ref != "" {
-			fmt.Fprintf(ctx.out, "    click %v %q _blank\n", nid, ref)
-		}
+		fmt.Fprintf(ctx.out, "    click %v %q _blank\n", nid, ctx.Ref(n))
 
 		if color := ctx.colorOf(n); color != "" {
 			fmt.Fprintf(ctx.out, "    style %v fill:%v\n", nid, color)
@@ -91,8 +72,7 @@ func (ctx *Mermaid) colorOf(p *pkggraph.Node) string {
 		return ""
 	}
 
-	hash := sha256.Sum256([]byte(p.PkgPath))
-	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+	hue := hueOf(p)
 	return hslahex(hue, 0.6, 0.7, 0.6)
 }
 
@@ -104,7 +84,6 @@ func (ctx *Mermaid) strokeColorOf(p *pkggraph.Node) string {
 		return ""
 	}
 
-	hash := sha256.Sum256([]byte(p.PkgPath))
-	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+	hue := hueOf(p)
 	return hslahex(hue, 0.6, 0.3, 0.8)
 }

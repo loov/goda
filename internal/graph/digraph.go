@@ -3,7 +3,6 @@ package graph
 import (
 	"fmt"
 	"io"
-	"strings"
 	"text/template"
 
 	"github.com/loov/goda/internal/pkggraph"
@@ -15,14 +14,7 @@ type Digraph struct {
 	label *template.Template
 }
 
-func (ctx *Digraph) Label(p *pkggraph.Node) string {
-	var labelText strings.Builder
-	err := ctx.label.Execute(&labelText, p)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "template error: %v\n", err)
-	}
-	return labelText.String()
-}
+func (ctx *Digraph) Label(p *pkggraph.Node) string { return renderLabel(ctx.label, ctx.err, p) }
 
 func (ctx *Digraph) Write(graph *pkggraph.Graph) error {
 	labelCache := map[*pkggraph.Node]string{}

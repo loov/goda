@@ -2,7 +2,6 @@ package graph
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -23,14 +22,7 @@ type GraphML struct {
 	nocolor bool
 }
 
-func (ctx *GraphML) Label(p *pkggraph.Node) string {
-	var labelText strings.Builder
-	err := ctx.label.Execute(&labelText, p)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "template error: %v\n", err)
-	}
-	return labelText.String()
-}
+func (ctx *GraphML) Label(p *pkggraph.Node) string { return renderLabel(ctx.label, ctx.err, p) }
 
 func (ctx *GraphML) Write(graph *pkggraph.Graph) error {
 	file := graphml.NewFile()
@@ -125,7 +117,6 @@ func (ctx *GraphML) colorOf(p *pkggraph.Node) string {
 		return ""
 	}
 
-	hash := sha256.Sum256([]byte(p.PkgPath))
-	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+	hue := hueOf(p)
 	return hslhex(hue, 0.6, 0.6)
 }

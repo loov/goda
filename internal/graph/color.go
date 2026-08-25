@@ -1,9 +1,30 @@
 package graph
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"math"
+	"strings"
+	"text/template"
+
+	"github.com/loov/goda/internal/pkggraph"
 )
+
+// renderLabel executes the label template for p, reporting errors to errw.
+func renderLabel(t *template.Template, errw io.Writer, p *pkggraph.Node) string {
+	var labelText strings.Builder
+	if err := t.Execute(&labelText, p); err != nil {
+		fmt.Fprintf(errw, "template error: %v\n", err)
+	}
+	return labelText.String()
+}
+
+// hueOf derives a stable hue in 0..1 from the package path.
+func hueOf(p *pkggraph.Node) float64 {
+	hash := sha256.Sum256([]byte(p.PkgPath))
+	return float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+}
 
 func hslahex(h, s, l, a float64) string {
 	r, g, b, xa := hsla(h, s, l, a)

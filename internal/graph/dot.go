@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"io"
 	"strconv"
@@ -24,14 +23,7 @@ type Dot struct {
 	label *template.Template
 }
 
-func (ctx *Dot) Label(p *pkggraph.Node) string {
-	var labelText strings.Builder
-	err := ctx.label.Execute(&labelText, p)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "template error: %v\n", err)
-	}
-	return labelText.String()
-}
+func (ctx *Dot) Label(p *pkggraph.Node) string { return renderLabel(ctx.label, ctx.err, p) }
 
 func (ctx *Dot) ModuleLabel(mod *pkgtree.Module) string {
 	lbl := mod.Mod.Path
@@ -52,8 +44,7 @@ func (ctx *Dot) ModuleLabel(mod *pkgtree.Module) string {
 
 func (ctx *Dot) TreePackageLabel(tp *pkgtree.Package, parentPrinted bool) string {
 	suffix := ""
-	parentPath := tp.Parent.Path()
-	if parentPrinted && tp.Parent != nil && parentPath != "" {
+	if parentPath := tp.Parent.Path(); parentPrinted && parentPath != "" {
 		suffix = strings.TrimPrefix(tp.Path(), parentPath+"/")
 	}
 
@@ -62,12 +53,7 @@ func (ctx *Dot) TreePackageLabel(tp *pkgtree.Package, parentPrinted bool) string
 		tp.GraphNode.ID = suffix
 	}
 
-	var labelText strings.Builder
-	err := ctx.label.Execute(&labelText, tp.GraphNode)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "template error: %v\n", err)
-	}
-	return labelText.String()
+	return ctx.Label(tp.GraphNode)
 }
 
 func (ctx *Dot) RepoRef(repo *pkgtree.Repo) string {
@@ -216,7 +202,6 @@ func (ctx *Dot) colorOf(p *pkggraph.Node) string {
 		return ""
 	}
 
-	hash := sha256.Sum256([]byte(p.PkgPath))
-	hue := float64(uint(hash[0])<<8|uint(hash[1])) / 0xFFFF
+	hue := hueOf(p)
 	return "color=\"" + hslahex(hue, 0.9, 0.3, 0.7) + "\""
 }

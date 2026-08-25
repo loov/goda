@@ -3,7 +3,6 @@ package graph
 import (
 	"fmt"
 	"io"
-	"strings"
 	"text/template"
 
 	"github.com/loov/goda/internal/pkggraph"
@@ -15,20 +14,13 @@ type TGF struct {
 	label *template.Template
 }
 
-func (ctx *TGF) Label(p *pkggraph.Node) string {
-	var labelText strings.Builder
-	err := ctx.label.Execute(&labelText, p)
-	if err != nil {
-		fmt.Fprintf(ctx.err, "template error: %v\n", err)
-	}
-	return labelText.String()
-}
+func (ctx *TGF) Label(p *pkggraph.Node) string { return renderLabel(ctx.label, ctx.err, p) }
 
 func (ctx *TGF) Write(graph *pkggraph.Graph) error {
-	indexCache := map[*pkggraph.Node]int64{}
+	indexCache := map[*pkggraph.Node]int{}
 	for i, node := range graph.Sorted {
 		label := ctx.Label(node)
-		indexCache[node] = int64(i + 1)
+		indexCache[node] = i + 1
 		fmt.Fprintf(ctx.out, "%d %s\n", i+1, label)
 	}
 
