@@ -116,19 +116,7 @@ func (set Set) Clone() Set {
 }
 
 // Union includes packages from both sets
-func Union(a, b Set) Set {
-	if len(a) == 0 {
-		return b.Clone()
-	}
-
-	r := a.Clone()
-	for pid, p := range b {
-		if _, exists := r[pid]; !exists {
-			r[pid] = p
-		}
-	}
-	return r
-}
+func Union(a, b Set) Set { return UnionAll(a, b) }
 
 // UnionAll includes packages from both sets
 func UnionAll(xs ...Set) Set {
@@ -266,27 +254,6 @@ func Transitive(a Set) Set {
 			delete(cp.Imports, dep)
 		}
 		result[id] = &cp
-	}
-
-	return result
-}
-
-// SourcesOfAll returns packages that don't have incoming edges,
-// looking at all dependencies in the set.
-func SourcesOfAll(a Set) Set {
-	incoming := map[string]int{}
-
-	a.WalkAllDependencies(func(p *packages.Package) {
-		for _, dep := range p.Imports {
-			incoming[dep.ID]++
-		}
-	})
-
-	result := New()
-	for _, p := range a {
-		if incoming[p.ID] == 0 {
-			result[p.ID] = p
-		}
 	}
 
 	return result

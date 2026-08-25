@@ -110,10 +110,6 @@ func Parse(tokens []Token) (Expr, error) {
 		}
 	}
 
-	if p != len(tokens) {
-		panic("failed to parse")
-	}
-
 	if len(seq.Exprs) == 1 {
 		return seq.Exprs[0], nil
 	}
@@ -164,7 +160,7 @@ func parseCombine(p int, tokens []Token, lookingForOperator bool) (int, Expr, er
 			}
 
 			if p >= len(tokens) || tokens[p].Kind != TLeftParen {
-				panic("unexpected func location")
+				return p, combine(exprs), errors.New("expected '(' after function name")
 			}
 			p++ // skip the left paren
 
