@@ -70,7 +70,7 @@ func (ctx Context) LoadWithoutTests(patterns ...string) ([]*packages.Package, er
 func load(config *packages.Config, patterns ...string) ([]*packages.Package, error) {
 	roots, err := packages.Load(config, replaceAliases(patterns...)...)
 	if err != nil {
-		return roots, err
+		return roots, explainChecksumError(err, patterns)
 	}
 	var errs []error
 	for _, p := range roots {
@@ -80,7 +80,24 @@ func load(config *packages.Config, patterns ...string) ([]*packages.Package, err
 			}
 		}
 	}
-	return roots, errors.Join(errs...)
+	return roots, explainChecksumError(errors.Join(errs...), patterns)
+}
+
+// explainChecksumError adds context to go's errors about go.mod/go.sum
+// being out of date, which go mod tidy cannot fix when the patterns reach
+// outside the main module's dependency graph (golang/go#59755).
+func explainChecksumError(err error, patterns []string) error {
+	if err == nil {
+		return nil
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "updates to go.mod needed") && !strings.Contains(msg, "missing go.sum entry") {
+		return err
+	}
+	if broad := broadPatterns(patterns); len(broad) > 0 {
+		return fmt.Errorf("%w\n\npattern %q matches packages in every module, not just this one; use \"./...\" (or \"<module path>/...\") for the current module, or GOFLAGS=-mod=mod(...) to let go update go.sum (this modifies go.mod and go.sum)", err, strings.Join(broad, ", "))
+	}
+	return fmt.Errorf("%w\n\none of %q is outside this module's dependency graph (not in \"go list all\"), so go.sum has no checksums for it; add it with \"go get <package>\", or use GOFLAGS=-mod=mod(...) to let go update go.sum (this modifies go.mod and go.sum)", err, strings.Join(patterns, ", "))
 }
 
 func (ctx *Context) Set(key, value string) {
@@ -155,4 +172,15 @@ func (strs Strings) Clone() Strings {
 func KeyValue(s string) (string, string) {
 	k, v, _ := strings.Cut(s, "=")
 	return k, v
+}
+
+// broadPatterns returns wildcard patterns that are not scoped to a directory.
+func broadPatterns(patterns []string) []string {
+	var xs []string
+	for _, p := range patterns {
+		if strings.Contains(p, "...") && !strings.HasPrefix(p, ".") && !strings.HasPrefix(p, "/") {
+			xs = append(xs, p)
+		}
+	}
+	return xs
 }
