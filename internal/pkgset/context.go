@@ -133,9 +133,6 @@ func (strs Strings) Clone() Strings {
 
 // KeyValue parses s into a key and value.
 func KeyValue(s string) (string, string) {
-	p := strings.LastIndexByte(s, '=')
-	if p < 0 {
-		return s, ""
-	}
-	return s[:p], s[p+1:]
+	k, v, _ := strings.Cut(s, "=")
+	return k, v
 }
