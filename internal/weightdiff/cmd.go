@@ -20,7 +20,6 @@ import (
 
 type Command struct {
 	humanized  bool
-	miss       bool
 	minimum    int64
 	allsyms    bool
 	color      bool
@@ -38,7 +37,6 @@ func (*Command) Usage() string {
 
 func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.humanized, "h", false, "humanized size output")
-	f.BoolVar(&cmd.miss, "miss", false, "include missing entries")
 	f.Int64Var(&cmd.minimum, "minimum", 1024, "minimum abs(total delta) difference to print")
 	f.BoolVar(&cmd.allsyms, "all", false, "include all symbols (e.g. BSS symbols)")
 	f.BoolVar(&cmd.color, "color", false, "color delta based on sign")
@@ -46,12 +44,11 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 }
 
 func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subcommands.ExitStatus {
-	if f.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "missing binary arguments\n")
+	if f.NArg() < 2 {
+		fmt.Fprintf(os.Stderr, "need at least two binaries to compare\n")
 		return subcommands.ExitUsageError
 	}
 
-	binaries := []string{}
 	aliases := []string{}
 	symnameSet := map[string]struct{}{}
 	symSets := []map[string]*nm.Sym{}
@@ -80,7 +77,6 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			symset[sym.QualifiedName] = sym
 		}
 
-		binaries = append(binaries, binary)
 		aliases = append(aliases, alias)
 		symSets = append(symSets, symset)
 	}
@@ -99,10 +95,8 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		QualifiedName string
 
 		Cells []Cell
-		Delta []int64
 
-		TotalDelta  int64
-		MaxAbsDelta int64
+		TotalDelta int64
 	}
 
 	rows := []Row{}
@@ -122,11 +116,6 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			lastSize = size
 		}
 
-		for _, cell := range row.Cells[1:] {
-			if cell.Sym != nil {
-				row.MaxAbsDelta = max(row.MaxAbsDelta, abs(cell.Delta))
-			}
-		}
 		row.TotalDelta = row.Cells[len(row.Cells)-1].MaybeSize() - row.Cells[0].MaybeSize()
 
 		rows = append(rows, row)
@@ -141,7 +130,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	})
 
 	sizeToString := func(v int64) string {
-		return strconv.Itoa(int(v))
+		return strconv.FormatInt(v, 10)
 	}
 	if cmd.humanized {
 		sizeToString = memory.ToStringShort
@@ -178,7 +167,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			fmt.Fprintf(w, "\t%7v\t  delta", bin)
 		}
 	}
-	if len(binaries) > 2 {
+	if len(aliases) > 2 {
 		fmt.Fprintf(w, "\ttotal ∆")
 	}
 	if cmd.cumulative {
@@ -202,7 +191,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 				fmt.Fprintf(w, "\t%7v\t%8v", symSizeToString(cell.Sym), deltaToString(cell.Delta))
 			}
 		}
-		if len(binaries) > 2 {
+		if len(aliases) > 2 {
 			fmt.Fprintf(w, "\t%8v", deltaToString(row.TotalDelta))
 		}
 		if cmd.cumulative {
