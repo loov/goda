@@ -63,7 +63,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 
 	f.StringVar(&cmd.docs, "docs", "https://pkg.go.dev/", "override the docs url to use")
 
-	f.StringVar(&cmd.outputType, "type", "dot", "output type (dot, graphml, digraph, edges, tgf)")
+	f.StringVar(&cmd.outputType, "type", "dot", "output type (dot, graphml, mermaid, digraph, edges, tgf)")
 	f.StringVar(&cmd.labelFormat, "f", "", "label formatting")
 
 	f.BoolVar(&cmd.clusters, "cluster", false, "create clusters")
@@ -154,7 +154,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	for _, color := range cmd.colors {
 		target, err := pkgset.Calc(ctx, []string{color.Expr})
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to evaluate color expression %q: %v", color.Expr, err)
+			fmt.Fprintf(os.Stderr, "failed to evaluate color expression %q: %v\n", color.Expr, err)
 			continue
 		}
 		for id := range target {
