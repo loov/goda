@@ -1,0 +1,26 @@
+digraph G {
+    node [penwidth=2 fontsize=10 shape=rectangle target="_graphviz"];
+    edge [tailport=e penwidth=2];
+    compound=true;
+    rankdir=LR;
+    newrank=true;
+    ranksep="1.5";
+    quantum="0.5";
+    "alpha.test/cmd/client" [label="alpha.test/cmd/client" href="https://pkg.go.dev/alpha.test/cmd/client" color="#911c07b2"];
+    "alpha.test/cmd/server" [label="alpha.test/cmd/server" href="https://pkg.go.dev/alpha.test/cmd/server" color="#1e9107b2"];
+    "alpha.test/database" [label="alpha.test/database" href="https://pkg.go.dev/alpha.test/database" color="#6d0791b2"];
+    "alpha.test/database/migration" [label="alpha.test/database/migration" href="https://pkg.go.dev/alpha.test/database/migration" color="#1f9107b2"];
+    "alpha.test/rpc" [label="alpha.test/rpc" href="https://pkg.go.dev/alpha.test/rpc" color="#910713b2"];
+    "alpha.test/rpc/rpcconn" [label="alpha.test/rpc/rpcconn" href="https://pkg.go.dev/alpha.test/rpc/rpcconn" color="#6d0791b2"];
+    "alpha.test/service" [label="alpha.test/service" href="https://pkg.go.dev/alpha.test/service" color="#077391b2"];
+    "alpha.test/tool/migrate" [label="alpha.test/tool/migrate" href="https://pkg.go.dev/alpha.test/tool/migrate" color="#074e91b2"];
+    "alpha.test/cmd/client" -> "alpha.test/rpc" [color="#910713b2"];
+    "alpha.test/cmd/client" -> "alpha.test/service" [color="#077391b2"];
+    "alpha.test/cmd/server" -> "alpha.test/database" [color="#6d0791b2"];
+    "alpha.test/cmd/server" -> "alpha.test/service" [color="#077391b2"];
+    "alpha.test/database/migration" -> "alpha.test/database" [color="#6d0791b2"];
+    "alpha.test/rpc" -> "alpha.test/rpc/rpcconn" [color="#6d0791b2"];
+    "alpha.test/service" -> "alpha.test/database" [color="#6d0791b2"];
+    "alpha.test/service" -> "alpha.test/rpc" [color="#910713b2"];
+    "alpha.test/tool/migrate" -> "alpha.test/database/migration" [color="#1f9107b2"];
+}

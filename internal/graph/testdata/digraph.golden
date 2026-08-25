@@ -1,0 +1,8 @@
+alpha.test/cmd/client alpha.test/rpc alpha.test/service
+alpha.test/cmd/server alpha.test/database alpha.test/service
+alpha.test/database
+alpha.test/database/migration alpha.test/database
+alpha.test/rpc alpha.test/rpc/rpcconn
+alpha.test/rpc/rpcconn
+alpha.test/service alpha.test/database alpha.test/rpc
+alpha.test/tool/migrate alpha.test/database/migration

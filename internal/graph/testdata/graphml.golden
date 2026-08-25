@@ -1,0 +1,75 @@
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+	<key id="label" for="node" attr.name="label" attr.type="string"></key>
+	<key id="module" for="node" attr.name="module" attr.type="string"></key>
+	<key id="ynodelabel" for="node" yfiles.type="nodegraphics"></key>
+	<key id="yedgelabel" for="edge" yfiles.type="edgegraphics"></key>
+	<graph id="" edgedefault="directed">
+		<node id="alpha.test/cmd/client">
+			<data key="label">alpha.test/cmd/client</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#d66e5b" transparent="false" /><y:NodeLabel>alpha.test/cmd/client</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/cmd/server">
+			<data key="label">alpha.test/cmd/server</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#70d65b" transparent="false" /><y:NodeLabel>alpha.test/cmd/server</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/database">
+			<data key="label">alpha.test/database</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#b65bd6" transparent="false" /><y:NodeLabel>alpha.test/database</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/database/migration">
+			<data key="label">alpha.test/database/migration</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#71d65b" transparent="false" /><y:NodeLabel>alpha.test/database/migration</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/rpc">
+			<data key="label">alpha.test/rpc</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#d65b66" transparent="false" /><y:NodeLabel>alpha.test/rpc</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/rpc/rpcconn">
+			<data key="label">alpha.test/rpc/rpcconn</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#b65bd6" transparent="false" /><y:NodeLabel>alpha.test/rpc/rpcconn</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/service">
+			<data key="label">alpha.test/service</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#5bbbd6" transparent="false" /><y:NodeLabel>alpha.test/service</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<node id="alpha.test/tool/migrate">
+			<data key="label">alpha.test/tool/migrate</data>
+			<data key="module">alpha.test</data>
+			<data key="ynodelabel"><y:ShapeNode><y:Fill color="#5b9ad6" transparent="false" /><y:NodeLabel>alpha.test/tool/migrate</y:NodeLabel></y:ShapeNode></data>
+		</node>
+		<edge source="alpha.test/cmd/client" target="alpha.test/rpc">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#d65b66" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/cmd/client" target="alpha.test/service">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#5bbbd6" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/cmd/server" target="alpha.test/database">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#b65bd6" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/cmd/server" target="alpha.test/service">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#5bbbd6" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/database/migration" target="alpha.test/database">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#b65bd6" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/rpc" target="alpha.test/rpc/rpcconn">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#b65bd6" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/service" target="alpha.test/database">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#b65bd6" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/service" target="alpha.test/rpc">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#d65b66" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+		<edge source="alpha.test/tool/migrate" target="alpha.test/database/migration">
+			<data key="yedgelabel"><y:PolyLineEdge><y:LineStyle color="#71d65b" type="line" width="1.0" /></y:PolyLineEdge></data>
+		</edge>
+	</graph>
+</graphml>

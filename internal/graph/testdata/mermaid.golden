@@ -1,0 +1,43 @@
+flowchart LR
+    n0["alpha.test/cmd/client"]
+    click n0 "https://pkg.go.dev/alpha.test/cmd/client" _blank
+    style n0 fill:#e0928499
+    n1["alpha.test/cmd/server"]
+    click n1 "https://pkg.go.dev/alpha.test/cmd/server" _blank
+    style n1 fill:#94e08499
+    n2["alpha.test/database"]
+    click n2 "https://pkg.go.dev/alpha.test/database" _blank
+    style n2 fill:#c884e099
+    n3["alpha.test/database/migration"]
+    click n3 "https://pkg.go.dev/alpha.test/database/migration" _blank
+    style n3 fill:#94e08499
+    n4["alpha.test/rpc"]
+    click n4 "https://pkg.go.dev/alpha.test/rpc" _blank
+    style n4 fill:#e0848c99
+    n5["alpha.test/rpc/rpcconn"]
+    click n5 "https://pkg.go.dev/alpha.test/rpc/rpcconn" _blank
+    style n5 fill:#c884e099
+    n6["alpha.test/service"]
+    click n6 "https://pkg.go.dev/alpha.test/service" _blank
+    style n6 fill:#84cce099
+    n7["alpha.test/tool/migrate"]
+    click n7 "https://pkg.go.dev/alpha.test/tool/migrate" _blank
+    style n7 fill:#84b3e099
+    n0 --> n4
+    linkStyle 0 stroke:#7a1e26cc
+    n0 --> n6
+    linkStyle 1 stroke:#1e667acc
+    n1 --> n2
+    linkStyle 2 stroke:#621e7acc
+    n1 --> n6
+    linkStyle 3 stroke:#1e667acc
+    n3 --> n2
+    linkStyle 4 stroke:#621e7acc
+    n4 --> n5
+    linkStyle 5 stroke:#621e7acc
+    n6 --> n2
+    linkStyle 6 stroke:#621e7acc
+    n6 --> n4
+    linkStyle 7 stroke:#7a1e26cc
+    n7 --> n3
+    linkStyle 8 stroke:#2e7a1ecc

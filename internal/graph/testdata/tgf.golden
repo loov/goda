@@ -1,0 +1,18 @@
+1 alpha.test/cmd/client
+2 alpha.test/cmd/server
+3 alpha.test/database
+4 alpha.test/database/migration
+5 alpha.test/rpc
+6 alpha.test/rpc/rpcconn
+7 alpha.test/service
+8 alpha.test/tool/migrate
+#
+1 5
+1 7
+2 3
+2 7
+4 3
+5 6
+7 3
+7 5
+8 4
