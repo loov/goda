@@ -225,7 +225,10 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 				if err != nil {
 					return nil, err
 				}
-				return ModuleDependencies(set), nil
+				if combineOp == "" {
+					return ModuleDependencies(set), nil
+				}
+				return combine(set, Subtract(ModuleDependencies(set), set)), nil
 
 			case "import", "imp":
 				set, err := eval(ctx, e.Expr)
@@ -280,7 +283,13 @@ func Calc(parentContext context.Context, expr []string) (Set, error) {
 					return nil, err
 				}
 
-				roots, err := ctx.LoadWithTests(set.IDs()...)
+				var ids []string
+				for _, p := range set.Sorted() {
+					if !IsTestPkg(p) {
+						ids = append(ids, p.ID)
+					}
+				}
+				roots, err := ctx.LoadWithTests(ids...)
 				withTests := NewRoot(roots...)
 				return combine(set, Test(withTests)), err
 
