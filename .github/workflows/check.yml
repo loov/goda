@@ -16,7 +16,19 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - run: make check
+      - run: make test
+
+  # golangci-lint tracks recent Go releases faster than go.mod's floor moves,
+  # so lint runs on the latest stable toolchain.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          check-latest: true
+      - run: make lint
 
   # weight/nm parses `go tool nm` output and deadcode parses `-ldflags=-dumpdep`;
   # a new Go release can change either, so test against the latest release too.
