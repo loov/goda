@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"text/tabwriter"
 
 	"github.com/google/subcommands"
@@ -39,7 +38,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&cmd.printStandard, "std", false, "print std packages")
 
 	f.BoolVar(&cmd.noAlign, "noalign", false, "disable aligning tabs")
-	f.StringVar(&cmd.header, "h", "", "header for the table\nautomatically derives from format, when empty, use \"-\" to skip")
+	f.StringVar(&cmd.header, "header", "", "header for the table\nautomatically derives from format, when empty, use \"-\" to skip")
 	f.StringVar(&cmd.format, "f", "{{.ID}}", "formatting")
 }
 
@@ -65,27 +64,30 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 
 	graph := pkggraph.From(result)
 
+	failed := false
 	var w io.Writer = os.Stdout
 	if !cmd.noAlign {
 		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	}
 	if cmd.header != "-" {
 		if cmd.header == "" {
-			rx := regexp.MustCompile(`(\{\{\s*\.?|\s*\}\})`)
-			cmd.header = rx.ReplaceAllString(cmd.format, "")
+			cmd.header = templates.Header(cmd.format)
 		}
 		fmt.Fprintln(w, cmd.header)
 	}
 	for _, p := range graph.Sorted {
-		err := t.Execute(w, p)
-		fmt.Fprintln(w)
-		if err != nil {
+		if err := t.Execute(w, p); err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
+			failed = true
 		}
+		fmt.Fprintln(w)
 	}
 	if w, ok := w.(interface{ Flush() error }); ok {
 		w.Flush()
 	}
 
+	if failed {
+		return subcommands.ExitFailure
+	}
 	return subcommands.ExitSuccess
 }

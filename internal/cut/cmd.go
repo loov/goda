@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -47,7 +46,7 @@ func (cmd *Command) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&cmd.exclude, "exclude", "", "package expr to exclude from output")
 
 	f.BoolVar(&cmd.noAlign, "noalign", false, "disable aligning tabs")
-	f.StringVar(&cmd.header, "h", "", "header for the table\nautomatically derives from format, when empty, use \"-\" to skip")
+	f.StringVar(&cmd.header, "header", "", "header for the table\nautomatically derives from format, when empty, use \"-\" to skip")
 	f.StringVar(&cmd.format, "f", "{{.ID}}\t{{.InDegree}}\t{{.Cut.PackageCount}}\t{{.Cut.AllFiles.Size}}\t{{.Cut.Go.Lines}}", "info formatting")
 }
 
@@ -129,14 +128,14 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		return nodelist[i].InDegree() < nodelist[k].InDegree()
 	})
 
+	failed := false
 	var w io.Writer = os.Stdout
 	if !cmd.noAlign {
 		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	}
 	if cmd.header != "-" {
 		if cmd.header == "" {
-			rx := regexp.MustCompile(`(\{\{\s*\.?|\s*\}\})`)
-			cmd.header = rx.ReplaceAllString(cmd.format, "")
+			cmd.header = templates.Header(cmd.format)
 		}
 		fmt.Fprintln(w, cmd.header)
 	}
@@ -145,16 +144,19 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 			continue
 		}
 
-		err := t.Execute(w, node)
-		fmt.Fprintln(w)
-		if err != nil {
+		if err := t.Execute(w, node); err != nil {
 			fmt.Fprintf(os.Stderr, "template error: %v\n", err)
+			failed = true
 		}
+		fmt.Fprintln(w)
 	}
 	if w, ok := w.(interface{ Flush() error }); ok {
 		w.Flush()
 	}
 
+	if failed {
+		return subcommands.ExitFailure
+	}
 	return subcommands.ExitSuccess
 }
 
