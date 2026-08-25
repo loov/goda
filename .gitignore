@@ -23,3 +23,5 @@ _testmain.go
 *.prof
 
 goda
+
+dist/

@@ -83,7 +83,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		fmt.Fprintln(w)
 	}
 	if w, ok := w.(interface{ Flush() error }); ok {
-		w.Flush()
+		_ = w.Flush()
 	}
 
 	if failed {

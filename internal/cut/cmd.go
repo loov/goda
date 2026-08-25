@@ -138,7 +138,7 @@ func (cmd *Command) print(w io.Writer, t *template.Template, result, excluded pk
 		fmt.Fprintln(w)
 	}
 	if w, ok := w.(interface{ Flush() error }); ok {
-		w.Flush()
+		_ = w.Flush()
 	}
 	return failed
 }

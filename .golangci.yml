@@ -1,0 +1,19 @@
+version: "2"
+
+# The standard set includes staticcheck, govet, errcheck, ineffassign, unused.
+linters:
+  default: standard
+  settings:
+    errcheck:
+      # Report output goes to stdout/stderr; a failed write there is not actionable.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        # Deferred Close on read-only files has no actionable error.
+        - (*os.File).Close
+    staticcheck:
+      checks:
+        - default
+        # explicit embedded selectors (p.Package.ID) read clearer than p.ID
+        - -QF1008

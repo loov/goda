@@ -1,0 +1,20 @@
+version: 2
+
+builds:
+  - env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+changelog:
+  use: git
+
+# The release body is the tag annotation followed by the generated
+# commit list.
+release:
+  header: "{{ .TagBody }}"
