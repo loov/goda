@@ -1,0 +1,12 @@
+1     ├ alpha.test/cmd/client
+2       ├ alpha.test/rpc
+3         └ alpha.test/rpc/rpcconn
+4       └ alpha.test/service
+5         ├ alpha.test/database
+6         └ alpha.test/rpc @2
+7     ├ alpha.test/cmd/server
+8       ├ alpha.test/database @5
+9       └ alpha.test/service @4
+10    └ alpha.test/tool/migrate
+11      └ alpha.test/database/migration
+12        └ alpha.test/database @5

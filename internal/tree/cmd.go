@@ -4,9 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
@@ -51,6 +53,12 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	if !cmd.printStandard {
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
+	cmd.print(os.Stdout, t, result)
+	return subcommands.ExitSuccess
+}
+
+// print writes the dependency tree of result to w.
+func (cmd *Command) print(w io.Writer, t *template.Template, result pkgset.Set) {
 	roots := pkgset.Sources(result)
 
 	lineNr := 0
@@ -60,16 +68,16 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	visit = func(ident int, parentID string, p *packages.Package, last bool) {
 		lineNr++
 		if last {
-			fmt.Fprintf(os.Stdout, "%-4d%s  └ ", lineNr, strings.Repeat("  ", ident))
+			fmt.Fprintf(w, "%-4d%s  └ ", lineNr, strings.Repeat("  ", ident))
 		} else {
-			fmt.Fprintf(os.Stdout, "%-4d%s  ├ ", lineNr, strings.Repeat("  ", ident))
+			fmt.Fprintf(w, "%-4d%s  ├ ", lineNr, strings.Repeat("  ", ident))
 		}
 
 		type packageWithImporter struct {
 			ParentID string
 			*packages.Package
 		}
-		err := t.Execute(os.Stdout, packageWithImporter{
+		err := t.Execute(w, packageWithImporter{
 			ParentID: parentID,
 			Package:  p,
 		})
@@ -78,14 +86,14 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		}
 
 		if line, ok := printed[p.ID]; ok {
-			fmt.Fprintf(os.Stdout, " @%d\n", line)
+			fmt.Fprintf(w, " @%d\n", line)
 			return
 		}
 		if pkgset.IsStd(p) {
-			fmt.Fprintln(os.Stdout, " ~")
+			fmt.Fprintln(w, " ~")
 			return
 		}
-		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(w)
 
 		printed[p.ID] = lineNr
 		deps := []*packages.Package{}
@@ -106,6 +114,4 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	for i, root := range sorted {
 		visit(0, "\x00", root, i == len(sorted)-1)
 	}
-
-	return subcommands.ExitSuccess
 }

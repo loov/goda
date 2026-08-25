@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 	"text/tabwriter"
+	"text/template"
 
 	"github.com/google/subcommands"
 	"golang.org/x/tools/go/packages"
@@ -80,6 +81,14 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		result = pkgset.Subtract(result, pkgset.Std())
 	}
 
+	if cmd.print(os.Stdout, t, result, excluded) {
+		return subcommands.ExitFailure
+	}
+	return subcommands.ExitSuccess
+}
+
+// print writes the cut table for result to w, returning whether a template failed.
+func (cmd *Command) print(w io.Writer, t *template.Template, result, excluded pkgset.Set) (failed bool) {
 	graph := pkggraph.From(result)
 
 	// pkggraph.From only links nodes inside the graph, so a flat two-pass build suffices.
@@ -108,10 +117,8 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 		)
 	})
 
-	failed := false
-	var w io.Writer = os.Stdout
 	if !cmd.noAlign {
-		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		w = tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
 	}
 	if cmd.header != "-" {
 		if cmd.header == "" {
@@ -133,11 +140,7 @@ func (cmd *Command) Execute(ctx context.Context, f *flag.FlagSet, _ ...any) subc
 	if w, ok := w.(interface{ Flush() error }); ok {
 		w.Flush()
 	}
-
-	if failed {
-		return subcommands.ExitFailure
-	}
-	return subcommands.ExitSuccess
+	return failed
 }
 
 // Erase returns the stats of packages that become unreachable when root is removed.
