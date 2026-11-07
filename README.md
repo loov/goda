@@ -6,10 +6,20 @@ _Note: the exact syntax of the command line arguments has not yet been finalized
 
 ### Installation
 
-To install, you'll need a recent version of Go and then you can install via:
+#### Go
+
+If you have a recent version of Go installed, installation is straightforward:
 
 ```
 go install github.com/loov/goda@latest
+```
+
+#### Homebrew
+
+Goda is also available via [Homebrew](https://brew.sh). Run the following command to install the toolkit:
+
+```
+brew install goda
 ```
 
 The commands assume that your GOBIN is reachable on path.
